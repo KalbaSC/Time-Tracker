@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Timecard Summary — Kalba Sports & Cultural Club</title>
+  <title>ملخص البصمة — نادي كلباء الرياضي الثقافي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- SheetJS لقراءة ملفات Excel في المتصفح -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -20,23 +21,20 @@
       --bad:#ff6b6b;
       --radius:16px;
     }
-
     @font-face {
       font-family: 'NotoKufiArabic';
       src: url('NotoKufiArabic.ttf') format('truetype');
-      font-weight: 400;
-      font-style: normal;
+      font-weight: 400; font-style: normal;
     }
     @font-face {
       font-family: 'NotoKufiArabic';
       src: url('NotoKufiArabic-Light.ttf') format('truetype');
-      font-weight: 300;
-      font-style: normal;
+      font-weight: 300; font-style: normal;
     }
     html, body { height: 100%; }
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "NotoKufiArabic", Arial, sans-serif;
+      font-family: "NotoKufiArabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
       color: var(--text);
       background-color: var(--bg);
       background-image:
@@ -45,10 +43,10 @@
         radial-gradient(circle at 20% 30%, rgba(244,231,51,.05) 0%, transparent 40%),
         radial-gradient(circle at 80% 70%, rgba(244,231,51,.04) 0%, transparent 40%);
       min-height:100vh;
-      display:flex;
-      flex-direction:column;
+      display:flex; flex-direction:column;
     }
 
+    /* رأس ثابت على طريقة news.html */
     header{
       background:#222222;
       padding:16px 5%;
@@ -61,7 +59,7 @@
     .header-right{display:flex; align-items:center; gap:15px; flex:1; min-width:0}
     .header-right img.logo{height:70px; object-fit:contain}
     .header-right .divider{width:1.5px; height:65px; background:var(--accent)}
-    .header-info{text-align:left; min-width:0}
+    .header-info{text-align:right; min-width:0}
     .header-info .title{margin:0; font-weight:800; font-size:18px; color:#fff}
     .header-info .subtitle{margin:0; font-size:14px; color:var(--accent)}
 
@@ -109,18 +107,19 @@
     table{width:100%; border-collapse:separate; border-spacing:0; margin-top:6px}
     thead th{
       position:sticky; top:0; background:#111; z-index:1;
-      text-align:left; padding:10px; font-size:12px; color:#fff17a;
+      text-align:right; padding:10px; font-size:12px; color:#fff17a;
       border-bottom:1px solid var(--accent);
     }
     tbody td{padding:10px; border-bottom:1px solid #2a2a2a; vertical-align:top}
     tbody tr:hover{background:#0f0f0f}
-    .right{text-align:right}
+    .left{text-align:left}
     .center{text-align:center}
     .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px}
     .pill.ok{background:rgba(43,216,134,.12); color:var(--ok)}
     .pill.warn{background:rgba(255,194,102,.12); color:var(--warn)}
     .pill.bad{background:rgba(255,107,107,.12); color:var(--bad)}
 
+    /* نافذة التفاصيل */
     .modal-backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:9999;
     }
@@ -142,68 +141,71 @@
   </style>
 </head>
 <body>
+  <!-- رأس مطابق لثيم news.html -->
   <header>
     <div class="header-right">
-      <img src="Picture3.png" alt="Sharjah emblem" class="logo">
+      <img src="Picture3.png" alt="شعار الشارقة" class="logo">
       <div class="divider"></div>
-      <img src="logo.png" alt="Kalba SC logo" class="logo">
+      <img src="logo.png" alt="شعار نادي كلباء" class="logo">
       <div class="header-info">
-        <p class="title">Kalba Sports & Cultural Club</p>
-        <p class="subtitle">Timecard Summary — Daily / Weekly / Monthly</p>
+        <p class="title">نادي كلباء الرياضي الثقافي</p>
+        <p class="subtitle">ملخص البصمة — يومي / أسبوعي / شهري</p>
       </div>
     </div>
   </header>
 
   <main>
+    <!-- يمين: الملف والإعدادات -->
     <section class="panel">
       <div class="control">
-        <label>Upload timecard (Excel)</label>
+        <label>تحميل ملف البصمة (Excel)</label>
         <input id="file" type="file" accept=".xlsx,.xls" />
       </div>
 
       <div class="controls" style="margin-top:10px">
         <div class="control">
-          <label>View</label>
+          <label>العرض</label>
           <select id="view">
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
+            <option value="daily">يومي</option>
+            <option value="weekly">أسبوعي</option>
+            <option value="monthly">شهري</option>
           </select>
         </div>
 
         <div class="control">
-          <label>Expected hours per day</label>
+          <label>الساعات المتوقعة يوميًا</label>
           <input id="expected" type="number" min="0" step="0.25" value="7" />
         </div>
 
         <div class="control">
-          <label>Week starts on</label>
+          <label>بداية الأسبوع</label>
           <select id="weekStart">
-            <option value="1" selected>Monday</option>
-            <option value="0">Sunday</option>
-            <option value="6">Saturday</option>
+            <option value="1" selected>الاثنين</option>
+            <option value="0">الأحد</option>
+            <option value="6">السبت</option>
           </select>
         </div>
 
         <div class="control">
           <label>&nbsp;</label>
-          <button id="download" class="btn secondary">Download CSV</button>
+          <button id="download" class="btn secondary">تنزيل CSV</button>
         </div>
       </div>
 
       <p class="note" style="margin-top:8px">
-        Columns expected: <b>Employee ID</b>, <b>First Name</b>, <b>Date</b>, <b>Time</b>.
-        The <b>Time</b> cell contains comma-separated times for the day like
+        الأعمدة المتوقعة: <b>Employee ID</b>، <b>First Name</b>، <b>Date</b>، <b>Time</b>.
+        يحتوي <b>Time</b> على أوقات اليوم مفصولة بفواصل مثل
         <span class="mono">08:30:01, 13:10:16, 16:31:21, 19:51:08</span>.
-        We pair them as <em>IN/OUT</em>. If there’s a trailing IN without OUT, it’s ignored.
+        يتم التعامل معها كأزواج <em>دخول/خروج</em>، وآخر دخول بلا خروج يُتجاهَل.
       </p>
     </section>
 
+    <!-- يسار: النتائج -->
     <section class="panel" style="min-height:460px">
       <div class="flex" style="justify-content:space-between; margin-bottom:6px">
-        <div class="note"><span id="meta">No file loaded.</span></div>
+        <div class="note"><span id="meta">لا يوجد ملف محمّل.</span></div>
         <div class="flex">
-          <button id="recalc" class="btn">Recalculate</button>
+          <button id="recalc" class="btn">إعادة الحساب</button>
         </div>
       </div>
 
@@ -211,29 +213,30 @@
         <table id="table">
           <thead>
             <tr>
-              <th>Employee ID</th>
-              <th>Name</th>
-              <th>Period</th>
-              <th class="right">Worked</th>
-              <th class="right">Expected</th>
-              <th class="right">Overtime</th>
-              <th class="right">Shortfall</th>
-              <th class="center">Punches</th>
+              <th>الرقم الوظيفي</th>
+              <th>الاسم</th>
+              <th>الفترة</th>
+              <th class="left">ساعات العمل</th>
+              <th class="left">المتوقّع</th>
+              <th class="left">الزيادة</th>
+              <th class="left">النقص</th>
+              <th class="center">التفاصيل</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="8" class="note">Upload a file to see results.</td></tr>
+            <tr><td colspan="8" class="note">حمّلي الملف لعرض النتائج.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
   </main>
 
+  <!-- نافذة تفاصيل الدخول/الخروج -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <header>
-        <h3 id="modalTitle">Punch Details</h3>
-        <button class="close" id="closeModal">Close</button>
+        <h3 id="modalTitle">تفاصيل البصمة</h3>
+        <button class="close" id="closeModal">إغلاق</button>
       </header>
       <div class="content">
         <div class="muted" id="modalMeta"></div>
@@ -241,9 +244,9 @@
           <table>
             <thead>
               <tr>
-                <th>Date</th>
-                <th>IN → OUT pairs</th>
-                <th class="right">Day total</th>
+                <th>التاريخ</th>
+                <th>الأزواج (دخول → خروج)</th>
+                <th class="left">مجموع اليوم</th>
               </tr>
             </thead>
             <tbody id="detailsBody"></tbody>
@@ -271,8 +274,8 @@
   const modalMeta = $('modalMeta');
   const detailsBody = $('detailsBody');
 
-  let rawRows = []; 
-  let byKeyDetails = new Map(); 
+  let rawRows = []; // {empId, name, date: Date, workedSec, pairs:[{in:string, out:string|null}]}
+  let byKeyDetails = new Map(); // key -> { empId, name, period, days: Map(ymd -> {pairs, workedSec}) }
   let lastCSV = '';
 
   fileInput.addEventListener('change', handleFile, false);
@@ -285,7 +288,7 @@
   modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
 
   function handleDownload(){
-    if (!lastCSV) { alert('No data to download yet.'); return; }
+    if (!lastCSV) { alert('لا توجد بيانات للتنزيل بعد.'); return; }
     const blob = new Blob([lastCSV], {type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -307,9 +310,10 @@
         const ws = wb.Sheets[firstSheet];
         const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
 
+        // إيجاد صف العناوين
         let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
         if (headerIdx === -1) headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
-        if (headerIdx === -1) { alert('Could not find a header row containing "Employee ID".'); return; }
+        if (headerIdx === -1) { alert('تعذّر العثور على صف عناوين يحتوي "Employee ID".'); return; }
 
         const header = rows[headerIdx];
         const colIdx = {
@@ -342,11 +346,11 @@
         }
 
         rawRows = out;
-        metaEl.textContent = `${f.name} — ${out.length} rows parsed`;
+        metaEl.textContent = `${f.name} — تم تحليل ${out.length} صفًا`;
         render();
       }catch(err){
         console.error(err);
-        alert('Error while reading the file.');
+        alert('حدث خطأ أثناء قراءة الملف.');
       }
     };
     reader.readAsArrayBuffer(f);
@@ -391,7 +395,7 @@
   function diffSec(a, b){
     if (!a || !b) return 0;
     let d = hmsToSec(b) - hmsToSec(a);
-    if (d < 0) d += 24*3600; 
+    if (d < 0) d += 24*3600; // عبور منتصف الليل
     return d;
   }
   function secToHHMM(sec){
@@ -406,7 +410,7 @@
   function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
   function getWeekStart(d, startDow){
     const date = normalizeDate(d);
-    const dow = date.getDay(); 
+    const dow = date.getDay(); // 0=الأحد
     const diff = (dow - startDow + 7) % 7;
     date.setDate(date.getDate() - diff);
     return date;
@@ -415,8 +419,8 @@
     if (p.startsWith('W:')){
       const d = new Date(p.slice(2));
       const end = new Date(d); end.setDate(end.getDate()+6);
-      const weekNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      return `Week ${ymd(d)} → ${ymd(end)} (starts ${weekNames[ws]})`;
+      const weekNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+      return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${weekNames[ws]})`;
     }
     if (p.startsWith('M:')) return p.slice(2);
     return p;
@@ -424,7 +428,7 @@
 
   function render(){
     if (!rawRows.length){
-      tbody.innerHTML = `<tr><td colspan="8" class="note">Upload a file to see results.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="note">حمّلي الملف لعرض النتائج.</td></tr>`;
       lastCSV = '';
       return;
     }
@@ -475,25 +479,27 @@
       });
     }
 
-    rows.sort((a,b)=> (a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period)));
+    rows.sort((a,b)=> (a.empId.localeCompare(b.empId, 'ar') || a.period.localeCompare(b.period, 'ar')));
 
     tbody.innerHTML = rows.map(r => `
       <tr>
         <td>${escapeHTML(r.empId)}</td>
         <td>${escapeHTML(r.name)}</td>
         <td>${escapeHTML(r.period)}</td>
-        <td class="right">${secToHHMM(r.worked)}</td>
-        <td class="right">${secToHHMM(r.expected)}</td>
-        <td class="right">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
-        <td class="right">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
-        <td class="center"><button class="btn secondary" data-key="${escapeHTML(r.key)}">Details</button></td>
+        <td class="left">${secToHHMM(r.worked)}</td>
+        <td class="left">${secToHHMM(r.expected)}</td>
+        <td class="left">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
+        <td class="left">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
+        <td class="center"><button class="btn secondary" data-key="${escapeHTML(r.key)}">تفاصيل</button></td>
       </tr>
     `).join('');
 
+    // أزرار التفاصيل
     [...tbody.querySelectorAll('button[data-key]')].forEach(btn=>{
       btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key')));
     });
 
+    // تجهيز CSV
     const csv = [
       ['Employee ID','Name','Period','Worked (HH:MM)','Expected (HH:MM)','Overtime (HH:MM)','Shortfall (HH:MM)'],
       ...rows.map(r=>[
@@ -504,7 +510,7 @@
     ].map(row => row.map(csvEscape).join(',')).join('\n');
     lastCSV = csv;
 
-    metaEl.textContent = `Records: ${rawRows.length} — View: ${viewSel.value} — Expected/day: ${expectedPerDayHrs} h`;
+    metaEl.textContent = `السجلات: ${rawRows.length} — العرض: ${viewSel.options[viewSel.selectedIndex].text} — المتوقّع/يوم: ${expectedPerDayHrs} ساعة`;
   }
 
   function openDetails(key){
@@ -512,20 +518,20 @@
     if (!obj) return;
 
     const [empId, name, period] = key.split('||');
-    modalTitle.textContent = `Punch Details — ${name} (${empId})`;
-    modalMeta.innerHTML = `Period: <b>${escapeHTML(prettyPeriod(period, parseInt(weekStartSel.value,10)))}</b> — Covered days: ${obj.days.size}`;
+    modalTitle.textContent = `تفاصيل البصمة — ${name} (${empId})`;
+    modalMeta.innerHTML = `الفترة: <b>${escapeHTML(prettyPeriod(period, parseInt(weekStartSel.value,10)))}</b> — أيام مغطّاة: ${obj.days.size}`;
 
     const days = [...obj.dayDetails.keys()].sort();
     detailsBody.innerHTML = days.map(d=>{
       const day = obj.dayDetails.get(d);
       const pairsHtml = day.pairs.length
         ? day.pairs.map(p=> pairHTML(p)).join(' &nbsp; ')
-        : '<span class="muted">No pairs</span>';
+        : '<span class="muted">لا يوجد أزواج</span>';
       return `
         <tr>
           <td>${escapeHTML(d)}</td>
           <td>${pairsHtml}</td>
-          <td class="right">${secToHHMM(day.workedSec)}</td>
+          <td class="left">${secToHHMM(day.workedSec)}</td>
         </tr>
       `;
     }).join('');
@@ -535,10 +541,10 @@
   }
 
   function pairHTML(p){
-    const pin  = `<span class="pill" style="background:rgba(244,231,51,.16); color:${'#000'}; border:1px solid ${'#f4e733'};">IN ${escapeHTML(p.in)}</span>`;
-    const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">OUT ${escapeHTML(p.out)}</span>` : `<span class="pill warn">OUT missing</span>`;
+    const pin  = `<span class="pill" style="background:rgba(244,231,51,.16); color:#000; border:1px solid #f4e733;">دخول ${escapeHTML(p.in)}</span>`;
+    const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${escapeHTML(p.out)}</span>` : `<span class="pill warn">خروج غير مسجل</span>`;
     const dur = p.out ? secToHHMM(diffSec(p.in, p.out)) : '00:00';
-    return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(duration: ${dur})</span>`;
+    return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
   }
 
   function closeModal(){
