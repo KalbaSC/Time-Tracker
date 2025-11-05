@@ -1,140 +1,211 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Timecard Summary — Daily / Weekly / Monthly</title>
+  <title>نظام ملخص البصمة — نادي كلباء الرياضي الثقافي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- SheetJS for reading .xlsx files -->
+  <!-- SheetJS لقراءة ملفات Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{
-      --bg:#0b0e14; --panel:#121826; --muted:#a9b0c0; --text:#eef2ff; --accent:#7cacf8; --ok:#24c17a; --warn:#ffb86b; --bad:#ff6b6b;
+      /* ألوان نادي كلباء: أسود + أصفر */
+      --black:#0b0b0b; --black-2:#121212; --border:#222; --text:#f8f9fb; --muted:#c6c8ce;
+      --yellow:#ffd100; --yellow-2:#ffea80;
+      --ok:#2bd886; --warn:#ffc266; --bad:#ff6b6b;
       --radius:16px;
     }
     *{box-sizing:border-box}
-    body{margin:0; font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--text)}
-    header{padding:24px; border-bottom:1px solid #1b2234; background:linear-gradient(180deg,#0f1421,transparent)}
-    h1{margin:0 0 8px; font-size:24px}
-    p.sub{margin:0; color:var(--muted)}
-    .wrap{max-width:1200px; margin:0 auto; padding:20px}
-    .panel{background:var(--panel); border:1px solid #1b2234; border-radius:var(--radius); padding:16px}
-    .grid{display:grid; gap:12px}
-    @media (min-width:900px){ .grid{grid-template-columns: 1.2fr 2fr} }
-    .controls{display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+    body{margin:0; font-family: "Tajawal", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--black); color:var(--text)}
+    header{
+      padding:22px; border-bottom:1px solid var(--border);
+      background:linear-gradient(135deg,#000 0%, #1a1a1a 60%, #332b00 60.5%, #000 61%), linear-gradient(180deg,#141414,transparent);
+      position:sticky; top:0; z-index:5;
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:18px}
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:42px; height:42px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, var(--yellow) 0 45%, #000 47% 100%);
+      box-shadow:0 0 0 2px #000, 0 0 0 4px var(--yellow);
+      flex:0 0 auto;
+    }
+    h1{margin:0; font-size:22px; line-height:1.2}
+    .sub{margin:4px 0 0; color:var(--muted); font-size:13px}
+    .grid{display:grid; gap:14px}
+    @media (min-width:980px){ .grid{grid-template-columns: 1.05fr 2fr} }
+
+    .panel{background:linear-gradient(180deg,#121212,#0e0e0e); border:1px solid var(--border); border-radius:var(--radius); padding:14px}
+    .controls{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
+    .control{display:flex; flex-direction:column; gap:6px; min-width:180px}
     label{font-size:12px; color:var(--muted)}
-    .control{display:flex; flex-direction:column; gap:6px; min-width:160px}
     input[type="number"], select, input[type="file"]{
-      padding:10px 12px; background:#0e1422; color:var(--text);
-      border:1px solid #1b2234; border-radius:10px; outline:none;
+      padding:10px 12px; background:#0f0f0f; color:var(--text);
+      border:1px solid var(--border); border-radius:12px; outline:none;
     }
     input[type="file"]{padding:8px; background:transparent; border:none}
     .btn{
       appearance:none; border:none; border-radius:12px; padding:10px 14px;
-      background:var(--accent); color:#081022; font-weight:600; cursor:pointer;
+      background:var(--yellow); color:#111; font-weight:700; cursor:pointer;
+      transition:transform .06s ease, box-shadow .2s ease;
+      box-shadow: 0 4px 0 #a88600;
     }
-    .btn.secondary{background:#1b2234; color:var(--text); border:1px solid #28324a}
+    .btn:active{ transform: translateY(1px); box-shadow:0 3px 0 #a88600; }
+    .btn.secondary{background:#1b1b1b; color:var(--text); border:1px solid var(--border); box-shadow:none}
+    .note{color:var(--muted); font-size:12px}
     .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
     table{width:100%; border-collapse:separate; border-spacing:0; margin-top:10px}
     thead th{
-      position:sticky; top:0; background:#0f1524; z-index:1;
-      text-align:left; padding:10px; font-size:12px; color:var(--muted);
-      border-bottom:1px solid #223056;
+      position:sticky; top:0; background:#111; z-index:1;
+      text-align:right; padding:10px; font-size:12px; color:var(--yellow-2);
+      border-bottom:1px solid var(--border);
     }
-    tbody td{padding:10px; border-bottom:1px solid #1b2234}
-    tbody tr:hover{background:#0e1422}
-    .right{text-align:right}
+    tbody td{padding:10px; border-bottom:1px solid var(--border)}
+    tbody tr:hover{background:#0f0f0f}
+    .right{text-align:left} /* لأننا RTL */
+    .center{text-align:center}
     .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px}
-    .pill.ok{background:rgba(36,193,122,.12); color:var(--ok)}
-    .pill.warn{background:rgba(255,184,107,.12); color:var(--warn)}
+    .pill.ok{background:rgba(43,216,134,.12); color:var(--ok)}
+    .pill.warn{background:rgba(255,194,102,.12); color:var(--warn)}
     .pill.bad{background:rgba(255,107,107,.12); color:var(--bad)}
-    .note{color:var(--muted); font-size:12px}
     .footer{margin-top:8px; color:var(--muted); font-size:12px}
-    .hl{color:var(--accent)}
-    .nowrap{white-space:nowrap}
+    .k-badge{display:inline-block; padding:2px 8px; border-radius:999px; background:var(--yellow); color:#111; font-weight:700; font-size:11px}
+
+    /* نافذة التفاصيل (Modal) */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:50;
+    }
+    .modal{width:min(920px, 94vw); max-height:86vh; overflow:auto; background:#0f0f0f; border:1px solid var(--border); border-radius:16px}
+    .modal header{position:sticky; top:0; background:#111; padding:12px 16px; border-bottom:1px solid var(--border)}
+    .modal h3{margin:0; font-size:18px}
+    .modal .content{padding:12px 16px}
+    .close{background:#1b1b1b; color:#eee; border:1px solid var(--border); border-radius:10px; padding:6px 10px; cursor:pointer}
+    .muted{color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace}
+
+    /* شرائط صفراء أنيقة حول الجدول */
+    .table-wrap{position:relative; overflow:auto; max-height:70vh; border-radius:12px; outline:1px solid #2a2a2a}
+    .table-wrap::before{
+      content:""; position:absolute; inset:-1px; border-radius:12px; pointer-events:none;
+      background:
+        linear-gradient(90deg, transparent, rgba(255,209,0,.2), transparent) top / 100% 2px no-repeat,
+        linear-gradient(90deg, transparent, rgba(255,209,0,.2), transparent) bottom / 100% 2px no-repeat;
+    }
+    a.link{color:var(--yellow); text-decoration:none}
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap">
-      <h1>Timecard Summary</h1>
-      <p class="sub">Upload your Excel timecard → compute worked hours, undertime (fall short), and overtime. View by day, week, or month.</p>
+    <div class="wrap brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>نظام ملخص البصمة <span class="k-badge">نادي كلباء</span></h1>
+        <p class="sub">ارفع ملف الإكسل لاحتساب ساعات العمل المتحققة، الزيادة، والنقص — مع عرض أوقات الدخول/الخروج.</p>
+      </div>
     </div>
   </header>
 
   <div class="wrap grid">
-    <!-- Left: File & Settings -->
+    <!-- اللوحة اليمنى: الملف والإعدادات -->
     <section class="panel">
       <div class="control">
-        <label>Upload .xlsx timecard</label>
+        <label>تحميل ملف البصمة (Excel)</label>
         <input id="file" type="file" accept=".xlsx,.xls" />
       </div>
 
-      <div class="controls" style="margin-top:8px">
+      <div class="controls" style="margin-top:10px">
         <div class="control">
-          <label>View</label>
+          <label>العرض</label>
           <select id="view">
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
+            <option value="daily">يومي</option>
+            <option value="weekly">أسبوعي</option>
+            <option value="monthly">شهري</option>
           </select>
         </div>
 
         <div class="control">
-          <label>Expected hours per day</label>
+          <label>عدد ساعات العمل المتوقعة يوميًا</label>
           <input id="expected" type="number" min="0" step="0.25" value="7" />
         </div>
 
         <div class="control">
-          <label>Week starts on</label>
+          <label>بداية الأسبوع</label>
           <select id="weekStart">
-            <option value="0">Sunday</option>
-            <option value="1">Monday</option>
-            <option value="6">Saturday</option>
+            <option value="1" selected>الاثنين</option>
+            <option value="0">الأحد</option>
+            <option value="6">السبت</option>
           </select>
         </div>
 
         <div class="control">
           <label>&nbsp;</label>
-          <button id="download" class="btn secondary">Download CSV</button>
+          <button id="download" class="btn secondary">تنزيل CSV</button>
         </div>
       </div>
 
       <div class="footer">
         <div class="note">
-          • Assumes each row has a <span class="hl">Date</span> and a comma-separated list of clock times (e.g., <span class="nowrap">08:30:01,13:10:16,16:31:21,19:51:08</span>).
-          Pairs are treated as IN/OUT, summed per day. Odd last time is ignored.
-          <br/>• Columns auto-detected: <em>Employee ID</em>, <em>First Name</em>, <em>Date</em>, <em>Time</em>. You can tweak detection in code comments if your headers differ.
+          • يتوقع وجود أعمدة: <b>Employee ID</b>، <b>First Name</b>، <b>Date</b>، <b>Time</b>.<br>
+          • عمود <b>Time</b> يحتوي أوقات اليوم مفصولة بفواصل مثل:
+          <span class="mono">08:30:01, 13:10:16, 16:31:21, 19:51:08</span> (تتعامل الصفحة مع الأزواج دخول/خروج). إن كان العدد فرديًا يتم تجاهل آخر وقت.
         </div>
       </div>
     </section>
 
-    <!-- Right: Results -->
-    <section class="panel" style="min-height:420px">
-      <div class="flex" style="justify-content:space-between; margin-bottom:8px">
-        <div class="note"><span id="meta">No file loaded.</span></div>
+    <!-- اللوحة اليسرى: النتائج -->
+    <section class="panel" style="min-height:460px">
+      <div class="flex" style="justify-content:space-between; margin-bottom:6px">
+        <div class="note"><span id="meta">لا يوجد ملف محمّل.</span></div>
         <div class="flex">
-          <button id="recalc" class="btn">Recalculate</button>
+          <button id="recalc" class="btn">إعادة الحساب</button>
         </div>
       </div>
-      <div style="overflow:auto; max-height:70vh">
+      <div class="table-wrap">
         <table id="table">
           <thead>
             <tr>
-              <th>Employee ID</th>
-              <th>Name</th>
-              <th>Period</th>
-              <th class="right">Worked</th>
-              <th class="right">Expected</th>
-              <th class="right">Overtime</th>
-              <th class="right">Fall Short</th>
+              <th>الرقم الوظيفي</th>
+              <th>الاسم</th>
+              <th>الفترة</th>
+              <th class="right">ساعات العمل</th>
+              <th class="right">المتوقع</th>
+              <th class="right">الزيادة</th>
+              <th class="right">النقص</th>
+              <th class="center">تفاصيل</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="7" class="note">Upload a file to see results.</td></tr>
+            <tr><td colspan="8" class="note center">حمّلي الملف لرؤية النتائج.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
+  </div>
+
+  <!-- نافذة التفاصيل -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <header class="flex" style="justify-content:space-between">
+        <h3 id="modalTitle">تفاصيل البصمة</h3>
+        <button class="close" id="closeModal">إغلاق</button>
+      </header>
+      <div class="content">
+        <div class="note" id="modalMeta"></div>
+        <div class="table-wrap" style="margin-top:10px; max-height:60vh">
+          <table>
+            <thead>
+              <tr>
+                <th>اليوم</th>
+                <th>الأزواج (دخول → خروج)</th>
+                <th class="right">مجموع اليوم</th>
+              </tr>
+            </thead>
+            <tbody id="detailsBody">
+              <!-- يمتلئ ديناميكيًا -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -149,7 +220,14 @@
   const recalcBtn = $('recalc');
   const dlBtn = $('download');
 
-  let rawRows = []; // parsed daily rows: {empId, name, date: Date, workedSec}
+  const modalBackdrop = $('modalBackdrop');
+  const closeModalBtn = $('closeModal');
+  const modalTitle = $('modalTitle');
+  const modalMeta = $('modalMeta');
+  const detailsBody = $('detailsBody');
+
+  let rawRows = []; // {empId, name, date: Date, workedSec, pairs:[{in:string, out:string|null}]}
+  let byKeyDetails = new Map(); // key -> { empId, name, period, days: Map(ymd -> {pairs, workedSec}) }
   let lastCSV = '';
 
   fileInput.addEventListener('change', handleFile, false);
@@ -157,8 +235,12 @@
   viewSel.addEventListener('change', render);
   expectedInp.addEventListener('change', render);
   weekStartSel.addEventListener('change', render);
-  dlBtn.addEventListener('click', () => {
-    if (!lastCSV) { alert('No data to download yet.'); return; }
+  dlBtn.addEventListener('click', handleDownload);
+  closeModalBtn.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
+
+  function handleDownload(){
+    if (!lastCSV) { alert('لا توجد بيانات للتنزيل بعد.'); return; }
     const blob = new Blob([lastCSV], {type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -166,105 +248,94 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-  });
+  }
 
   function handleFile() {
     const f = fileInput.files?.[0];
     if (!f) return;
     const reader = new FileReader();
     reader.onload = evt => {
-      const data = new Uint8Array(evt.target.result);
-      const wb = XLSX.read(data, {type:'array'});
-      const firstSheet = wb.SheetNames[0];
-      const ws = wb.Sheets[firstSheet];
+      try{
+        const data = new Uint8Array(evt.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const firstSheet = wb.SheetNames[0];
+        const ws = wb.Sheets[firstSheet];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
 
-      // Grab as rows (array of arrays) to detect header row robustly
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
-      // Find header row index where first cell equals 'Employee ID'
-      let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
-      if (headerIdx === -1) {
-        // Sometimes Report has Arabic title row then headers in row 1
-        headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
+        let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
+        if (headerIdx === -1) headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
+        if (headerIdx === -1) { alert('تعذر العثور على صف العناوين الذي يحتوي "Employee ID".'); return; }
+
+        const header = rows[headerIdx];
+        const colIdx = {
+          empId: header.findIndex(h => String(h).trim().toLowerCase().includes('employee id')),
+          name:  header.findIndex(h => String(h).trim().toLowerCase().includes('first name')),
+          date:  header.findIndex(h => String(h).trim().toLowerCase() === 'date'),
+          timeList: header.findIndex(h => String(h).trim().toLowerCase() === 'time'),
+        };
+        if (colIdx.empId === -1) colIdx.empId = 0;
+        if (colIdx.name  === -1) colIdx.name  = 1;
+        if (colIdx.date  === -1) colIdx.date  = 2;
+        if (colIdx.timeList === -1) colIdx.timeList = 4;
+
+        const out = [];
+        for (let i = headerIdx + 1; i < rows.length; i++) {
+          const r = rows[i];
+          if (!r || r.length === 0) continue;
+          const empId = String(r[colIdx.empId] ?? '').trim();
+          const name = String(r[colIdx.name] ?? '').trim();
+          const dateCell = r[colIdx.date];
+          const timesStr = String(r[colIdx.timeList] ?? '').trim();
+          if (!empId || !name || !dateCell || !timesStr) continue;
+
+          const d = parseExcelDate(dateCell);
+          if (!d) continue;
+
+          const pairs = pairsFromCSV(timesStr);
+          const workedSec = pairs.reduce((acc,p)=> acc + diffSec(p.in, p.out), 0);
+          out.push({empId, name, date: d, workedSec, pairs});
+        }
+
+        rawRows = out;
+        metaEl.textContent = `${f.name} — تم解析 ${out.length} صفًا`;
+        render();
+      }catch(err){
+        console.error(err);
+        alert('حدث خطأ أثناء قراءة الملف.');
       }
-      if (headerIdx === -1) {
-        alert('Could not find header row containing "Employee ID". Please adjust code or your file.');
-        return;
-      }
-
-      // Detect likely columns
-      const header = rows[headerIdx];
-      const colIdx = {
-        empId: header.findIndex(h => String(h).trim().toLowerCase().includes('employee id')),
-        name: header.findIndex(h => String(h).trim().toLowerCase().includes('first name')),
-        date: header.findIndex(h => String(h).trim().toLowerCase() === 'date'),
-        timesCount: header.findIndex(h => String(h).trim().toLowerCase() === 'times'), // optional
-        timeList: header.findIndex(h => String(h).trim().toLowerCase() === 'time'),
-      };
-      // Fallbacks (based on your sample structure)
-      if (colIdx.empId === -1) colIdx.empId = 0;
-      if (colIdx.name === -1) colIdx.name = 1;
-      if (colIdx.date === -1) colIdx.date = 2;
-      if (colIdx.timeList === -1) colIdx.timeList = 4;
-
-      // Parse data
-      const out = [];
-      for (let i = headerIdx + 1; i < rows.length; i++) {
-        const r = rows[i];
-        if (!r || r.length === 0) continue;
-        const empId = String(r[colIdx.empId] ?? '').trim();
-        const name = String(r[colIdx.name] ?? '').trim();
-        const dateCell = r[colIdx.date];
-        const timesStr = String(r[colIdx.timeList] ?? '').trim();
-
-        if (!empId || !name || !dateCell || !timesStr) continue;
-
-        const d = parseExcelDate(dateCell);
-        if (!d) continue;
-
-        const workedSec = sumPairsToSeconds(timesStr);
-        out.push({empId, name, date: d, workedSec});
-      }
-
-      rawRows = out;
-      metaEl.textContent = `${f.name} — ${out.length} rows parsed`;
-      render();
     };
     reader.readAsArrayBuffer(f);
   }
 
   function parseExcelDate(v){
-    // v can be JS Date, Excel serial, or string 'YYYY-MM-DD'
-    if (v instanceof Date && !isNaN(v)) return v;
+    if (v instanceof Date && !isNaN(v)) return normalizeDate(v);
     if (typeof v === 'number') {
-      // Excel serial: days since 1899-12-30
       const epoch = new Date(Date.UTC(1899,11,30));
       const d = new Date(epoch.getTime() + v*86400000);
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      return normalizeDate(d);
     }
     const s = String(v).trim();
     const t = Date.parse(s);
-    if (!isNaN(t)) {
-      const d = new Date(t);
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    }
+    if (!isNaN(t)) return normalizeDate(new Date(t));
     return null;
   }
+  function normalizeDate(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 
-  function sumPairsToSeconds(csv){
-    // csv like: "08:30:01,13:10:16,16:31:21,19:51:08"
+  function pairsFromCSV(csv){
     const parts = csv.split(',').map(x => x.trim()).filter(Boolean);
-    let total = 0;
-    for (let i = 0; i + 1 < parts.length; i += 2) {
-      const a = hmsToSec(parts[i]);
-      const b = hmsToSec(parts[i+1]);
-      let diff = b - a;
-      if (diff < 0) diff += 24*3600; // handle across midnight
-      total += diff;
+    const out = [];
+    for (let i = 0; i < parts.length; i += 2) {
+      const a = parts[i];
+      const b = parts[i+1] ?? null; // قد يكون لا يوجد خروج
+      if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(a)) continue;
+      if (b && !/^\d{1,2}:\d{2}(:\d{2})?$/.test(b)) { out.push({in:a, out:null}); continue; }
+      out.push({in:a, out:b});
     }
-    return total;
+    return out;
   }
 
   function hmsToSec(hms){
+    if (!hms) return 0;
     const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(hms);
     if (!m) return 0;
     const h = parseInt(m[1],10)||0;
@@ -272,7 +343,12 @@
     const s = parseInt(m[3]||'0',10)||0;
     return h*3600 + mm*60 + s;
   }
-
+  function diffSec(a, b){
+    if (!a || !b) return 0;
+    let d = hmsToSec(b) - hmsToSec(a);
+    if (d < 0) d += 24*3600; // عبور منتصف الليل
+    return d;
+  }
   function secToHHMM(sec){
     const sign = sec < 0 ? '-' : '';
     const v = Math.abs(sec);
@@ -281,22 +357,30 @@
     return `${sign}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
   }
 
-  function getWeekStart(d, startDow){
-    // returns the date for the week start (local) given start day of week (0=Sun..6=Sat)
-    const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const dow = date.getDay();
-    const diff = (dow - startDow + 7) % 7;
-    date.setDate(date.getDate() - diff);
-    date.setHours(0,0,0,0);
-    return date;
-  }
-
   function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
 
+  function getWeekStart(d, startDow){
+    const date = normalizeDate(d);
+    const dow = date.getDay(); // 0=الأحد
+    const diff = (dow - startDow + 7) % 7;
+    date.setDate(date.getDate() - diff);
+    return date;
+  }
+
+  function prettyPeriod(p, ws){
+    if (p.startsWith('W:')){
+      const d = new Date(p.slice(2));
+      const end = new Date(d); end.setDate(end.getDate()+6);
+      return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][ws]})`;
+    }
+    if (p.startsWith('M:')) return p.slice(2); // YYYY-MM
+    return p; // YYYY-MM-DD
+  }
+
   function render(){
     if (!rawRows.length){
-      tbody.innerHTML = `<tr><td colspan="7" class="note">Upload a file to see results.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="note center">حمّلي الملف لرؤية النتائج.</td></tr>`;
       lastCSV = '';
       return;
     }
@@ -305,8 +389,8 @@
     const view = viewSel.value; // daily | weekly | monthly
     const weekStart = parseInt(weekStartSel.value, 10);
 
-    // Group by employee + period key
-    const map = new Map();
+    // بناء تجميعي مع تخزين تفاصيل الأيام/الأزواج
+    const map = new Map(); // key -> {empId,name,period, workedSec, days:Set, dayDetails: Map(ymd -> {pairs, workedSec})}
     for (const r of rawRows) {
       let keyPeriod = '';
       if (view === 'daily') {
@@ -319,14 +403,17 @@
       }
       const key = `${r.empId}||${r.name}||${keyPeriod}`;
       if (!map.has(key)) {
-        map.set(key, {empId:r.empId, name:r.name, period:keyPeriod, workedSec:0, days: new Set()});
+        map.set(key, {empId:r.empId, name:r.name, period:keyPeriod, workedSec:0, days:new Set(), dayDetails:new Map()});
       }
       const obj = map.get(key);
       obj.workedSec += r.workedSec;
-      obj.days.add(ymd(r.date)); // count unique days with entries
+      const dayKey = ymd(r.date);
+      obj.days.add(dayKey);
+      obj.dayDetails.set(dayKey, {pairs: r.pairs.slice(), workedSec: r.workedSec});
     }
+    byKeyDetails = map;
 
-    // Build rows
+    // إعداد صفوف الجدول النهائي
     const rows = [];
     for (const obj of map.values()) {
       const daysCount = (view === 'daily') ? 1 : obj.days.size;
@@ -335,6 +422,7 @@
       const overtime = Math.max(0, delta);
       const short = Math.max(0, -delta);
       rows.push({
+        key: `${obj.empId}||${obj.name}||${obj.period}`,
         empId: obj.empId,
         name: obj.name,
         period: prettyPeriod(obj.period, weekStart),
@@ -345,10 +433,9 @@
       });
     }
 
-    // Sort by Employee, then Period
-    rows.sort((a,b)=> (a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period)));
+    rows.sort((a,b)=> (a.empId.localeCompare(b.empId,'ar') || a.period.localeCompare(b.period,'ar')));
 
-    // Render table
+    // رسم الجدول
     tbody.innerHTML = rows.map(r => `
       <tr>
         <td>${escapeHTML(r.empId)}</td>
@@ -356,33 +443,69 @@
         <td>${escapeHTML(r.period)}</td>
         <td class="right">${secToHHMM(r.worked)}</td>
         <td class="right">${secToHHMM(r.expected)}</td>
-        <td class="right">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">${secToHHMM(0)}</span>`}</td>
-        <td class="right">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">${secToHHMM(0)}</span>`}</td>
+        <td class="right">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
+        <td class="right">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
+        <td class="center"><button class="btn secondary" data-key="${escapeHTML(r.key)}">تفاصيل</button></td>
       </tr>
     `).join('');
 
-    // Prepare CSV for download
+    // زر التفاصيل
+    [...tbody.querySelectorAll('button[data-key]')].forEach(btn=>{
+      btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key')));
+    });
+
+    // تجهيز CSV
     const csv = [
-      ['Employee ID','Name','Period','Worked (HH:MM)','Expected (HH:MM)','Overtime (HH:MM)','Fall Short (HH:MM)'],
+      ['Employee ID','Name','Period','Worked (HH:MM)','Expected (HH:MM)','Overtime (HH:MM)','Shortfall (HH:MM)'],
       ...rows.map(r=>[
         r.empId, r.name, r.period,
         secToHHMM(r.worked), secToHHMM(r.expected),
-        secToHHMM(r.overtime), secToHHMM(r.short ? -r.short : 0) // keep sign consistent
+        secToHHMM(r.overtime), (r.short ? `-${secToHHMM(r.short)}` : '00:00')
       ])
     ].map(row => row.map(csvEscape).join(',')).join('\n');
     lastCSV = csv;
 
-    metaEl.textContent = `Records: ${rawRows.length} — View: ${viewSel.value} — Expected/day: ${expectedPerDayHrs} h`;
+    metaEl.textContent = `السجلات: ${rawRows.length} — العرض: ${viewSel.options[viewSel.selectedIndex].text} — المتوقع/يوم: ${expectedPerDayHrs} ساعة`;
   }
 
-  function prettyPeriod(p, weekStart){
-    if (p.startsWith('W:')){
-      const d = new Date(p.slice(2));
-      const end = new Date(d); end.setDate(end.getDate()+6);
-      return `Week ${ymd(d)} → ${ymd(end)} (start ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][weekStart]})`;
-    }
-    if (p.startsWith('M:')) return p.slice(2); // YYYY-MM
-    return p; // YYYY-MM-DD
+  function openDetails(key){
+    const obj = byKeyDetails.get(key);
+    if (!obj) return;
+
+    const [empId, name, period] = key.split('||');
+    modalTitle.textContent = `تفاصيل البصمة — ${name} (${empId})`;
+    modalMeta.innerHTML = `الفترة: <b>${escapeHTML(prettyPeriod(period, parseInt(weekStartSel.value,10)))}</b> — أيام مغطّاة: ${obj.days.size}`;
+
+    // ترتيب الأيام تصاعديًا
+    const days = [...obj.dayDetails.keys()].sort();
+    detailsBody.innerHTML = days.map(d=>{
+      const day = obj.dayDetails.get(d);
+      const pairsHtml = day.pairs.length
+        ? day.pairs.map(p=> pairHTML(p)).join('، ')
+        : '<span class="muted">لا يوجد أزواج مسجلة</span>';
+      return `
+        <tr>
+          <td>${escapeHTML(d)}</td>
+          <td>${pairsHtml}</td>
+          <td class="right">${secToHHMM(day.workedSec)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    modalBackdrop.style.display = 'flex';
+    modalBackdrop.setAttribute('aria-hidden','false');
+  }
+
+  function pairHTML(p){
+    const pin  = `<span class="pill" style="background:rgba(255,209,0,.16); color:var(--yellow)">دخول ${escapeHTML(p.in)}</span>`;
+    const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${escapeHTML(p.out)}</span>` : `<span class="pill warn">خروج غير مسجل</span>`;
+    const dur = p.out ? secToHHMM(diffSec(p.in, p.out)) : '00:00';
+    return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
+  }
+
+  function closeModal(){
+    modalBackdrop.style.display = 'none';
+    modalBackdrop.setAttribute('aria-hidden','true');
   }
 
   function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]); }
