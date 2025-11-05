@@ -1,207 +1,252 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام ملخص البصمة — نادي كلباء الرياضي الثقافي</title>
+  <title>Timecard Summary — Kalba Sports & Cultural Club</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- SheetJS لقراءة ملفات Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     :root{
-      /* ألوان نادي كلباء: أسود + أصفر */
-      --black:#0b0b0b; --black-2:#121212; --border:#222; --text:#f8f9fb; --muted:#c6c8ce;
-      --yellow:#ffd100; --yellow-2:#ffea80;
-      --ok:#2bd886; --warn:#ffc266; --bad:#ff6b6b;
+      --bg:#222222;
+      --accent:#f4e733;
+      --text:#ffffff;
+      --muted:#cfcfcf;
+      --panel:#000000;
+      --border:#f4e733;
+      --soft:#444;
+      --ok:#2bd886;
+      --warn:#ffc266;
+      --bad:#ff6b6b;
       --radius:16px;
     }
-    *{box-sizing:border-box}
-    body{margin:0; font-family: "Tajawal", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--black); color:var(--text)}
-    header{
-      padding:22px; border-bottom:1px solid var(--border);
-      background:linear-gradient(135deg,#000 0%, #1a1a1a 60%, #332b00 60.5%, #000 61%), linear-gradient(180deg,#141414,transparent);
-      position:sticky; top:0; z-index:5;
-    }
-    .wrap{max-width:1200px; margin:0 auto; padding:18px}
-    .brand{display:flex; align-items:center; gap:12px}
-    .logo{
-      width:42px; height:42px; border-radius:50%;
-      background: radial-gradient(circle at 30% 30%, var(--yellow) 0 45%, #000 47% 100%);
-      box-shadow:0 0 0 2px #000, 0 0 0 4px var(--yellow);
-      flex:0 0 auto;
-    }
-    h1{margin:0; font-size:22px; line-height:1.2}
-    .sub{margin:4px 0 0; color:var(--muted); font-size:13px}
-    .grid{display:grid; gap:14px}
-    @media (min-width:980px){ .grid{grid-template-columns: 1.05fr 2fr} }
 
-    .panel{background:linear-gradient(180deg,#121212,#0e0e0e); border:1px solid var(--border); border-radius:var(--radius); padding:14px}
+    @font-face {
+      font-family: 'NotoKufiArabic';
+      src: url('NotoKufiArabic.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NotoKufiArabic';
+      src: url('NotoKufiArabic-Light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+    }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "NotoKufiArabic", Arial, sans-serif;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, rgba(244,231,51,.08) 0px, rgba(244,231,51,.08) 2px, transparent 2px, transparent 14px),
+        repeating-linear-gradient(-45deg, rgba(244,231,51,.06) 0px, rgba(244,231,51,.06) 1px, transparent 1px, transparent 16px),
+        radial-gradient(circle at 20% 30%, rgba(244,231,51,.05) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(244,231,51,.04) 0%, transparent 40%);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      background:#222222;
+      padding:16px 5%;
+      width:90%;
+      margin:0 auto;
+      border-bottom:3px solid var(--accent);
+      position:sticky; top:0; z-index:1001;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    .header-right{display:flex; align-items:center; gap:15px; flex:1; min-width:0}
+    .header-right img.logo{height:70px; object-fit:contain}
+    .header-right .divider{width:1.5px; height:65px; background:var(--accent)}
+    .header-info{text-align:left; min-width:0}
+    .header-info .title{margin:0; font-weight:800; font-size:18px; color:#fff}
+    .header-info .subtitle{margin:0; font-size:14px; color:var(--accent)}
+
+    main{flex:1; width:90%; margin:20px auto; display:grid; gap:16px}
+    @media (min-width:980px){ main{grid-template-columns:1.05fr 2fr} }
+
+    .panel{
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding:14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    }
+
     .controls{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
     .control{display:flex; flex-direction:column; gap:6px; min-width:180px}
     label{font-size:12px; color:var(--muted)}
     input[type="number"], select, input[type="file"]{
       padding:10px 12px; background:#0f0f0f; color:var(--text);
-      border:1px solid var(--border); border-radius:12px; outline:none;
+      border:1px solid #333; border-radius:12px; outline:none;
     }
     input[type="file"]{padding:8px; background:transparent; border:none}
+
     .btn{
       appearance:none; border:none; border-radius:12px; padding:10px 14px;
-      background:var(--yellow); color:#111; font-weight:700; cursor:pointer;
+      background:var(--accent); color:#000; font-weight:800; cursor:pointer;
       transition:transform .06s ease, box-shadow .2s ease;
       box-shadow: 0 4px 0 #a88600;
     }
     .btn:active{ transform: translateY(1px); box-shadow:0 3px 0 #a88600; }
-    .btn.secondary{background:#1b1b1b; color:var(--text); border:1px solid var(--border); box-shadow:none}
+    .btn.secondary{background:#1b1b1b; color:var(--text); border:1px solid #333; box-shadow:none}
+
     .note{color:var(--muted); font-size:12px}
     .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    table{width:100%; border-collapse:separate; border-spacing:0; margin-top:10px}
+
+    .table-wrap{
+      position:relative; overflow:auto; max-height:70vh; border-radius:12px; outline:1px solid #2a2a2a
+    }
+    .table-wrap::before{
+      content:""; position:absolute; inset:-1px; border-radius:12px; pointer-events:none;
+      background:
+        linear-gradient(90deg, transparent, rgba(244,231,51,.2), transparent) top/100% 2px no-repeat,
+        linear-gradient(90deg, transparent, rgba(244,231,51,.2), transparent) bottom/100% 2px no-repeat;
+    }
+    table{width:100%; border-collapse:separate; border-spacing:0; margin-top:6px}
     thead th{
       position:sticky; top:0; background:#111; z-index:1;
-      text-align:right; padding:10px; font-size:12px; color:var(--yellow-2);
-      border-bottom:1px solid var(--border);
+      text-align:left; padding:10px; font-size:12px; color:#fff17a;
+      border-bottom:1px solid var(--accent);
     }
-    tbody td{padding:10px; border-bottom:1px solid var(--border)}
+    tbody td{padding:10px; border-bottom:1px solid #2a2a2a; vertical-align:top}
     tbody tr:hover{background:#0f0f0f}
-    .right{text-align:left} /* لأننا RTL */
+    .right{text-align:right}
     .center{text-align:center}
     .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px}
     .pill.ok{background:rgba(43,216,134,.12); color:var(--ok)}
     .pill.warn{background:rgba(255,194,102,.12); color:var(--warn)}
     .pill.bad{background:rgba(255,107,107,.12); color:var(--bad)}
-    .footer{margin-top:8px; color:var(--muted); font-size:12px}
-    .k-badge{display:inline-block; padding:2px 8px; border-radius:999px; background:var(--yellow); color:#111; font-weight:700; font-size:11px}
 
-    /* نافذة التفاصيل (Modal) */
     .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:50;
+      position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:9999;
     }
-    .modal{width:min(920px, 94vw); max-height:86vh; overflow:auto; background:#0f0f0f; border:1px solid var(--border); border-radius:16px}
-    .modal header{position:sticky; top:0; background:#111; padding:12px 16px; border-bottom:1px solid var(--border)}
+    .modal{
+      width:min(980px, 94vw); max-height:86vh; overflow:auto; background:#0f0f0f;
+      border:2px solid var(--border); border-radius:16px; box-shadow:0 10px 35px rgba(0,0,0,.45);
+    }
+    .modal header{position:sticky; top:0; background:#111; padding:12px 16px; border-bottom:1px solid var(--accent); display:flex; justify-content:space-between; align-items:center}
     .modal h3{margin:0; font-size:18px}
     .modal .content{padding:12px 16px}
-    .close{background:#1b1b1b; color:#eee; border:1px solid var(--border); border-radius:10px; padding:6px 10px; cursor:pointer}
+    .close{background:#1b1b1b; color:#eee; border:1px solid #333; border-radius:10px; padding:6px 10px; cursor:pointer}
     .muted{color:var(--muted)}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace}
 
-    /* شرائط صفراء أنيقة حول الجدول */
-    .table-wrap{position:relative; overflow:auto; max-height:70vh; border-radius:12px; outline:1px solid #2a2a2a}
-    .table-wrap::before{
-      content:""; position:absolute; inset:-1px; border-radius:12px; pointer-events:none;
-      background:
-        linear-gradient(90deg, transparent, rgba(255,209,0,.2), transparent) top / 100% 2px no-repeat,
-        linear-gradient(90deg, transparent, rgba(255,209,0,.2), transparent) bottom / 100% 2px no-repeat;
+    @media (max-width:768px){
+      .header-right img.logo{height:40px}
+      .header-right .divider{display:none}
     }
-    a.link{color:var(--yellow); text-decoration:none}
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <h1>نظام ملخص البصمة <span class="k-badge">نادي كلباء</span></h1>
-        <p class="sub">ارفع ملف الإكسل لاحتساب ساعات العمل المتحققة، الزيادة، والنقص — مع عرض أوقات الدخول/الخروج.</p>
+    <div class="header-right">
+      <img src="Picture3.png" alt="Sharjah emblem" class="logo">
+      <div class="divider"></div>
+      <img src="logo.png" alt="Kalba SC logo" class="logo">
+      <div class="header-info">
+        <p class="title">Kalba Sports & Cultural Club</p>
+        <p class="subtitle">Timecard Summary — Daily / Weekly / Monthly</p>
       </div>
     </div>
   </header>
 
-  <div class="wrap grid">
-    <!-- اللوحة اليمنى: الملف والإعدادات -->
+  <main>
     <section class="panel">
       <div class="control">
-        <label>تحميل ملف البصمة (Excel)</label>
+        <label>Upload timecard (Excel)</label>
         <input id="file" type="file" accept=".xlsx,.xls" />
       </div>
 
       <div class="controls" style="margin-top:10px">
         <div class="control">
-          <label>العرض</label>
+          <label>View</label>
           <select id="view">
-            <option value="daily">يومي</option>
-            <option value="weekly">أسبوعي</option>
-            <option value="monthly">شهري</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
           </select>
         </div>
 
         <div class="control">
-          <label>عدد ساعات العمل المتوقعة يوميًا</label>
+          <label>Expected hours per day</label>
           <input id="expected" type="number" min="0" step="0.25" value="7" />
         </div>
 
         <div class="control">
-          <label>بداية الأسبوع</label>
+          <label>Week starts on</label>
           <select id="weekStart">
-            <option value="1" selected>الاثنين</option>
-            <option value="0">الأحد</option>
-            <option value="6">السبت</option>
+            <option value="1" selected>Monday</option>
+            <option value="0">Sunday</option>
+            <option value="6">Saturday</option>
           </select>
         </div>
 
         <div class="control">
           <label>&nbsp;</label>
-          <button id="download" class="btn secondary">تنزيل CSV</button>
+          <button id="download" class="btn secondary">Download CSV</button>
         </div>
       </div>
 
-      <div class="footer">
-        <div class="note">
-          • يتوقع وجود أعمدة: <b>Employee ID</b>، <b>First Name</b>، <b>Date</b>، <b>Time</b>.<br>
-          • عمود <b>Time</b> يحتوي أوقات اليوم مفصولة بفواصل مثل:
-          <span class="mono">08:30:01, 13:10:16, 16:31:21, 19:51:08</span> (تتعامل الصفحة مع الأزواج دخول/خروج). إن كان العدد فرديًا يتم تجاهل آخر وقت.
-        </div>
-      </div>
+      <p class="note" style="margin-top:8px">
+        Columns expected: <b>Employee ID</b>, <b>First Name</b>, <b>Date</b>, <b>Time</b>.
+        The <b>Time</b> cell contains comma-separated times for the day like
+        <span class="mono">08:30:01, 13:10:16, 16:31:21, 19:51:08</span>.
+        We pair them as <em>IN/OUT</em>. If there’s a trailing IN without OUT, it’s ignored.
+      </p>
     </section>
 
-    <!-- اللوحة اليسرى: النتائج -->
     <section class="panel" style="min-height:460px">
       <div class="flex" style="justify-content:space-between; margin-bottom:6px">
-        <div class="note"><span id="meta">لا يوجد ملف محمّل.</span></div>
+        <div class="note"><span id="meta">No file loaded.</span></div>
         <div class="flex">
-          <button id="recalc" class="btn">إعادة الحساب</button>
+          <button id="recalc" class="btn">Recalculate</button>
         </div>
       </div>
+
       <div class="table-wrap">
         <table id="table">
           <thead>
             <tr>
-              <th>الرقم الوظيفي</th>
-              <th>الاسم</th>
-              <th>الفترة</th>
-              <th class="right">ساعات العمل</th>
-              <th class="right">المتوقع</th>
-              <th class="right">الزيادة</th>
-              <th class="right">النقص</th>
-              <th class="center">تفاصيل</th>
+              <th>Employee ID</th>
+              <th>Name</th>
+              <th>Period</th>
+              <th class="right">Worked</th>
+              <th class="right">Expected</th>
+              <th class="right">Overtime</th>
+              <th class="right">Shortfall</th>
+              <th class="center">Punches</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="8" class="note center">حمّلي الملف لرؤية النتائج.</td></tr>
+            <tr><td colspan="8" class="note">Upload a file to see results.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
-  </div>
+  </main>
 
-  <!-- نافذة التفاصيل -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
-      <header class="flex" style="justify-content:space-between">
-        <h3 id="modalTitle">تفاصيل البصمة</h3>
-        <button class="close" id="closeModal">إغلاق</button>
+      <header>
+        <h3 id="modalTitle">Punch Details</h3>
+        <button class="close" id="closeModal">Close</button>
       </header>
       <div class="content">
-        <div class="note" id="modalMeta"></div>
+        <div class="muted" id="modalMeta"></div>
         <div class="table-wrap" style="margin-top:10px; max-height:60vh">
           <table>
             <thead>
               <tr>
-                <th>اليوم</th>
-                <th>الأزواج (دخول → خروج)</th>
-                <th class="right">مجموع اليوم</th>
+                <th>Date</th>
+                <th>IN → OUT pairs</th>
+                <th class="right">Day total</th>
               </tr>
             </thead>
-            <tbody id="detailsBody">
-              <!-- يمتلئ ديناميكيًا -->
-            </tbody>
+            <tbody id="detailsBody"></tbody>
           </table>
         </div>
       </div>
@@ -226,8 +271,8 @@
   const modalMeta = $('modalMeta');
   const detailsBody = $('detailsBody');
 
-  let rawRows = []; // {empId, name, date: Date, workedSec, pairs:[{in:string, out:string|null}]}
-  let byKeyDetails = new Map(); // key -> { empId, name, period, days: Map(ymd -> {pairs, workedSec}) }
+  let rawRows = []; 
+  let byKeyDetails = new Map(); 
   let lastCSV = '';
 
   fileInput.addEventListener('change', handleFile, false);
@@ -240,7 +285,7 @@
   modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
 
   function handleDownload(){
-    if (!lastCSV) { alert('لا توجد بيانات للتنزيل بعد.'); return; }
+    if (!lastCSV) { alert('No data to download yet.'); return; }
     const blob = new Blob([lastCSV], {type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -264,7 +309,7 @@
 
         let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
         if (headerIdx === -1) headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
-        if (headerIdx === -1) { alert('تعذر العثور على صف العناوين الذي يحتوي "Employee ID".'); return; }
+        if (headerIdx === -1) { alert('Could not find a header row containing "Employee ID".'); return; }
 
         const header = rows[headerIdx];
         const colIdx = {
@@ -297,11 +342,11 @@
         }
 
         rawRows = out;
-        metaEl.textContent = `${f.name} — تم解析 ${out.length} صفًا`;
+        metaEl.textContent = `${f.name} — ${out.length} rows parsed`;
         render();
       }catch(err){
         console.error(err);
-        alert('حدث خطأ أثناء قراءة الملف.');
+        alert('Error while reading the file.');
       }
     };
     reader.readAsArrayBuffer(f);
@@ -326,7 +371,7 @@
     const out = [];
     for (let i = 0; i < parts.length; i += 2) {
       const a = parts[i];
-      const b = parts[i+1] ?? null; // قد يكون لا يوجد خروج
+      const b = parts[i+1] ?? null;
       if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(a)) continue;
       if (b && !/^\d{1,2}:\d{2}(:\d{2})?$/.test(b)) { out.push({in:a, out:null}); continue; }
       out.push({in:a, out:b});
@@ -346,7 +391,7 @@
   function diffSec(a, b){
     if (!a || !b) return 0;
     let d = hmsToSec(b) - hmsToSec(a);
-    if (d < 0) d += 24*3600; // عبور منتصف الليل
+    if (d < 0) d += 24*3600; 
     return d;
   }
   function secToHHMM(sec){
@@ -359,28 +404,27 @@
 
   function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
-
   function getWeekStart(d, startDow){
     const date = normalizeDate(d);
-    const dow = date.getDay(); // 0=الأحد
+    const dow = date.getDay(); 
     const diff = (dow - startDow + 7) % 7;
     date.setDate(date.getDate() - diff);
     return date;
   }
-
   function prettyPeriod(p, ws){
     if (p.startsWith('W:')){
       const d = new Date(p.slice(2));
       const end = new Date(d); end.setDate(end.getDate()+6);
-      return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][ws]})`;
+      const weekNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      return `Week ${ymd(d)} → ${ymd(end)} (starts ${weekNames[ws]})`;
     }
-    if (p.startsWith('M:')) return p.slice(2); // YYYY-MM
-    return p; // YYYY-MM-DD
+    if (p.startsWith('M:')) return p.slice(2);
+    return p;
   }
 
   function render(){
     if (!rawRows.length){
-      tbody.innerHTML = `<tr><td colspan="8" class="note center">حمّلي الملف لرؤية النتائج.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="note">Upload a file to see results.</td></tr>`;
       lastCSV = '';
       return;
     }
@@ -389,7 +433,6 @@
     const view = viewSel.value; // daily | weekly | monthly
     const weekStart = parseInt(weekStartSel.value, 10);
 
-    // بناء تجميعي مع تخزين تفاصيل الأيام/الأزواج
     const map = new Map(); // key -> {empId,name,period, workedSec, days:Set, dayDetails: Map(ymd -> {pairs, workedSec})}
     for (const r of rawRows) {
       let keyPeriod = '';
@@ -413,7 +456,6 @@
     }
     byKeyDetails = map;
 
-    // إعداد صفوف الجدول النهائي
     const rows = [];
     for (const obj of map.values()) {
       const daysCount = (view === 'daily') ? 1 : obj.days.size;
@@ -433,9 +475,8 @@
       });
     }
 
-    rows.sort((a,b)=> (a.empId.localeCompare(b.empId,'ar') || a.period.localeCompare(b.period,'ar')));
+    rows.sort((a,b)=> (a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period)));
 
-    // رسم الجدول
     tbody.innerHTML = rows.map(r => `
       <tr>
         <td>${escapeHTML(r.empId)}</td>
@@ -445,16 +486,14 @@
         <td class="right">${secToHHMM(r.expected)}</td>
         <td class="right">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
         <td class="right">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
-        <td class="center"><button class="btn secondary" data-key="${escapeHTML(r.key)}">تفاصيل</button></td>
+        <td class="center"><button class="btn secondary" data-key="${escapeHTML(r.key)}">Details</button></td>
       </tr>
     `).join('');
 
-    // زر التفاصيل
     [...tbody.querySelectorAll('button[data-key]')].forEach(btn=>{
       btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key')));
     });
 
-    // تجهيز CSV
     const csv = [
       ['Employee ID','Name','Period','Worked (HH:MM)','Expected (HH:MM)','Overtime (HH:MM)','Shortfall (HH:MM)'],
       ...rows.map(r=>[
@@ -465,7 +504,7 @@
     ].map(row => row.map(csvEscape).join(',')).join('\n');
     lastCSV = csv;
 
-    metaEl.textContent = `السجلات: ${rawRows.length} — العرض: ${viewSel.options[viewSel.selectedIndex].text} — المتوقع/يوم: ${expectedPerDayHrs} ساعة`;
+    metaEl.textContent = `Records: ${rawRows.length} — View: ${viewSel.value} — Expected/day: ${expectedPerDayHrs} h`;
   }
 
   function openDetails(key){
@@ -473,16 +512,15 @@
     if (!obj) return;
 
     const [empId, name, period] = key.split('||');
-    modalTitle.textContent = `تفاصيل البصمة — ${name} (${empId})`;
-    modalMeta.innerHTML = `الفترة: <b>${escapeHTML(prettyPeriod(period, parseInt(weekStartSel.value,10)))}</b> — أيام مغطّاة: ${obj.days.size}`;
+    modalTitle.textContent = `Punch Details — ${name} (${empId})`;
+    modalMeta.innerHTML = `Period: <b>${escapeHTML(prettyPeriod(period, parseInt(weekStartSel.value,10)))}</b> — Covered days: ${obj.days.size}`;
 
-    // ترتيب الأيام تصاعديًا
     const days = [...obj.dayDetails.keys()].sort();
     detailsBody.innerHTML = days.map(d=>{
       const day = obj.dayDetails.get(d);
       const pairsHtml = day.pairs.length
-        ? day.pairs.map(p=> pairHTML(p)).join('، ')
-        : '<span class="muted">لا يوجد أزواج مسجلة</span>';
+        ? day.pairs.map(p=> pairHTML(p)).join(' &nbsp; ')
+        : '<span class="muted">No pairs</span>';
       return `
         <tr>
           <td>${escapeHTML(d)}</td>
@@ -497,10 +535,10 @@
   }
 
   function pairHTML(p){
-    const pin  = `<span class="pill" style="background:rgba(255,209,0,.16); color:var(--yellow)">دخول ${escapeHTML(p.in)}</span>`;
-    const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${escapeHTML(p.out)}</span>` : `<span class="pill warn">خروج غير مسجل</span>`;
+    const pin  = `<span class="pill" style="background:rgba(244,231,51,.16); color:${'#000'}; border:1px solid ${'#f4e733'};">IN ${escapeHTML(p.in)}</span>`;
+    const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">OUT ${escapeHTML(p.out)}</span>` : `<span class="pill warn">OUT missing</span>`;
     const dur = p.out ? secToHHMM(diffSec(p.in, p.out)) : '00:00';
-    return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
+    return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(duration: ${dur})</span>`;
   }
 
   function closeModal(){
