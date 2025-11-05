@@ -479,10 +479,11 @@
 
   const modalBackdrop = $('modalBackdrop'), closeModalBtn = $('closeModal'), modalTitle = $('modalTitle'), modalMeta = $('modalMeta'), detailsBody = $('detailsBody');
 
-  let rawRows = []; 
-  let groupedDetails = new Map(); 
+  let rawRows = [];
+  let groupedDetails = new Map();
   let lastSummaryCSV = '', lastDetailedCSV = '';
 
+  // File upload area interaction
   fileUploadArea.addEventListener('click', () => fileInput.click());
   fileUploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -508,6 +509,7 @@
   dlSumBtn.addEventListener('click', ()=> downloadCSV(lastSummaryCSV, 'timecard_summary.csv'));
   dlDetBtn.addEventListener('click', ()=> downloadCSV(lastDetailedCSV, 'timecard_details.csv'));
 
+  // Set default dates (current month)
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -522,12 +524,19 @@
   function downloadCSV(text, filename){
     if (!text){ alert('لا توجد بيانات للتنزيل بعد.'); return; }
     const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(blob); 
+    a.download = filename; 
+    document.body.appendChild(a); 
+    a.click(); 
+    a.remove();
   }
 
   function handleFile(){
-    const f = fileInput.files?.[0]; if (!f) return;
+    const f = fileInput.files?.[0]; 
+    if (!f) return;
     
+    // Update file upload area text
     fileUploadArea.innerHTML = `
       <div class="file-upload-icon">✅</div>
       <p>تم تحميل الملف: ${f.name}</p>
@@ -544,48 +553,68 @@
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
 
-        let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
-        if (headerIdx === -1) headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
+        // Find header row - more flexible approach
+        let headerIdx = -1;
+        let headerRow = null;
+        
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (row && row.some(cell => 
+            String(cell).toLowerCase().includes('employee') && 
+            String(cell).toLowerCase().includes('id')
+          )) {
+            headerIdx = i;
+            headerRow = row;
+            break;
+          }
+        }
+
         if (headerIdx === -1) { 
-          alert('تعذّر العثور على صف العناوين الذي يحتوي "Employee ID".'); 
-          fileUploadArea.innerHTML = `
-            <div class="file-upload-icon">📁</div>
-            <p>انقر لتحميل ملف البصمة (Excel) أو اسحب الملف هنا</p>
-            <p class="note">يجب أن يحتوي الملف على الأعمدة: Employee ID, First Name, Date, Time</p>
-          `;
+          alert('تعذّر العثور على صف العناوين الذي يحتوي "Employee ID". يرجى التأكد من تنسيق الملف.'); 
+          resetFileUploadArea();
           loadingIndicator.style.display = 'none';
           return; 
         }
 
-        const header = rows[headerIdx];
+        // Map columns more flexibly
+        const header = headerRow.map(h => String(h).toLowerCase().trim());
         const colIdx = {
-          empId: header.findIndex(h => String(h).trim().toLowerCase().includes('employee id')),
-          name:  header.findIndex(h => String(h).trim().toLowerCase().includes('first name')),
-          date:  header.findIndex(h => String(h).trim().toLowerCase() === 'date'),
-          timeList: header.findIndex(h => String(h).trim().toLowerCase() === 'time'),
+          empId: header.findIndex(h => h.includes('employee') && h.includes('id')),
+          name:  header.findIndex(h => h.includes('first') && h.includes('name')),
+          date:  header.findIndex(h => h.includes('date')),
+          timeList: header.findIndex(h => h.includes('time')),
         };
-        if (colIdx.empId === -1) colIdx.empId = 0;
-        if (colIdx.name  === -1) colIdx.name  = 1;
-        if (colIdx.date  === -1) colIdx.date  = 2;
-        if (colIdx.timeList === -1) colIdx.timeList = 4;
+
+        // Fallback searches if exact matches not found
+        if (colIdx.empId === -1) colIdx.empId = header.findIndex(h => h.includes('id'));
+        if (colIdx.name === -1) colIdx.name = header.findIndex(h => h.includes('name'));
+        if (colIdx.date === -1) colIdx.date = header.findIndex(h => h.includes('date'));
+        if (colIdx.timeList === -1) colIdx.timeList = header.findIndex(h => h.includes('time'));
+
+        console.log('Found columns:', colIdx);
 
         const out = [];
         for (let i = headerIdx + 1; i < rows.length; i++){
-          const r = rows[i]; if (!r || r.length===0) continue;
+          const r = rows[i]; 
+          if (!r || r.length === 0) continue;
+          
           const empId = String(r[colIdx.empId] ?? '').trim();
           const name = String(r[colIdx.name] ?? '').trim();
           const dateCell = r[colIdx.date];
           const timesStr = String(r[colIdx.timeList] ?? '').trim();
-          if (!empId || !name || !dateCell) continue;
+          
+          if (!empId || empId === 'undefined' || !name || name === 'undefined') continue;
 
-          const d = parseExcelDate(dateCell); if (!d) continue;
+          const d = parseExcelDate(dateCell); 
+          if (!d) continue;
 
           const pairs = pairsFromCSV(timesStr);
           const workedSec = sumPairs(pairs, parseInt(roundingSel.value,10)||0);
           out.push({empId, name, date: d, pairs, workedSec});
         }
+        
         rawRows = out;
-        metaEl.textContent = `${f.name} — تم تحليل ${out.length} صفًا`;
+        metaEl.textContent = `${f.name} — تم تحليل ${out.length} سجل بصمة بنجاح`;
         
         fileUploadArea.innerHTML = `
           <div class="file-upload-icon">✅</div>
@@ -596,17 +625,21 @@
         loadingIndicator.style.display = 'none';
         render();
       }catch(err){ 
-        console.error(err); 
-        alert('حدث خطأ أثناء قراءة الملف.'); 
-        fileUploadArea.innerHTML = `
-          <div class="file-upload-icon">📁</div>
-          <p>انقر لتحميل ملف البصمة (Excel) أو اسحب الملف هنا</p>
-          <p class="note">يجب أن يحتوي الملف على الأعمدة: Employee ID, First Name, Date, Time</p>
-        `;
+        console.error('Error processing file:', err); 
+        alert('حدث خطأ أثناء قراءة الملف: ' + err.message); 
+        resetFileUploadArea();
         loadingIndicator.style.display = 'none';
       }
     };
     reader.readAsArrayBuffer(f);
+  }
+
+  function resetFileUploadArea() {
+    fileUploadArea.innerHTML = `
+      <div class="file-upload-icon">📁</div>
+      <p>انقر لتحميل ملف البصمة (Excel) أو اسحب الملف هنا</p>
+      <p class="note">يجب أن يحتوي الملف على الأعمدة: Employee ID, First Name, Date, Time</p>
+    `;
   }
 
   function render(){
@@ -618,261 +651,432 @@
       return;
     }
 
+    // Show loading indicator
     loadingIndicator.style.display = 'inline-block';
     
+    // Use setTimeout to allow UI to update before heavy processing
     setTimeout(() => {
-      const empFilter = (empFilterInp.value||'').trim().toLowerCase();
-      const fromDate = fromDateInp.value ? new Date(fromDateInp.value) : null;
-      const toDate = toDateInp.value ? new Date(toDateInp.value) : null;
-      const view = viewSel.value;
-      const weekStart = parseInt(weekStartSel.value,10);
-      const expectedWD = (+expectedWDInp.value||0) * 3600;
-      const expectedSat = (+expectedSatInp.value||0) * 3600;
-      const satPolicy = satPolicySel.value; 
-      const expectedMode = expectedModeSel.value; 
+      try {
+        // filters
+        const empFilter = (empFilterInp.value||'').trim().toLowerCase();
+        const fromDate = fromDateInp.value ? new Date(fromDateInp.value) : null;
+        const toDate = toDateInp.value ? new Date(toDateInp.value) : null;
+        const view = viewSel.value;
+        const weekStart = parseInt(weekStartSel.value,10);
+        const expectedWD = (+expectedWDInp.value||0) * 3600;
+        const expectedSat = (+expectedSatInp.value||0) * 3600;
+        const satPolicy = satPolicySel.value;
+        const expectedMode = expectedModeSel.value;
+        const rounding = parseInt(roundingSel.value,10)||0;
 
-      const map = new Map(); 
-      for (const row of rawRows){
-        if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
-        if (fromDate && row.date < fromDate) continue;
-        if (toDate && row.date > toDate) continue;
+        // group data
+        const map = new Map();
+        for (const row of rawRows){
+          if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
+          if (fromDate && row.date < fromDate) continue;
+          if (toDate && row.date > toDate) continue;
 
-        let periodKey = '';
-        if (view === 'daily'){ periodKey = ymd(row.date); }
-        else if (view === 'weekly'){ periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); }
-        else { periodKey = 'M:'+ym(row.date); }
-
-        const key = `${row.empId}||${row.name}||${periodKey}`;
-        if (!map.has(key)){
-          map.set(key, {empId:row.empId, name:row.name, period:periodKey, workedSec:0, days:new Map()});
-        }
-        const obj = map.get(key);
-        obj.workedSec += row.workedSec;
-        obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
-      }
-
-      const rows = [];
-      let totalWorked=0, totalExpected=0, totalOver=0, totalShort=0;
-      for (const obj of map.values()){
-        let expectedSec = 0;
-
-        if (view === 'daily'){
-          const dkey = [...obj.days.keys()][0];
-          const info = obj.days.get(dkey);
-          expectedSec = expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, expectedMode, !!info.pairs?.length);
-        } else {
-          const range = periodRange(obj.period, weekStart);
-          if (expectedMode === 'calendar'){
-            expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
-            if (satPolicy === 'calendar') expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); 
-          } else {
-            for (const [dkey, info] of obj.days){
-              expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
-            }
+          let periodKey = '';
+          if (view === 'daily'){ 
+            periodKey = ymd(row.date); 
+          } else if (view === 'weekly'){ 
+            periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); 
+          } else { 
+            periodKey = 'M:'+ym(row.date); 
           }
-        }
 
-        const delta = obj.workedSec - expectedSec;
-        const over = Math.max(0, delta);
-        const short = Math.max(0, -delta);
-
-        totalWorked += obj.workedSec; totalExpected += expectedSec; totalOver += over; totalShort += short;
-
-        rows.push({
-          key: `${obj.empId}||${obj.name}||${obj.period}`,
-          empId: obj.empId, name: obj.name,
-          period: prettyPeriod(obj.period, weekStart),
-          worked: secToHrsMins(obj.workedSec),
-          expected: secToHrsMins(expectedSec),
-          over: secToHrsMins(over),
-          short: secToHrsMins(short),
-          details: obj.days,
-        });
-      }
-
-      rows.sort((a,b)=> a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period));
-
-      tbody.innerHTML = '';
-      for (const r of rows){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="mono">${r.empId}</td>
-          <td>${r.name}</td>
-          <td>${r.period}</td>
-          <td class="left">${r.worked}</td>
-          <td class="left">${r.expected}</td>
-          <td class="left"><span class="pill ok">${r.over}</span></td>
-          <td class="left"><span class="pill bad">${r.short}</span></td>
-          <td class="center"><button class="btn secondary" data-key="${r.key}">📋 عرض</button></td>
-        `;
-        tbody.appendChild(tr);
-      }
-
-      tbody.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', e => showDetails(e.target.dataset.key));
-      });
-
-      updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
-
-      hintPolicy.textContent = `السياسة: ${expectedMode==='calendar'?'أيام العمل التقويمية':'الأيام التي بها بصمة'}، السبت: ${satPolicy==='punch'?'بالبصمة':satPolicy==='calendar'?'تقويمي دائمًا':'غير محتسب'}.`;
-
-      lastSummaryCSV = 'الرقم الوظيفي,الاسم,الفترة,ساعات العمل,المتوقّع,الزيادة,النقص\n'+
-        rows.map(r => `${r.empId},${r.name},${r.period},${r.worked},${r.expected},${r.over},${r.short}`).join('\n');
-
-      const detailRows = [];
-      for (const r of rows){
-        for (const [dkey, info] of r.details){
-          const d = parseYmd(dkey);
-          detailRows.push({
-            empId: r.empId, name: r.name, period: r.period, date: dkey,
-            dow: ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()],
-            pairs: info.pairs.map(p => `${p.in}→${p.out}`).join('; '),
-            worked: secToHrsMins(info.workedSec),
+          const key = `${row.empId}||${row.name}||${periodKey}`;
+          if (!map.has(key)){
+            map.set(key, {
+              empId: row.empId, 
+              name: row.name, 
+              period: periodKey, 
+              workedSec: 0, 
+              days: new Map()
+            });
+          }
+          const obj = map.get(key);
+          obj.workedSec += row.workedSec;
+          obj.days.set(ymd(row.date), {
+            pairs: row.pairs, 
+            workedSec: row.workedSec, 
+            dow: row.date.getDay()
           });
         }
-      }
-      lastDetailedCSV = 'الرقم الوظيفي,الاسم,الفترة,التاريخ,اليوم,الأزواج (دخول→خروج),ساعات العمل\n'+
-        detailRows.map(r => `${r.empId},${r.name},${r.period},${r.date},${r.dow},"${r.pairs}",${r.worked}`).join('\n');
 
-      groupedDetails = map;
-      
-      loadingIndicator.style.display = 'none';
+        // compute expected time and differences
+        const summaryRows = [];
+        let totalWorked = 0, totalExpected = 0, totalOver = 0, totalShort = 0;
+        
+        for (const obj of map.values()){
+          let expectedSec = 0;
+
+          if (view === 'daily'){
+            // For daily view, use the specific day
+            const dkey = [...obj.days.keys()][0];
+            const info = obj.days.get(dkey);
+            expectedSec = calculateExpectedForDay(info.dow, expectedWD, expectedSat, satPolicy, expectedMode, info.pairs.length > 0);
+          } else {
+            // For weekly/monthly views
+            const range = getPeriodRange(obj.period, weekStart);
+            if (expectedMode === 'calendar'){
+              // Count calendar days
+              expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun-Thu
+              if (satPolicy === 'calendar') {
+                expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
+              }
+            } else {
+              // Only count days with punches
+              for (const [dkey, info] of obj.days){
+                expectedSec += calculateExpectedForDay(info.dow, expectedWD, expectedSat, satPolicy, expectedMode, info.pairs.length > 0);
+              }
+            }
+          }
+
+          const delta = obj.workedSec - expectedSec;
+          const over = Math.max(0, delta);
+          const short = Math.max(0, -delta);
+
+          totalWorked += obj.workedSec;
+          totalExpected += expectedSec;
+          totalOver += over;
+          totalShort += short;
+
+          summaryRows.push({
+            key: `${obj.empId}||${obj.name}||${obj.period}`,
+            empId: obj.empId, 
+            name: obj.name,
+            period: formatPeriodDisplay(obj.period, weekStart),
+            workedSec: obj.workedSec,
+            expectedSec: expectedSec,
+            overSec: over,
+            shortSec: short,
+            days: obj.days
+          });
+        }
+
+        // Sort rows
+        summaryRows.sort((a,b) => a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period));
+
+        // Render table
+        renderTable(summaryRows);
+
+        // Update KPIs
+        updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
+
+        // Update policy hint
+        updatePolicyHint(expectedMode, satPolicy);
+
+        // Prepare CSV data
+        prepareCSVData(summaryRows);
+
+        // Store for modal
+        groupedDetails = map;
+        
+      } catch (error) {
+        console.error('Error in render:', error);
+        tbody.innerHTML = `<tr><td colspan="8" class="note" style="text-align: center; padding: 40px; color: var(--bad);">خطأ في عرض البيانات: ${error.message}</td></tr>`;
+      } finally {
+        // Hide loading indicator
+        loadingIndicator.style.display = 'none';
+      }
     }, 50);
   }
 
-  function updateKPIs(worked, expected, over, short){
-    kpiWorked.textContent = secToHrsMins(worked);
-    kpiExpected.textContent = secToHrsMins(expected);
-    kpiOver.textContent = secToHrsMins(over);
-    kpiShort.textContent = secToHrsMins(short);
+  function renderTable(rows) {
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="note" style="text-align: center; padding: 40px;">لا توجد بيانات تطابق عوامل التصفية المحددة.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(row => `
+      <tr>
+        <td class="mono">${escapeHtml(row.empId)}</td>
+        <td>${escapeHtml(row.name)}</td>
+        <td>${escapeHtml(row.period)}</td>
+        <td class="left">${secondsToHhMm(row.workedSec)}</td>
+        <td class="left">${secondsToHhMm(row.expectedSec)}</td>
+        <td class="left">${row.overSec > 0 ? `<span class="pill ok">${secondsToHhMm(row.overSec)}</span>` : `<span class="pill">00:00</span>`}</td>
+        <td class="left">${row.shortSec > 0 ? `<span class="pill bad">-${secondsToHhMm(row.shortSec)}</span>` : `<span class="pill ok">00:00</span>`}</td>
+        <td class="center"><button class="btn secondary" data-key="${escapeHtml(row.key)}">تفاصيل</button></td>
+      </tr>
+    `).join('');
+
+    // Add event listeners to detail buttons
+    tbody.querySelectorAll('button[data-key]').forEach(btn => {
+      btn.addEventListener('click', () => openDetails(btn.getAttribute('data-key')));
+    });
   }
 
-  function showDetails(key){
+  function updateKPIs(worked, expected, over, short){
+    kpiWorked.textContent = secondsToHhMm(worked);
+    kpiExpected.textContent = secondsToHhMm(expected);
+    kpiOver.textContent = secondsToHhMm(over);
+    kpiShort.textContent = secondsToHhMm(short);
+  }
+
+  function updatePolicyHint(expectedMode, satPolicy) {
+    const modeText = expectedMode === 'calendar' ? 'أيام العمل التقويمية' : 'الأيام التي بها بصمة';
+    const satText = 
+      satPolicy === 'punch' ? 'السبت يُحتسب فقط عند وجود بصمة' :
+      satPolicy === 'calendar' ? 'السبت يُحتسب تقويميًا دائمًا' :
+      'السبت لا يُحتسب';
+    
+    hintPolicy.textContent = `سياسة الحساب: ${modeText} — ${satText}. الجمعة مستبعدة دائماً.`;
+  }
+
+  function prepareCSVData(rows) {
+    // Summary CSV
+    const summaryHeader = ['الرقم الوظيفي', 'الاسم', 'الفترة', 'ساعات العمل', 'المتوقّع', 'الزيادة', 'النقص'];
+    const summaryData = rows.map(r => [
+      r.empId, r.name, r.period, 
+      secondsToHhMm(r.workedSec), 
+      secondsToHhMm(r.expectedSec),
+      secondsToHhMm(r.overSec),
+      r.shortSec > 0 ? `-${secondsToHhMm(r.shortSec)}` : '00:00'
+    ]);
+    lastSummaryCSV = [summaryHeader, ...summaryData]
+      .map(row => row.map(csvEscape).join(','))
+      .join('\n');
+
+    // Detailed CSV
+    const detailHeader = ['الرقم الوظيفي', 'الاسم', 'الفترة', 'التاريخ', 'اليوم', 'الأزواج (دخول→خروج)', 'ساعات العمل'];
+    const detailData = [];
+    
+    for (const row of rows) {
+      const days = [...row.days.keys()].sort();
+      for (const dateStr of days) {
+        const dayInfo = row.days.get(dateStr);
+        const date = parseYmd(dateStr);
+        const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const pairsStr = dayInfo.pairs.map(p => `${p.in}→${p.out}`).join('; ');
+        
+        detailData.push([
+          row.empId,
+          row.name,
+          row.period,
+          dateStr,
+          dayNames[date.getDay()],
+          pairsStr,
+          secondsToHhMm(dayInfo.workedSec)
+        ]);
+      }
+    }
+    
+    lastDetailedCSV = [detailHeader, ...detailData]
+      .map(row => row.map(csvEscape).join(','))
+      .join('\n');
+  }
+
+  function openDetails(key){
     const obj = groupedDetails.get(key);
     if (!obj) return;
+    
     modalTitle.textContent = `تفاصيل البصمة — ${obj.name} (${obj.empId})`;
-    modalMeta.textContent = `الفترة: ${prettyPeriod(obj.period, parseInt(weekStartSel.value,10))}`;
+    modalMeta.innerHTML = `الفترة: <b>${escapeHtml(formatPeriodDisplay(obj.period, parseInt(weekStartSel.value,10)))}</b> — أيام مغطّاة: ${obj.days.size}`;
 
-    const days = [...obj.days.entries()].sort((a,b)=> a[0].localeCompare(b[0]));
-    detailsBody.innerHTML = '';
-    for (const [dkey, info] of days){
-      const d = parseYmd(dkey);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${dkey} (${['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()]})</td>
-        <td>${info.pairs.length ? info.pairs.map(p => `${p.in} → ${p.out}`).join('<br>') : '<span class="muted">لا توجد أزواج</span>'}</td>
-        <td class="left">${secToHrsMins(info.workedSec)}</td>
-      `;
-      detailsBody.appendChild(tr);
-    }
+    const days = [...obj.days.keys()].sort();
+    detailsBody.innerHTML = days.map(dateStr => {
+      const day = obj.days.get(dateStr);
+      const pairsHtml = day.pairs.length ? 
+        day.pairs.map(p => pairToHtml(p)).join(' &nbsp; ') : 
+        '<span class="muted">لا يوجد أزواج</span>';
+      
+      const dayNames = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+      const dayColor = day.dow === 6 ? 'rgba(255,194,102,.18)' : 
+                      day.dow === 5 ? 'rgba(255,107,107,.18)' : 
+                      'rgba(244,231,51,.14)';
+      
+      return `<tr>
+        <td>${escapeHtml(dateStr)} <span class="pill" style="background:${dayColor}; color:#fff">${dayNames[day.dow]}</span></td>
+        <td>${pairsHtml}</td>
+        <td class="left">${secondsToHhMm(day.workedSec)}</td>
+      </tr>`;
+    }).join('');
+    
     modalBackdrop.style.display = 'flex';
-    modalBackdrop.setAttribute('aria-hidden', 'false');
+    modalBackdrop.setAttribute('aria-hidden','false');
   }
 
-  function closeModal(){
-    modalBackdrop.style.display = 'none';
-    modalBackdrop.setAttribute('aria-hidden', 'true');
+  function closeModal(){ 
+    modalBackdrop.style.display = 'none'; 
+    modalBackdrop.setAttribute('aria-hidden','true'); 
   }
+
+  // ========== UTILITY FUNCTIONS ==========
 
   function parseExcelDate(v){
-    if (typeof v === 'number') return new Date(Math.round((v - 25569)*86400*1000));
-    if (typeof v === 'string') return new Date(v);
-    if (v instanceof Date) return v;
+    if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+    if (typeof v === 'number') {
+      // Excel date (number of days since 1900-01-01)
+      const excelEpoch = new Date(1899, 11, 30);
+      return new Date(excelEpoch.getTime() + v * 86400000);
+    }
+    if (typeof v === 'string') {
+      const parsed = new Date(v);
+      return isNaN(parsed.getTime()) ? null : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
     return null;
   }
 
-  function pairsFromCSV(timesStr){
-    const parts = timesStr.split(',').map(s => s.trim()).filter(Boolean);
+  function pairsFromCSV(csv){
+    if (!csv) return [];
+    const parts = csv.split(',').map(s => s.trim()).filter(Boolean);
     const pairs = [];
-    for (let i=0; i<parts.length; i+=2){
-      if (i+1 < parts.length) pairs.push({in:parts[i], out:parts[i+1]});
+    for (let i = 0; i < parts.length; i += 2) {
+      pairs.push({
+        in: parts[i] || '',
+        out: parts[i + 1] || ''
+      });
     }
     return pairs;
   }
 
-  function sumPairs(pairs, rounding){
-    let totalSec = 0;
-    for (const p of pairs){
-      const inSec = timeToSec(p.in), outSec = timeToSec(p.out);
-      if (inSec===null || outSec===null) continue;
-      let diff = outSec - inSec;
-      if (rounding > 0) diff = Math.round(diff / (rounding*60)) * (rounding*60);
-      totalSec += Math.max(0, diff);
+  function sumPairs(pairs, roundingMin){
+    let total = 0;
+    for (const p of pairs) {
+      if (!p.in || !p.out) continue;
+      const inSec = timeToSeconds(p.in);
+      const outSec = timeToSeconds(p.out);
+      if (inSec === null || outSec === null) continue;
+      
+      let duration = outSec - inSec;
+      if (duration < 0) duration += 24 * 3600; // Cross midnight
+      
+      if (roundingMin > 0) {
+        const roundingSec = roundingMin * 60;
+        duration = Math.round(duration / roundingSec) * roundingSec;
+      }
+      
+      total += Math.max(0, duration);
     }
-    return totalSec;
+    return total;
   }
 
-  function timeToSec(t){
-    if (!t) return null;
-    const m = String(t).match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?$/i);
-    if (!m) return null;
-    let h = +m[1], min = +m[2], sec = m[3] ? +m[3] : 0;
-    const pm = m[4]?.toUpperCase() === 'PM';
-    if (pm && h < 12) h += 12;
-    if (!pm && h === 12) h = 0;
-    return h*3600 + min*60 + sec;
+  function timeToSeconds(timeStr){
+    if (!timeStr) return null;
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (!match) return null;
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const seconds = match[3] ? parseInt(match[3], 10) : 0;
+    return hours * 3600 + minutes * 60 + seconds;
   }
 
-  function secToHrsMins(sec){
-    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60);
-    return `${h}:${m<10?'0':''}${m}`;
+  function secondsToHhMm(seconds){
+    const absSeconds = Math.abs(seconds);
+    const h = Math.floor(absSeconds / 3600);
+    const m = Math.floor((absSeconds % 3600) / 60);
+    return `${seconds < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
-  function ymd(d){ return d.toISOString().split('T')[0]; }
-  function ym(d){ return d.toISOString().substring(0,7); }
-  function parseYmd(s){ return new Date(s); }
-
-  function getWeekStart(d, weekStart){
-    const day = d.getDay(); const diff = (day - weekStart + 7) % 7; const start = new Date(d); start.setDate(d.getDate() - diff); return start;
+  function ymd(d){ 
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  function periodRange(periodKey, weekStart){
-    if (periodKey.includes('W:')){
-      const start = parseYmd(periodKey.substring(2));
-      const end = new Date(start); end.setDate(start.getDate() + 6);
-      return {start, end};
-    } else if (periodKey.includes('M:')){
-      const [y,m] = periodKey.substring(2).split('-').map(Number);
-      const start = new Date(y, m-1, 1);
-      const end = new Date(y, m, 0);
-      return {start, end};
+  function ym(d){ 
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function parseYmd(ymdStr){
+    const parts = ymdStr.split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  }
+
+  function getWeekStart(date, startDay){
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = (day - startDay + 7) % 7;
+    d.setDate(d.getDate() - diff);
+    return d;
+  }
+
+  function getPeriodRange(periodKey, weekStart){
+    if (periodKey.startsWith('W:')) {
+      const startDate = parseYmd(periodKey.substring(2));
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      return { start: startDate, end: endDate };
+    } else if (periodKey.startsWith('M:')) {
+      const [year, month] = periodKey.substring(2).split('-').map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      return { start: startDate, end: endDate };
     } else {
-      const d = parseYmd(periodKey);
-      return {start: d, end: d};
+      const date = parseYmd(periodKey);
+      return { start: date, end: date };
     }
   }
 
-  function countWeekdays(start, end, daysOfWeek){
-    let count = 0; const d = new Date(start);
-    while (d <= end){
-      if (daysOfWeek.includes(d.getDay())) count++;
-      d.setDate(d.getDate() + 1);
+  function formatPeriodDisplay(periodKey, weekStart){
+    if (periodKey.startsWith('W:')) {
+      const startDate = parseYmd(periodKey.substring(2));
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      return `أسبوع ${ymd(startDate)} → ${ymd(endDate)}`;
+    } else if (periodKey.startsWith('M:')) {
+      const [year, month] = periodKey.substring(2).split('-').map(Number);
+      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      return `${monthNames[month - 1]} ${year}`;
+    } else {
+      return periodKey;
+    }
+  }
+
+  function countWeekdays(start, end, targetDays){
+    let count = 0;
+    const current = new Date(start);
+    while (current <= end) {
+      if (targetDays.includes(current.getDay())) {
+        count++;
+      }
+      current.setDate(current.getDate() + 1);
     }
     return count;
   }
 
-  function expectedForDayKey(dkey, dow, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch){
-    if (dow === 5) return 0; 
-    if (dow === 6){ 
+  function calculateExpectedForDay(dayOfWeek, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch){
+    // 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday
+    if (dayOfWeek >= 0 && dayOfWeek <= 4) {
+      // Sunday to Thursday
+      if (expectedMode === 'punched' && !hasPunch) return 0;
+      return expectedWD;
+    } else if (dayOfWeek === 5) {
+      // Friday - always off
+      return 0;
+    } else if (dayOfWeek === 6) {
+      // Saturday
       if (satPolicy === 'off') return 0;
       if (satPolicy === 'punch' && !hasPunch) return 0;
       return expectedSat;
     }
-    if (expectedMode === 'punch' && !hasPunch) return 0;
-    return expectedWD;
+    return 0;
   }
 
-  function prettyPeriod(periodKey, weekStart){
-    if (periodKey.includes('W:')){
-      const start = parseYmd(periodKey.substring(2));
-      const end = new Date(start); end.setDate(start.getDate() + 6);
-      return `${ymd(start)} → ${ymd(end)}`;
-    } else if (periodKey.includes('M:')){
-      const [y,m] = periodKey.substring(2).split('-').map(Number);
-      return new Date(y, m-1, 1).toLocaleDateString('ar', {year:'numeric', month:'long'});
-    } else {
-      return periodKey;
+  function pairToHtml(pair){
+    const inPill = `<span class="pill" style="background:rgba(244,231,51,.16); color:#000; border:1px solid #f4e733;">دخول ${escapeHtml(pair.in)}</span>`;
+    const outPill = pair.out ? 
+      `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${escapeHtml(pair.out)}</span>` : 
+      `<span class="pill warn">خروج غير مسجل</span>`;
+    
+    const duration = pair.out ? secondsToHhMm(timeToSeconds(pair.out) - timeToSeconds(pair.in)) : '00:00';
+    
+    return `<span class="mono">${inPill} → ${outPill}</span> <span class="muted">(المدة: ${duration})</span>`;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function csvEscape(field) {
+    if (field === null || field === undefined) return '';
+    const string = String(field);
+    if (string.includes(',') || string.includes('"') || string.includes('\n')) {
+      return '"' + string.replace(/"/g, '""') + '"';
     }
+    return string;
   }
 })();
 </script>
