@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>ملخّص البصمة — نادي كلباء الرياضي الثقافي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{ --bg:#222222; --accent:#f4e733; --text:#ffffff; --muted:#cfcfcf;
@@ -71,7 +72,7 @@
   <header>
     <div class="header-right">
       <img src="Picture3.png" alt="شعار الشارقة" class="logo">
-      <div class="divider" style="width:1.5px;height:60px;background:#f4e733"></div>
+      <div class="divider"></div>
       <img src="logo.png" alt="شعار نادي كلباء" class="logo">
       <div class="header-info">
         <p class="title">نادي كلباء الرياضي الثقافي</p>
@@ -281,7 +282,7 @@
         const header = rows[headerIdx].map(x => String(x).trim());
         const lower = header.map(h => h.toLowerCase());
 
-        // prefer "Times" over "Time" if both exist / if "Times" has data
+        // base indices
         let idxEmp = lower.findIndex(h => h.includes('employee id'));
         let idxName = lower.findIndex(h => h.includes('first name'));
         let idxDate = lower.findIndex(h => h === 'date');
@@ -312,7 +313,7 @@
 
           const d = parseExcelDate(dateCell); if (!d) continue;
 
-          // choose data from best time column: if there is both Times and Time, prefer the one non-empty
+          // prefer non-empty Times over Time
           let timeCell = '';
           const idxTimesExact = lower.findIndex(h => h === 'times');
           const idxTimeExact  = lower.findIndex(h => h === 'time');
@@ -339,15 +340,15 @@
       hintPolicy.textContent = '';
       return;
     }
-    const empFilter = (document.getElementById('empFilter').value||'').trim().toLowerCase();
-    const fromDate = document.getElementById('fromDate').value ? new Date(document.getElementById('fromDate').value) : null;
-    const toDate   = document.getElementById('toDate').value   ? new Date(document.getElementById('toDate').value)   : null;
-    const view = document.getElementById('view').value;
-    const weekStart = parseInt(document.getElementById('weekStart').value,10);
-    const expectedWD = (+document.getElementById('expectedWD').value||0) * 3600;
-    const expectedSat = (+document.getElementById('expectedSat').value||0) * 3600;
-    const satPolicy = document.getElementById('satPolicy').value; // 'punch'|'calendar'|'off'
-    const expectedMode = document.getElementById('expectedMode').value; // 'calendar'|'punched'
+    const empFilter = (empFilterInp.value||'').trim().toLowerCase();
+    const fromDate = fromDateInp.value ? new Date(fromDateInp.value) : null;
+    const toDate   = toDateInp.value   ? new Date(toDateInp.value)   : null;
+    const view = viewSel.value;
+    const weekStart = parseInt(weekStartSel.value,10);
+    const expectedWD = (+expectedWDInp.value||0) * 3600;
+    const expectedSat = (+expectedSatInp.value||0) * 3600;
+    const satPolicy = satPolicySel.value; // 'punch'|'calendar'|'off'
+    const expectedMode = expectedModeSel.value; // 'calendar'|'punched'
 
     // policy hint
     const satText = satPolicy==='punch' ? 'السبت يُحتسب فقط عند وجود بصمة' : satPolicy==='calendar' ? 'السبت يُحتسب تقويمياً دائماً' : 'السبت لا يُحتسب';
@@ -437,6 +438,12 @@
 
   /* === Business rules & helpers === */
 
+  // CSV escape helper (FIX for ReferenceError)
+  function csvEsc(s){
+    s = String(s);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  }
+
   // Sun..Thu working, Fri off, Sat optional by policy
   function expectedForDay(dow, expectedWD, expectedSat, satPolicy, hasPunch){
     if (dow >= 0 && dow <= 4) return expectedWD; // Sun..Thu
@@ -466,11 +473,11 @@
         const pairs = info.pairs || [];
         const dayTotal = secToHHMM(info.workedSec);
         if (pairs.length === 0){
-          lines.push([empId, name, prettyPeriod(obj.period, weekStart), d, '', '', '', '00:00', dayTotal]);
+          lines.push([empId, name, prettyPeriod(obj.period, parseInt(weekStartSel.value,10)), d, '', '', '', '00:00', dayTotal]);
         } else {
           pairs.forEach((p, idx)=>{
             const dur = p.out ? secToHHMM(diffSec(p.in, p.out)) : '00:00';
-            lines.push([empId, name, prettyPeriod(obj.period, weekStart), d, idx+1, p.in||'', p.out||'', dur, dayTotal]);
+            lines.push([empId, name, prettyPeriod(obj.period, parseInt(weekStartSel.value,10)), d, idx+1, p.in||'', p.out||'', dur, dayTotal]);
           });
         }
       }
@@ -492,18 +499,18 @@
     if (!cell) return [];
     let s = String(cell).replace(/\r/g,'\n');
 
-    // Split by commas (EN/AR), semicolons, pipes, spaces, and line breaks
+    // Split by commas (EN/AR), semicolons, pipes, line breaks, or multiple spaces
     const parts = s.split(/[\u060C,;|\n]+|\s{2,}/).map(x=>x.trim()).filter(Boolean);
 
     // Normalize tokens: remove labels and convert 08.30 to 08:30
     const norm = parts.map(t => t
       .replace(/^(in|out|دخول|خروج)\s*:?/i,'')
       .replace(/\./g,':')
-      .replace(/\s*(am|pm)$/i, (m)=>m.toUpperCase()) // keep AM/PM if present
+      .replace(/\s*(am|pm)$/i, (m)=>m.toUpperCase())
       .trim()
     );
 
-    // Coalesce tokens like "08:30 AM" into one
+    // Merge "08:30 AM"
     const tokens = [];
     for (let i=0;i<norm.length;i++){
       const cur = norm[i], next = norm[i+1]||'';
@@ -553,12 +560,16 @@
     const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(hms||''); if (!m) return 0;
     return (+m[1])*3600 + (+m[2])*60 + (+(m[3]||0));
   }
-  function diffSec(a,b){
-    let d = hmsToSec(to24(a)) - hmsToSec(to24(b)); // ensure both normalize
-    d = -d; // because we did a-b reversed; now fix orientation
-    if (d<0) d += 24*3600; // across midnight
+
+  // FIXED: clearer diff across midnight
+  function diffSec(a, b){
+    const start = hmsToSec(to24(a));
+    const end   = hmsToSec(to24(b));
+    let d = end - start;
+    if (d < 0) d += 24 * 3600; // crosses midnight
     return d;
   }
+
   function secToHHMM(sec){ const v=Math.abs(sec); const h=Math.floor(v/3600), m=Math.floor((v%3600)/60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
   function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
