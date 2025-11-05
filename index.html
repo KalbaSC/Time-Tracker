@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Timecard Summary — Daily / Weekly / Monthly</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- SheetJS for reading .xlsx files -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0e14; --panel:#121826; --muted:#a9b0c0; --text:#eef2ff; --accent:#7cacf8; --ok:#24c17a; --warn:#ffb86b; --bad:#ff6b6b;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--text)}
+    header{padding:24px; border-bottom:1px solid #1b2234; background:linear-gradient(180deg,#0f1421,transparent)}
+    h1{margin:0 0 8px; font-size:24px}
+    p.sub{margin:0; color:var(--muted)}
+    .wrap{max-width:1200px; margin:0 auto; padding:20px}
+    .panel{background:var(--panel); border:1px solid #1b2234; border-radius:var(--radius); padding:16px}
+    .grid{display:grid; gap:12px}
+    @media (min-width:900px){ .grid{grid-template-columns: 1.2fr 2fr} }
+    .controls{display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+    label{font-size:12px; color:var(--muted)}
+    .control{display:flex; flex-direction:column; gap:6px; min-width:160px}
+    input[type="number"], select, input[type="file"]{
+      padding:10px 12px; background:#0e1422; color:var(--text);
+      border:1px solid #1b2234; border-radius:10px; outline:none;
+    }
+    input[type="file"]{padding:8px; background:transparent; border:none}
+    .btn{
+      appearance:none; border:none; border-radius:12px; padding:10px 14px;
+      background:var(--accent); color:#081022; font-weight:600; cursor:pointer;
+    }
+    .btn.secondary{background:#1b2234; color:var(--text); border:1px solid #28324a}
+    .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    table{width:100%; border-collapse:separate; border-spacing:0; margin-top:10px}
+    thead th{
+      position:sticky; top:0; background:#0f1524; z-index:1;
+      text-align:left; padding:10px; font-size:12px; color:var(--muted);
+      border-bottom:1px solid #223056;
+    }
+    tbody td{padding:10px; border-bottom:1px solid #1b2234}
+    tbody tr:hover{background:#0e1422}
+    .right{text-align:right}
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px}
+    .pill.ok{background:rgba(36,193,122,.12); color:var(--ok)}
+    .pill.warn{background:rgba(255,184,107,.12); color:var(--warn)}
+    .pill.bad{background:rgba(255,107,107,.12); color:var(--bad)}
+    .note{color:var(--muted); font-size:12px}
+    .footer{margin-top:8px; color:var(--muted); font-size:12px}
+    .hl{color:var(--accent)}
+    .nowrap{white-space:nowrap}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Timecard Summary</h1>
+      <p class="sub">Upload your Excel timecard → compute worked hours, undertime (fall short), and overtime. View by day, week, or month.</p>
+    </div>
+  </header>
+
+  <div class="wrap grid">
+    <!-- Left: File & Settings -->
+    <section class="panel">
+      <div class="control">
+        <label>Upload .xlsx timecard</label>
+        <input id="file" type="file" accept=".xlsx,.xls" />
+      </div>
+
+      <div class="controls" style="margin-top:8px">
+        <div class="control">
+          <label>View</label>
+          <select id="view">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>Expected hours per day</label>
+          <input id="expected" type="number" min="0" step="0.25" value="7" />
+        </div>
+
+        <div class="control">
+          <label>Week starts on</label>
+          <select id="weekStart">
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="6">Saturday</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>&nbsp;</label>
+          <button id="download" class="btn secondary">Download CSV</button>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="note">
+          • Assumes each row has a <span class="hl">Date</span> and a comma-separated list of clock times (e.g., <span class="nowrap">08:30:01,13:10:16,16:31:21,19:51:08</span>).
+          Pairs are treated as IN/OUT, summed per day. Odd last time is ignored.
+          <br/>• Columns auto-detected: <em>Employee ID</em>, <em>First Name</em>, <em>Date</em>, <em>Time</em>. You can tweak detection in code comments if your headers differ.
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Results -->
+    <section class="panel" style="min-height:420px">
+      <div class="flex" style="justify-content:space-between; margin-bottom:8px">
+        <div class="note"><span id="meta">No file loaded.</span></div>
+        <div class="flex">
+          <button id="recalc" class="btn">Recalculate</button>
+        </div>
+      </div>
+      <div style="overflow:auto; max-height:70vh">
+        <table id="table">
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Name</th>
+              <th>Period</th>
+              <th class="right">Worked</th>
+              <th class="right">Expected</th>
+              <th class="right">Overtime</th>
+              <th class="right">Fall Short</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="7" class="note">Upload a file to see results.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+  const $ = (id)=>document.getElementById(id);
+  const fileInput = $('file');
+  const viewSel = $('view');
+  const weekStartSel = $('weekStart');
+  const expectedInp = $('expected');
+  const metaEl = $('meta');
+  const tbody = $('tbody');
+  const recalcBtn = $('recalc');
+  const dlBtn = $('download');
+
+  let rawRows = []; // parsed daily rows: {empId, name, date: Date, workedSec}
+  let lastCSV = '';
+
+  fileInput.addEventListener('change', handleFile, false);
+  recalcBtn.addEventListener('click', render);
+  viewSel.addEventListener('change', render);
+  expectedInp.addEventListener('change', render);
+  weekStartSel.addEventListener('change', render);
+  dlBtn.addEventListener('click', () => {
+    if (!lastCSV) { alert('No data to download yet.'); return; }
+    const blob = new Blob([lastCSV], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'timecard_summary.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  function handleFile() {
+    const f = fileInput.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const firstSheet = wb.SheetNames[0];
+      const ws = wb.Sheets[firstSheet];
+
+      // Grab as rows (array of arrays) to detect header row robustly
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+      // Find header row index where first cell equals 'Employee ID'
+      let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
+      if (headerIdx === -1) {
+        // Sometimes Report has Arabic title row then headers in row 1
+        headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
+      }
+      if (headerIdx === -1) {
+        alert('Could not find header row containing "Employee ID". Please adjust code or your file.');
+        return;
+      }
+
+      // Detect likely columns
+      const header = rows[headerIdx];
+      const colIdx = {
+        empId: header.findIndex(h => String(h).trim().toLowerCase().includes('employee id')),
+        name: header.findIndex(h => String(h).trim().toLowerCase().includes('first name')),
+        date: header.findIndex(h => String(h).trim().toLowerCase() === 'date'),
+        timesCount: header.findIndex(h => String(h).trim().toLowerCase() === 'times'), // optional
+        timeList: header.findIndex(h => String(h).trim().toLowerCase() === 'time'),
+      };
+      // Fallbacks (based on your sample structure)
+      if (colIdx.empId === -1) colIdx.empId = 0;
+      if (colIdx.name === -1) colIdx.name = 1;
+      if (colIdx.date === -1) colIdx.date = 2;
+      if (colIdx.timeList === -1) colIdx.timeList = 4;
+
+      // Parse data
+      const out = [];
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || r.length === 0) continue;
+        const empId = String(r[colIdx.empId] ?? '').trim();
+        const name = String(r[colIdx.name] ?? '').trim();
+        const dateCell = r[colIdx.date];
+        const timesStr = String(r[colIdx.timeList] ?? '').trim();
+
+        if (!empId || !name || !dateCell || !timesStr) continue;
+
+        const d = parseExcelDate(dateCell);
+        if (!d) continue;
+
+        const workedSec = sumPairsToSeconds(timesStr);
+        out.push({empId, name, date: d, workedSec});
+      }
+
+      rawRows = out;
+      metaEl.textContent = `${f.name} — ${out.length} rows parsed`;
+      render();
+    };
+    reader.readAsArrayBuffer(f);
+  }
+
+  function parseExcelDate(v){
+    // v can be JS Date, Excel serial, or string 'YYYY-MM-DD'
+    if (v instanceof Date && !isNaN(v)) return v;
+    if (typeof v === 'number') {
+      // Excel serial: days since 1899-12-30
+      const epoch = new Date(Date.UTC(1899,11,30));
+      const d = new Date(epoch.getTime() + v*86400000);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    const s = String(v).trim();
+    const t = Date.parse(s);
+    if (!isNaN(t)) {
+      const d = new Date(t);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    return null;
+  }
+
+  function sumPairsToSeconds(csv){
+    // csv like: "08:30:01,13:10:16,16:31:21,19:51:08"
+    const parts = csv.split(',').map(x => x.trim()).filter(Boolean);
+    let total = 0;
+    for (let i = 0; i + 1 < parts.length; i += 2) {
+      const a = hmsToSec(parts[i]);
+      const b = hmsToSec(parts[i+1]);
+      let diff = b - a;
+      if (diff < 0) diff += 24*3600; // handle across midnight
+      total += diff;
+    }
+    return total;
+  }
+
+  function hmsToSec(hms){
+    const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(hms);
+    if (!m) return 0;
+    const h = parseInt(m[1],10)||0;
+    const mm = parseInt(m[2],10)||0;
+    const s = parseInt(m[3]||'0',10)||0;
+    return h*3600 + mm*60 + s;
+  }
+
+  function secToHHMM(sec){
+    const sign = sec < 0 ? '-' : '';
+    const v = Math.abs(sec);
+    const h = Math.floor(v/3600);
+    const m = Math.floor((v%3600)/60);
+    return `${sign}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  function getWeekStart(d, startDow){
+    // returns the date for the week start (local) given start day of week (0=Sun..6=Sat)
+    const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dow = date.getDay();
+    const diff = (dow - startDow + 7) % 7;
+    date.setDate(date.getDate() - diff);
+    date.setHours(0,0,0,0);
+    return date;
+  }
+
+  function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+
+  function render(){
+    if (!rawRows.length){
+      tbody.innerHTML = `<tr><td colspan="7" class="note">Upload a file to see results.</td></tr>`;
+      lastCSV = '';
+      return;
+    }
+    const expectedPerDayHrs = parseFloat(expectedInp.value || '0');
+    const expectedPerDaySec = Math.max(0, expectedPerDayHrs) * 3600;
+    const view = viewSel.value; // daily | weekly | monthly
+    const weekStart = parseInt(weekStartSel.value, 10);
+
+    // Group by employee + period key
+    const map = new Map();
+    for (const r of rawRows) {
+      let keyPeriod = '';
+      if (view === 'daily') {
+        keyPeriod = ymd(r.date);
+      } else if (view === 'weekly') {
+        const ws = getWeekStart(r.date, weekStart);
+        keyPeriod = `W:${ymd(ws)}`;
+      } else {
+        keyPeriod = `M:${ym(r.date)}`;
+      }
+      const key = `${r.empId}||${r.name}||${keyPeriod}`;
+      if (!map.has(key)) {
+        map.set(key, {empId:r.empId, name:r.name, period:keyPeriod, workedSec:0, days: new Set()});
+      }
+      const obj = map.get(key);
+      obj.workedSec += r.workedSec;
+      obj.days.add(ymd(r.date)); // count unique days with entries
+    }
+
+    // Build rows
+    const rows = [];
+    for (const obj of map.values()) {
+      const daysCount = (view === 'daily') ? 1 : obj.days.size;
+      const expected = expectedPerDaySec * daysCount;
+      const delta = obj.workedSec - expected;
+      const overtime = Math.max(0, delta);
+      const short = Math.max(0, -delta);
+      rows.push({
+        empId: obj.empId,
+        name: obj.name,
+        period: prettyPeriod(obj.period, weekStart),
+        worked: obj.workedSec,
+        expected,
+        overtime,
+        short
+      });
+    }
+
+    // Sort by Employee, then Period
+    rows.sort((a,b)=> (a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period)));
+
+    // Render table
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${escapeHTML(r.empId)}</td>
+        <td>${escapeHTML(r.name)}</td>
+        <td>${escapeHTML(r.period)}</td>
+        <td class="right">${secToHHMM(r.worked)}</td>
+        <td class="right">${secToHHMM(r.expected)}</td>
+        <td class="right">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">${secToHHMM(0)}</span>`}</td>
+        <td class="right">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">${secToHHMM(0)}</span>`}</td>
+      </tr>
+    `).join('');
+
+    // Prepare CSV for download
+    const csv = [
+      ['Employee ID','Name','Period','Worked (HH:MM)','Expected (HH:MM)','Overtime (HH:MM)','Fall Short (HH:MM)'],
+      ...rows.map(r=>[
+        r.empId, r.name, r.period,
+        secToHHMM(r.worked), secToHHMM(r.expected),
+        secToHHMM(r.overtime), secToHHMM(r.short ? -r.short : 0) // keep sign consistent
+      ])
+    ].map(row => row.map(csvEscape).join(',')).join('\n');
+    lastCSV = csv;
+
+    metaEl.textContent = `Records: ${rawRows.length} — View: ${viewSel.value} — Expected/day: ${expectedPerDayHrs} h`;
+  }
+
+  function prettyPeriod(p, weekStart){
+    if (p.startsWith('W:')){
+      const d = new Date(p.slice(2));
+      const end = new Date(d); end.setDate(end.getDate()+6);
+      return `Week ${ymd(d)} → ${ymd(end)} (start ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][weekStart]})`;
+    }
+    if (p.startsWith('M:')) return p.slice(2); // YYYY-MM
+    return p; // YYYY-MM-DD
+  }
+
+  function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]); }
+  function csvEscape(s){
+    s = String(s);
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+    return s;
+  }
+})();
+</script>
+</body>
+</html>
