@@ -18,6 +18,7 @@
         <a id="nav-login" href="ksc-auth.html">تسجيل الدخول</a>
         <a id="nav-punch" href="ksc-punch.html">البصمة</a>
         <a id="nav-summary" href="ksc-summary.html">ملخصي</a>
+        <button id="btnLogout" class="secondary" style="margin-right:10px">🚪 تسجيل الخروج</button>
       </nav>
     </header>
 
@@ -159,7 +160,10 @@ function handlePunch(type) {
 
 $('btnIn').onclick = () => handlePunch('in');
 $('btnOut').onclick = () => handlePunch('out');
-$('btnLogout').onclick = () => { KSC.setActive(null); location.href = 'ksc-auth.html'; };
+$('btnLogout').onclick = () => {
+  KSC.setActive(null);
+  location.href = 'ksc-auth.html';
+};
 
 refresh();
 </script>
