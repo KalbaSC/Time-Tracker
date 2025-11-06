@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول | نادي كلباء الرياضي الثقافي</title>
+  <link rel="stylesheet" href="ksc-shared.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-title">نظام البصمة - نادي كلباء</div>
+      </div>
+      <nav class="nav">
+        <a id="nav-login" href="ksc-auth.html">تسجيل الدخول</a>
+        <a id="nav-punch" href="ksc-punch.html">البصمة</a>
+        <a id="nav-summary" href="ksc-summary.html">ملخصي</a>
+      </nav>
+    </header>
+
+    <section class="card">
+      <h2>تسجيل الدخول</h2>
+      <div class="row">
+        <div class="col">
+          <label>الرقم الوظيفي</label>
+          <input id="empId" placeholder="مثال: 12034" />
+        </div>
+        <div class="col">
+          <label>الرمز السري (PIN)</label>
+          <input id="empPin" type="password" inputmode="numeric" placeholder="4–6 أرقام" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <button id="btnLogin">تسجيل الدخول</button>
+        </div>
+        <div class="col">
+          <button class="secondary" id="toRegister">إنشاء حساب موظف</button>
+        </div>
+      </div>
+      <p id="msg" class="note"></p>
+      <hr class="sep">
+      <div class="small note">ملاحظة: النسخة تجريبية وتخزن البيانات محليًا (المتصفح فقط).</div>
+    </section>
+
+    <section class="card" id="registerBox" style="display:none">
+      <h2>تسجيل موظف جديد</h2>
+      <div class="row">
+        <div class="col">
+          <label>الاسم</label>
+          <input id="empName" placeholder="الاسم الثلاثي" />
+        </div>
+        <div class="col">
+          <label>الرقم الوظيفي</label>
+          <input id="empIdReg" placeholder="مثال: 12034" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>الرمز السري (PIN)</label>
+          <input id="empPinReg" type="password" inputmode="numeric" placeholder="4–6 أرقام" />
+        </div>
+        <div class="col">
+          <label>تأكيد الرمز السري</label>
+          <input id="empPin2Reg" type="password" inputmode="numeric" placeholder="أعد الإدخال" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col"><button id="btnRegister">تسجيل</button></div>
+        <div class="col"><button class="secondary" id="cancelReg">إلغاء</button></div>
+      </div>
+      <p id="regMsg" class="note"></p>
+    </section>
+
+    <div class="footer">© نادي كلباء الرياضي الثقافي</div>
+  </div>
+
+  <script src="ksc-shared.js"></script>
+  <script>
+    KSC.initNav('login');
+    const empId=$('empId'), empPin=$('empPin'), msg=$('msg');
+    const regBox=$('registerBox'), toRegister=$('toRegister'), cancelReg=$('cancelReg');
+    const empName=$('empName'), empIdReg=$('empIdReg'), empPinReg=$('empPinReg'), empPin2Reg=$('empPin2Reg'), regMsg=$('regMsg');
+
+    toRegister.onclick=()=>{ regBox.style.display='block'; window.scrollTo(0,document.body.scrollHeight); };
+    cancelReg.onclick=()=>{ regBox.style.display='none'; };
+
+    $('btnLogin').onclick=()=>{
+      const id=(empId.value||'').trim(); const pin=(empPin.value||'').trim();
+      if(!id||!pin){ msg.textContent='أدخلي الرقم الوظيفي والرمز السري.'; return; }
+      const db=KSC.readDB();
+      if(!db[id]){ msg.textContent='الموظف غير مسجل.'; return; }
+      if(db[id].pin!==pin){ msg.textContent='الرمز السري غير صحيح.'; return; }
+      KSC.setActive({empId:id});
+      msg.textContent='تم الدخول.';
+      location.href='ksc-punch.html';
+    };
+
+    $('btnRegister').onclick=()=>{
+      const name=(empName.value||'').trim(); const id=(empIdReg.value||'').trim();
+      const pin=(empPinReg.value||'').trim(); const pin2=(empPin2Reg.value||'').trim();
+      if(!name||!id||!pin||!pin2){ regMsg.textContent='يرجى تعبئة جميع الحقول.'; return; }
+      if(pin!==pin2){ regMsg.textContent='الرمز السري وتأكيده غير متطابقين.'; return; }
+      const db=KSC.readDB();
+      if(db[id]){ regMsg.textContent='هذا الرقم الوظيفي مسجل مسبقًا.'; return; }
+      db[id]={name, pin, punches:{}}; KSC.writeDB(db);
+      regMsg.textContent='تم التسجيل! بإمكانك الآن تسجيل الدخول.';
+    };
+
+    // Auto-redirect if already logged
+    const active=KSC.getActive();
+    if(active && active.empId){ location.href='ksc-punch.html'; }
+  </script>
+</body>
+</html>

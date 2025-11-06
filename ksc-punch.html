@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>البصمة | نادي كلباء الرياضي الثقافي</title>
+  <link rel="stylesheet" href="ksc-shared.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-title">نظام البصمة - نادي كلباء</div>
+      </div>
+      <nav class="nav">
+        <a id="nav-login" href="ksc-auth.html">تسجيل الدخول</a>
+        <a id="nav-punch" href="ksc-punch.html">البصمة</a>
+        <a id="nav-summary" href="ksc-summary.html">ملخصي</a>
+      </nav>
+    </header>
+
+    <section class="card">
+      <h2>البصمة</h2>
+      <div id="authState" class="alert error small" style="display:none"></div>
+      <div class="row">
+        <div class="col">
+          <div class="kpi"><div class="label">الموظف</div><div class="value" id="empName">—</div></div>
+        </div>
+        <div class="col">
+          <div class="kpi"><div class="label">الرقم الوظيفي</div><div class="value mono" id="empId">—</div></div>
+        </div>
+        <div class="col">
+          <div class="kpi"><div class="label">آخر حركة</div><div class="value" id="lastAction">—</div></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col"><button id="btnIn">⬆️ بصمة دخول</button></div>
+        <div class="col"><button class="secondary" id="btnOut">⬇️ بصمة خروج</button></div>
+        <div class="col"><button class="secondary" id="btnLogout">تسجيل الخروج</button></div>
+      </div>
+      <p id="punchMsg" class="note"></p>
+    </section>
+
+    <section class="card">
+      <h2>بصمات اليوم</h2>
+      <table class="table">
+        <thead><tr><th>الوقت</th><th>النوع</th></tr></thead>
+        <tbody id="todayTable"><tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr></tbody>
+      </table>
+    </section>
+
+    <div class="footer">© نادي كلباء الرياضي الثقافي</div>
+  </div>
+
+  <script src="ksc-shared.js"></script>
+  <script>
+    KSC.initNav('punch');
+    const a=KSC.getActive();
+    const authState=$('authState');
+    if(!a){ authState.style.display='block'; authState.textContent='يرجى تسجيل الدخول أولًا.'; setTimeout(()=>location.href='ksc-auth.html',1200); }
+    const db=KSC.readDB(); if(!a||!db[a.empId]){ /* handled above */ }
+
+    const emp=(a&&db[a.empId])||{name:'—', punches:{}};
+    $('empName').textContent=emp.name; $('empId').textContent=a?a.empId:'—';
+
+    function refresh(){
+      const todayKey=KSC.ymd(new Date()); const pairs=emp.punches[todayKey]||[];
+      if(!pairs.length){ $('todayTable').innerHTML='<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>'; $('lastAction').textContent='—'; }
+      else{
+        $('todayTable').innerHTML = pairs.map(p=>`<tr><td class="mono">${p.in}${p.out?(' → '+p.out):''}</td><td>${p.out?'زوج مكتمل':'دخول مفتوح'}</td></tr>`).join('');
+        const last=pairs[pairs.length-1]; $('lastAction').textContent = last.out?('خروج '+last.out):('دخول '+last.in);
+      }
+      KSC.writeDB(db);
+    }
+
+    $('btnIn').onclick=()=>{
+      const today=KSC.ymd(new Date()); emp.punches[today]=emp.punches[today]||[];
+      const ps=emp.punches[today]; if(ps.length && !ps[ps.length-1].out){ $('punchMsg').textContent='يوجد دخول مفتوح لم يُغلق.'; return; }
+      ps.push({in:KSC.nowHHMM(), out:''}); $('punchMsg').textContent='تم تسجيل دخول.'; refresh();
+    };
+    $('btnOut').onclick=()=>{
+      const today=KSC.ymd(new Date()); const ps=emp.punches[today]||[];
+      if(!ps.length){ $('punchMsg').textContent='لا يوجد دخول لإغلاقه.'; return; }
+      const last=ps[ps.length-1]; if(last.out){ $('punchMsg').textContent='آخر زوج مغلق بالفعل.'; return; }
+      last.out=KSC.nowHHMM(); $('punchMsg').textContent='تم تسجيل خروج.'; refresh();
+    };
+    $('btnLogout').onclick=()=>{ KSC.setActive(null); location.href='ksc-auth.html'; };
+
+    refresh();
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+
+/* ksc-shared.css - Kalba Sports & Cultural Club theme (Arabic RTL) */
+:root{
+  --bg:#0b0b0b; --card:#111213; --accent:#f6c21a; --accent-2:#1f1f1f;
+  --text:#f2f2f2; --muted:#aaaaaa; --ok:#14b86a; --bad:#ef4444;
+  --radius:18px;
+  --shadow: 0 6px 20px rgba(0,0,0,.25);
+  font-family: "Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Kufi Arabic", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);direction:rtl}
+a{color:var(--accent);text-decoration:none}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-logo{width:40px;height:40px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#111;font-weight:900}
+.brand-title{font-weight:800;letter-spacing:.5px}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav a{padding:10px 14px;background:var(--accent-2);border-radius:12px}
+.nav a.active{background:var(--accent);color:#111}
+.card{background:linear-gradient(180deg, #141515, #0f0f0f);border:1px solid #1f1f1f;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px 0;font-size:20px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1 1 280px}
+label{display:block;margin-bottom:6px;color:var(--muted);font-size:14px}
+input,select,button{width:100%;padding:12px;border-radius:12px;border:1px solid #2a2a2a;background:#0f0f0f;color:var(--text)}
+button{cursor:pointer;background:var(--accent);color:#111;border-color:#d4a412;font-weight:700}
+button.secondary{background:#1c1c1c;color:var(--text);border-color:#2b2b2b}
+.note{color:var(--muted);font-size:13px}
+.mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+.kpi{background:#0f0f0f;border:1px solid #212121;border-radius:14px;padding:12px}
+.kpi .label{color:var(--muted);font-size:12px}
+.kpi .value{font-size:22px;font-weight:800;margin-top:4px}
+.kpi.ok .value{color:var(--ok)}
+.kpi.bad .value{color:var(--bad)}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid #222;padding:10px;text-align:right}
+.table th{color:var(--muted);font-weight:600}
+.footer{margin-top:20px;color:var(--muted);font-size:12px;text-align:center}
+.alert{padding:12px;background:#161616;border:1px solid #2a2a2a;border-radius:12px}
+.success{border-color:#116b3a;background:#0c2218}
+.error{border-color:#7a1c1c;background:#1a0d0d}
+.center{display:flex;justify-content:center;align-items:center}
+.small{font-size:12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+hr.sep{border:none;border-top:1px dashed #2a2a2a;margin:10px 0}
+/* mobile */
+@media (max-width:600px){.brand-title{font-size:14px}}

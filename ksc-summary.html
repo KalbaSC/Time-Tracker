@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ملخصي | نادي كلباء الرياضي الثقافي</title>
+  <link rel="stylesheet" href="ksc-shared.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-title">نظام البصمة - نادي كلباء</div>
+      </div>
+      <nav class="nav">
+        <a id="nav-login" href="ksc-auth.html">تسجيل الدخول</a>
+        <a id="nav-punch" href="ksc-punch.html">البصمة</a>
+        <a id="nav-summary" href="ksc-summary.html">ملخصي</a>
+      </nav>
+    </header>
+
+    <section class="card">
+      <h2>ملخص الساعات</h2>
+      <div id="authState" class="alert error small" style="display:none"></div>
+
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">اليوم — عملت</div><div class="value" id="tWorked">00:00</div></div>
+        <div class="kpi"><div class="label">اليوم — المتوقّع</div><div class="value" id="tExpected">00:00</div></div>
+        <div class="kpi ok"><div class="label">اليوم — المتبقي</div><div class="value" id="tLeft">00:00</div></div>
+        <div class="kpi"><div class="label">آخر حركة</div><div class="value" id="lastAction">—</div></div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">هذا الأسبوع — عملت</div><div class="value" id="wWorked">00:00</div></div>
+        <div class="kpi"><div class="label">هذا الأسبوع — المتوقّع</div><div class="value" id="wExpected">00:00</div></div>
+        <div class="kpi ok"><div class="label">هذا الأسبوع — المتبقي</div><div class="value" id="wLeft">00:00</div></div>
+        <div class="kpi"><div class="label">هذا الشهر — عملت</div><div class="value" id="mWorked">00:00</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>بصمات اليوم</h2>
+      <table class="table">
+        <thead><tr><th>الوقت</th><th>النوع</th></tr></thead>
+        <tbody id="todayTable"><tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr></tbody>
+      </table>
+      <div class="row" style="margin-top:10px">
+        <div class="col"><button class="secondary" id="download">📥 تنزيل سجلاتي (CSV)</button></div>
+      </div>
+    </section>
+
+    <div class="footer">© نادي كلباء الرياضي الثقافي</div>
+  </div>
+
+  <script src="ksc-shared.js"></script>
+  <script>
+    KSC.initNav('summary');
+    const a=KSC.getActive();
+    const authState=$('authState');
+    if(!a){ authState.style.display='block'; authState.textContent='يرجى تسجيل الدخول أولًا.'; setTimeout(()=>location.href='ksc-auth.html',1200); }
+    const db=KSC.readDB(); const emp=(a&&db[a.empId])||{punches:{}};
+
+    function refresh(){
+      const today=new Date(); const key=KSC.ymd(today); const pairs=emp.punches[key]||[];
+      const worked = KSC.sumPairs(pairs);
+      const expected= KSC.expectedSecondsForDate(today, pairs.length>0);
+      $('tWorked').textContent = KSC.secToHHMM(worked);
+      $('tExpected').textContent = KSC.secToHHMM(expected);
+      $('tLeft').textContent = KSC.secToHHMM(Math.max(0, expected - worked));
+
+      if(!pairs.length){ $('todayTable').innerHTML='<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>'; $('lastAction').textContent='—'; }
+      else{
+        $('todayTable').innerHTML = pairs.map(p=>`<tr><td class="mono">${p.in}${p.out?(' → '+p.out):''}</td><td>${p.out?'زوج مكتمل':'دخول مفتوح'}</td></tr>`).join('');
+        const last=pairs[pairs.length-1]; $('lastAction').textContent = last.out?('خروج '+last.out):('دخول '+last.in);
+      }
+
+      // Week (start Sunday)
+      const ws=new Date(today); ws.setDate(today.getDate() - today.getDay()); // day 0 = Sunday in JS? Actually 0=Sunday => sets to Sunday
+      const we=new Date(ws); we.setDate(ws.getDate()+6);
+      const wWorked=KSC.computeRangeWorked(emp, ws, we);
+      const wExpected=KSC.computeRangeExpected(emp, ws, we);
+      $('wWorked').textContent=KSC.secToHHMM(wWorked);
+      $('wExpected').textContent=KSC.secToHHMM(wExpected);
+      $('wLeft').textContent=KSC.secToHHMM(Math.max(0, wExpected - wWorked));
+
+      // Month
+      const ms=new Date(today.getFullYear(), today.getMonth(), 1);
+      const me=new Date(today.getFullYear(), today.getMonth()+1, 0);
+      const mWorked=KSC.computeRangeWorked(emp, ms, me);
+      $('mWorked').textContent=KSC.secToHHMM(mWorked);
+    }
+
+    $('download').onclick=()=>{
+      const rows=[['Date','Pairs (IN→OUT)','Worked (hh:mm)']];
+      const allDays=Object.keys(emp.punches||{}).sort();
+      for(const d of allDays){
+        const pairs=emp.punches[d]||[];
+        const pairsStr=pairs.map(p=>`${p.in}→${p.out||''}`).join('; ');
+        rows.push([d, pairsStr, KSC.secToHHMM(KSC.sumPairs(pairs))]);
+      }
+      KSC.downloadCSV(rows, `punches_${a.empId}.csv`);
+    };
+
+    refresh();
+  </script>
+</body>
+</html>
