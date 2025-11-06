@@ -57,7 +57,6 @@
 
 <script src="ksc-shared.js"></script>
 <script>
-// === INIT ===
 KSC.initNav('punch');
 const active = KSC.getActive();
 const authState = $('authState');
@@ -67,15 +66,13 @@ if (!active) {
   setTimeout(() => location.href = 'ksc-auth.html', 1200);
 }
 
-// === LOCATION CONFIG ===
 const allowedZones = [
   { name: 'نادي اتحاد كلباء الرياضي الثقافي', lat: 25.05962, lng: 56.348197, radius: 150 },
-  // You can add more zones here if needed:
-  // { name: 'الملعب الفرعي', lat: 25.0605, lng: 56.3490, radius: 120 },
+  { name: 'نادي اتحاد كلباء الرياضي الثقافي', lat: 25.045830, lng: 56.358105, radius: 150 },
 ];
 
 function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Earth radius in meters
+  const R = 6371e3;
   const φ1 = lat1 * Math.PI/180, φ2 = lat2 * Math.PI/180;
   const Δφ = (lat2 - lat1) * Math.PI/180;
   const Δλ = (lon2 - lon1) * Math.PI/180;
@@ -106,13 +103,11 @@ function requestLocation(cb) {
   );
 }
 
-// === EMPLOYEE DATA ===
 const db = KSC.readDB();
 const emp = (active && db[active.empId]) || { name:'—', punches:{} };
 $('empName').textContent = emp.name;
 $('empId').textContent = active ? active.empId : '—';
 
-// === FUNCTIONS ===
 function refresh() {
   const todayKey = KSC.ymd(new Date());
   const pairs = emp.punches[todayKey] || [];
