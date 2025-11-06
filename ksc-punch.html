@@ -55,41 +55,119 @@
     <div class="footer">© نادي كلباء الرياضي الثقافي</div>
   </div>
 
-  <script src="ksc-shared.js"></script>
-  <script>
-    KSC.initNav('punch');
-    const a=KSC.getActive();
-    const authState=$('authState');
-    if(!a){ authState.style.display='block'; authState.textContent='يرجى تسجيل الدخول أولًا.'; setTimeout(()=>location.href='ksc-auth.html',1200); }
-    const db=KSC.readDB(); if(!a||!db[a.empId]){ /* handled above */ }
+<script src="ksc-shared.js"></script>
+<script>
+// === INIT ===
+KSC.initNav('punch');
+const active = KSC.getActive();
+const authState = $('authState');
+if (!active) {
+  authState.style.display = 'block';
+  authState.textContent = 'يرجى تسجيل الدخول أولًا.';
+  setTimeout(() => location.href = 'ksc-auth.html', 1200);
+}
 
-    const emp=(a&&db[a.empId])||{name:'—', punches:{}};
-    $('empName').textContent=emp.name; $('empId').textContent=a?a.empId:'—';
+// === LOCATION CONFIG ===
+const allowedZones = [
+  { name: 'نادي اتحاد كلباء الرياضي الثقافي', lat: 25.05962, lng: 56.348197, radius: 150 },
+  // You can add more zones here if needed:
+  // { name: 'الملعب الفرعي', lat: 25.0605, lng: 56.3490, radius: 120 },
+];
 
-    function refresh(){
-      const todayKey=KSC.ymd(new Date()); const pairs=emp.punches[todayKey]||[];
-      if(!pairs.length){ $('todayTable').innerHTML='<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>'; $('lastAction').textContent='—'; }
-      else{
-        $('todayTable').innerHTML = pairs.map(p=>`<tr><td class="mono">${p.in}${p.out?(' → '+p.out):''}</td><td>${p.out?'زوج مكتمل':'دخول مفتوح'}</td></tr>`).join('');
-        const last=pairs[pairs.length-1]; $('lastAction').textContent = last.out?('خروج '+last.out):('دخول '+last.in);
-      }
-      KSC.writeDB(db);
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Earth radius in meters
+  const φ1 = lat1 * Math.PI/180, φ2 = lat2 * Math.PI/180;
+  const Δφ = (lat2 - lat1) * Math.PI/180;
+  const Δλ = (lon2 - lon1) * Math.PI/180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isInsideAllowed(lat, lng) {
+  for (const z of allowedZones) {
+    const dist = getDistance(lat, lng, z.lat, z.lng);
+    if (dist <= z.radius) return { ok: true, zone: z.name, dist };
+  }
+  return { ok: false };
+}
+
+function requestLocation(cb) {
+  if (!navigator.geolocation) {
+    alert('⚠️ جهازك لا يدعم تحديد الموقع الجغرافي');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => cb(true, pos.coords.latitude, pos.coords.longitude),
+    err => {
+      alert('❌ لم يتم السماح بالوصول إلى الموقع. يرجى تفعيل GPS.');
+      cb(false);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// === EMPLOYEE DATA ===
+const db = KSC.readDB();
+const emp = (active && db[active.empId]) || { name:'—', punches:{} };
+$('empName').textContent = emp.name;
+$('empId').textContent = active ? active.empId : '—';
+
+// === FUNCTIONS ===
+function refresh() {
+  const todayKey = KSC.ymd(new Date());
+  const pairs = emp.punches[todayKey] || [];
+  if (!pairs.length) {
+    $('todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
+    $('lastAction').textContent = '—';
+  } else {
+    $('todayTable').innerHTML = pairs.map(p =>
+      `<tr><td class="mono">${p.in}${p.out ? (' → ' + p.out) : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
+    ).join('');
+    const last = pairs[pairs.length-1];
+    $('lastAction').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
+  }
+  KSC.writeDB(db);
+}
+
+function handlePunch(type) {
+  requestLocation((ok, lat, lng) => {
+    if (!ok) return;
+    const check = isInsideAllowed(lat, lng);
+    if (!check.ok) {
+      $('punchMsg').innerHTML = '❌ لا يمكنك تسجيل ' + (type === 'in' ? 'الدخول' : 'الخروج') +
+        ' لأنك خارج نطاق النادي.';
+      return;
     }
 
-    $('btnIn').onclick=()=>{
-      const today=KSC.ymd(new Date()); emp.punches[today]=emp.punches[today]||[];
-      const ps=emp.punches[today]; if(ps.length && !ps[ps.length-1].out){ $('punchMsg').textContent='يوجد دخول مفتوح لم يُغلق.'; return; }
-      ps.push({in:KSC.nowHHMM(), out:''}); $('punchMsg').textContent='تم تسجيل دخول.'; refresh();
-    };
-    $('btnOut').onclick=()=>{
-      const today=KSC.ymd(new Date()); const ps=emp.punches[today]||[];
-      if(!ps.length){ $('punchMsg').textContent='لا يوجد دخول لإغلاقه.'; return; }
-      const last=ps[ps.length-1]; if(last.out){ $('punchMsg').textContent='آخر زوج مغلق بالفعل.'; return; }
-      last.out=KSC.nowHHMM(); $('punchMsg').textContent='تم تسجيل خروج.'; refresh();
-    };
-    $('btnLogout').onclick=()=>{ KSC.setActive(null); location.href='ksc-auth.html'; };
+    const today = KSC.ymd(new Date());
+    emp.punches[today] = emp.punches[today] || [];
+    const ps = emp.punches[today];
+
+    if (type === 'in') {
+      if (ps.length && !ps[ps.length-1].out) {
+        $('punchMsg').textContent = 'يوجد دخول مفتوح لم يُغلق بعد.';
+        return;
+      }
+      ps.push({ in: KSC.nowHHMM(), out: '' });
+      $('punchMsg').innerHTML = '✅ تم تسجيل دخول بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
+    } else {
+      if (!ps.length) { $('punchMsg').textContent = 'لا يوجد دخول لإغلاقه.'; return; }
+      const last = ps[ps.length-1];
+      if (last.out) { $('punchMsg').textContent = 'آخر زوج مغلق بالفعل.'; return; }
+      last.out = KSC.nowHHMM();
+      $('punchMsg').innerHTML = '✅ تم تسجيل خروج بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
+    }
 
     refresh();
-  </script>
+  });
+}
+
+$('btnIn').onclick = () => handlePunch('in');
+$('btnOut').onclick = () => handlePunch('out');
+$('btnLogout').onclick = () => { KSC.setActive(null); location.href = 'ksc-auth.html'; };
+
+refresh();
+</script>
+
 </body>
 </html>
