@@ -1,74 +1,217 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>البصمة | نادي كلباء الرياضي الثقافي</title>
+  <title>نظام البصمة | نادي اتحاد كلباء الرياضي الثقافي</title>
   <link rel="stylesheet" href="ksc-shared.css" />
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: "Tajawal", "Noto Kufi Arabic", sans-serif;
+      direction: rtl;
+      text-align: right;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0b0b0b;
+      padding: 10px 20px;
+      border-bottom: 2px solid #f6c21a;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo img {
+      height: 45px;
+      width: 45px;
+      border-radius: 50%;
+    }
+    .logo h1 {
+      font-size: 20px;
+      margin: 0;
+      color: #f6c21a;
+    }
+    #btnLogout {
+      background: #f6c21a;
+      color: #000;
+      font-weight: 700;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    #btnLogout:hover { background: #ffda41; }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #111;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    .card h2 {
+      color: #f6c21a;
+      margin-bottom: 15px;
+    }
+    .info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f0f0f;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #222;
+    }
+    .info-item {
+      flex: 1 1 250px;
+    }
+    .label {
+      color: #aaa;
+      font-size: 14px;
+    }
+    .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 25px 0;
+      flex-wrap: wrap;
+    }
+    button {
+      font-size: 18px;
+      padding: 14px 40px;
+      border-radius: 14px;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+    }
+    #btnIn {
+      background: #f6c21a;
+      color: #000;
+      font-weight: bold;
+    }
+    #btnOut {
+      background: #222;
+      color: #fff;
+      border: 1px solid #333;
+    }
+    #btnIn:hover { background: #ffda41; }
+    #btnOut:hover { background: #444; }
+
+    #punchMsg {
+      text-align: center;
+      font-size: 15px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .msg-ok {
+      background: rgba(20,184,106,0.15);
+      border: 1px solid #14b86a;
+      color: #14b86a;
+    }
+    .msg-err {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #fff;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #222;
+      text-align: center;
+    }
+    th { color: #f6c21a; }
+    .footer {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
+
+  <header>
+    <div class="logo">
+      <img src="logo.png" alt="Kalba Club Logo">
+      <h1>نظام البصمة - نادي اتحاد كلباء</h1>
+    </div>
+    <button id="btnLogout">🚪 تسجيل الخروج</button>
+  </header>
+
   <div class="container">
-    <header class="header">
-      <div class="brand">
-        <div class="brand-logo">K</div>
-        <div class="brand-title">نظام البصمة - نادي كلباء</div>
-      </div>
-      <nav class="nav">
-        <a id="nav-punch" href="ksc-punch.html">البصمة</a>
-        <a id="nav-summary" href="ksc-summary.html">ملخصي</a>
-        <button id="btnLogout" class="secondary" style="margin-right:10px">🚪 تسجيل الخروج</button>
-      </nav>
-    </header>
 
     <section class="card">
       <h2>البصمة</h2>
-      <div id="authState" class="alert error small" style="display:none"></div>
-      <div class="row">
-        <div class="col">
-          <div class="kpi"><div class="label">الموظف</div><div class="value" id="empName">—</div></div>
+      <div class="info">
+        <div class="info-item">
+          <div class="label">الموظف</div>
+          <div class="value" id="empName">—</div>
         </div>
-        <div class="col">
-          <div class="kpi"><div class="label">الرقم الوظيفي</div><div class="value mono" id="empId">—</div></div>
+        <div class="info-item">
+          <div class="label">الرقم الوظيفي</div>
+          <div class="value" id="empId">—</div>
         </div>
-        <div class="col">
-          <div class="kpi"><div class="label">آخر حركة</div><div class="value" id="lastAction">—</div></div>
+        <div class="info-item">
+          <div class="label">آخر حركة</div>
+          <div class="value" id="lastAction">—</div>
         </div>
       </div>
 
-      <div class="row">
-        <div class="col"><button id="btnIn">⬆️ بصمة دخول</button></div>
-        <div class="col"><button class="secondary" id="btnOut">⬇️ بصمة خروج</button></div>
-        <div class="col"><button class="secondary" id="btnLogout">تسجيل الخروج</button></div>
+      <div class="buttons">
+        <button id="btnIn">⬆️ بصمة دخول</button>
+        <button id="btnOut">⬇️ بصمة خروج</button>
       </div>
-      <p id="punchMsg" class="note"></p>
+
+      <div id="punchMsg"></div>
     </section>
 
     <section class="card">
       <h2>بصمات اليوم</h2>
-      <table class="table">
-        <thead><tr><th>الوقت</th><th>النوع</th></tr></thead>
-        <tbody id="todayTable"><tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr></tbody>
+      <table>
+        <thead>
+          <tr><th>الوقت</th><th>النوع</th></tr>
+        </thead>
+        <tbody id="todayTable">
+          <tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>
+        </tbody>
       </table>
     </section>
 
-    <div class="footer">© نادي كلباء الرياضي الثقافي</div>
+    <div class="footer">© نادي اتحاد كلباء الرياضي الثقافي</div>
+
   </div>
 
 <script src="ksc-shared.js"></script>
 <script>
 KSC.initNav('punch');
 const active = KSC.getActive();
-const authState = $('authState');
-if (!active) {
-  authState.style.display = 'block';
-  authState.textContent = 'يرجى تسجيل الدخول أولًا.';
-  setTimeout(() => location.href = 'ksc-auth.html', 1200);
-}
+if (!active) { location.href = 'ksc-auth.html'; }
 
 const allowedZones = [
-  { name: 'نادي اتحاد كلباء الرياضي الثقافي', lat: 25.05962, lng: 56.348197, radius: 150 },
-  { name: 'نادي اتحاد كلباء الرياضي الثقافي', lat: 25.045830, lng: 56.358105, radius: 150 },
+  { name: 'النادي الرئيسي', lat: 25.05962, lng: 56.348197, radius: 150 },
+  { name: 'الملعب الفرعي', lat: 25.045830, lng: 56.358105, radius: 150 },
 ];
 
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -79,7 +222,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-
 function isInsideAllowed(lat, lng) {
   for (const z of allowedZones) {
     const dist = getDistance(lat, lng, z.lat, z.lng);
@@ -87,16 +229,15 @@ function isInsideAllowed(lat, lng) {
   }
   return { ok: false };
 }
-
 function requestLocation(cb) {
   if (!navigator.geolocation) {
-    alert('⚠️ جهازك لا يدعم تحديد الموقع الجغرافي');
+    alert('⚠️ جهازك لا يدعم تحديد الموقع');
     return;
   }
   navigator.geolocation.getCurrentPosition(
     pos => cb(true, pos.coords.latitude, pos.coords.longitude),
     err => {
-      alert('❌ لم يتم السماح بالوصول إلى الموقع. يرجى تفعيل GPS.');
+      alert('❌ يرجى السماح بالوصول إلى الموقع.');
       cb(false);
     },
     { enableHighAccuracy: true, timeout: 10000 }
@@ -104,19 +245,19 @@ function requestLocation(cb) {
 }
 
 const db = KSC.readDB();
-const emp = (active && db[active.empId]) || { name:'—', punches:{} };
+const emp = db[active.empId];
 $('empName').textContent = emp.name;
-$('empId').textContent = active ? active.empId : '—';
+$('empId').textContent = active.empId;
 
 function refresh() {
-  const todayKey = KSC.ymd(new Date());
-  const pairs = emp.punches[todayKey] || [];
+  const today = KSC.ymd(new Date());
+  const pairs = emp.punches[today] || [];
   if (!pairs.length) {
     $('todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
     $('lastAction').textContent = '—';
   } else {
     $('todayTable').innerHTML = pairs.map(p =>
-      `<tr><td class="mono">${p.in}${p.out ? (' → ' + p.out) : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
+      `<tr><td>${p.in}${p.out ? ' → ' + p.out : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
     ).join('');
     const last = pairs[pairs.length-1];
     $('lastAction').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
@@ -129,8 +270,8 @@ function handlePunch(type) {
     if (!ok) return;
     const check = isInsideAllowed(lat, lng);
     if (!check.ok) {
-      $('punchMsg').innerHTML = '❌ لا يمكنك تسجيل ' + (type === 'in' ? 'الدخول' : 'الخروج') +
-        ' لأنك خارج نطاق النادي.';
+      $('punchMsg').className = 'msg-err';
+      $('punchMsg').textContent = '❌ خارج نطاق الموقع المسموح به.';
       return;
     }
 
@@ -140,29 +281,36 @@ function handlePunch(type) {
 
     if (type === 'in') {
       if (ps.length && !ps[ps.length-1].out) {
-        $('punchMsg').textContent = 'يوجد دخول مفتوح لم يُغلق بعد.';
+        $('punchMsg').className = 'msg-err';
+        $('punchMsg').textContent = '⚠️ لديك دخول مفتوح لم يُغلق بعد.';
         return;
       }
       ps.push({ in: KSC.nowHHMM(), out: '' });
-      $('punchMsg').innerHTML = '✅ تم تسجيل دخول بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
+      $('punchMsg').className = 'msg-ok';
+      $('punchMsg').textContent = '✅ تم تسجيل الدخول بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
     } else {
-      if (!ps.length) { $('punchMsg').textContent = 'لا يوجد دخول لإغلاقه.'; return; }
+      if (!ps.length) {
+        $('punchMsg').className = 'msg-err';
+        $('punchMsg').textContent = '⚠️ لا يوجد دخول لإغلاقه.';
+        return;
+      }
       const last = ps[ps.length-1];
-      if (last.out) { $('punchMsg').textContent = 'آخر زوج مغلق بالفعل.'; return; }
+      if (last.out) {
+        $('punchMsg').className = 'msg-err';
+        $('punchMsg').textContent = '⚠️ آخر دخول مغلق بالفعل.';
+        return;
+      }
       last.out = KSC.nowHHMM();
-      $('punchMsg').innerHTML = '✅ تم تسجيل خروج بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
+      $('punchMsg').className = 'msg-ok';
+      $('punchMsg').textContent = '✅ تم تسجيل الخروج بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
     }
-
     refresh();
   });
 }
 
 $('btnIn').onclick = () => handlePunch('in');
 $('btnOut').onclick = () => handlePunch('out');
-$('btnLogout').onclick = () => {
-  KSC.setActive(null);
-  location.href = 'ksc-auth.html';
-};
+$('btnLogout').onclick = () => { KSC.setActive(null); location.href = 'ksc-auth.html'; };
 
 refresh();
 </script>
