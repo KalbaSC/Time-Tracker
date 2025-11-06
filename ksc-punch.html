@@ -148,6 +148,8 @@
       font-size: 13px;
       margin-top: 20px;
     }
+   .value.ok  { color:#14b86a; }
+   .value.bad { color:#ef4444; }
   </style>
 </head>
 <body>
@@ -177,6 +179,15 @@
           <div class="label">آخر حركة</div>
           <div class="value" id="lastAction">—</div>
         </div>
+       <div class="info-item">
+  <div class="label">ساعات اليوم (عملت)</div>
+  <div class="value" id="todayWorked">00:00</div>
+</div>
+
+<div class="info-item">
+  <div class="label" id="leftLabel">المتبقي</div>
+  <div class="value" id="todayLeft">00:00</div>
+</div> 
       </div>
 
       <div class="buttons">
@@ -250,8 +261,10 @@ $('empName').textContent = emp.name;
 $('empId').textContent = active.empId;
 
 function refresh() {
-  const today = KSC.ymd(new Date());
-  const pairs = emp.punches[today] || [];
+  const todayDate = new Date();
+  const key = KSC.ymd(todayDate);
+
+  const pairs = emp.punches[key] || [];
   if (!pairs.length) {
     $('todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
     $('lastAction').textContent = '—';
@@ -259,11 +272,33 @@ function refresh() {
     $('todayTable').innerHTML = pairs.map(p =>
       `<tr><td>${p.in}${p.out ? ' → ' + p.out : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
     ).join('');
-    const last = pairs[pairs.length-1];
+    const last = pairs[pairs.length - 1];
     $('lastAction').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
   }
+
+  const workedSec = KSC.sumPairs(pairs);
+  const expectedSec = KSC.expectedSecondsForDate(todayDate, pairs.length > 0);
+
+  $('todayWorked').textContent = KSC.secToHHMM(workedSec);
+
+  const leftEl = $('todayLeft');
+  const leftLabel = $('leftLabel');
+
+  leftEl.classList.remove('ok','bad');
+
+  if (workedSec >= expectedSec && expectedSec > 0) {
+    leftLabel.textContent = 'الوقت الإضافي';
+    leftEl.textContent = KSC.secToHHMM(workedSec - expectedSec);
+    leftEl.classList.add('ok');
+  } else {
+    leftLabel.textContent = 'المتبقي';
+    leftEl.textContent = KSC.secToHHMM(Math.max(0, expectedSec - workedSec));
+    leftEl.classList.add(expectedSec - workedSec > 0 ? 'bad' : 'ok');
+  }
+
   KSC.writeDB(db);
 }
+
 
 function handlePunch(type) {
   requestLocation((ok, lat, lng) => {
