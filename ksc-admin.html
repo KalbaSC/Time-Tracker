@@ -114,14 +114,10 @@
               <label>كلمة مرور الإدارة</label>
               <input id="confAdminPass" type="password" placeholder="kalbaHR2025">
             </div>
-            <div class="col">
-              <label>رابط السكريبت (Apps Script)</label>
-              <input id="confScriptUrl" placeholder="https://script.google.com/macros/s/XXXX/exec">
-            </div>
+
           </div>
           <div class="toolbar" style="margin-top:10px">
             <button id="btnSaveSettings" class="btn-ok">💾 حفظ الإعدادات</button>
-            <button id="btnTestConn" class="secondary">🔌 اختبار الاتصال</button>
           </div>
           <p class="small">* تُستخدم هذه الإعدادات لحساب المتبقي/الإضافي ولمزامنة البيانات مع Google Sheets.</p>
         </div>
@@ -189,13 +185,14 @@
 
   <script src="ksc-shared.js"></script>
   <script>
-    // --- Admin auth (simple) ---
-    const LS_ADMIN = 'kscAdmin';
+    const USE_PROXY = true; 
+    const PROXY_URL = "https://YOUR-PROXY.example.workers.dev";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3eJzO1iruN7NjYTkooV5f1kIukOXkLx_Mj9OWts8X3UTcXSrSWqiTZeHJPUums28J/exec"; 
     const DEFAULT_ADMIN = 'kalbaHR2025';
 
     const state = {
-      employees: {},   // { id:{name,pin,active} }
-      leaves: [],      // [ {id,type,from,to,note,fileName,base64?} ]
+      employees: {},
+      leaves: [],
       settings: {
         wdHours: 7,
         satHours: 3,
@@ -318,7 +315,6 @@
       state.leaves.push(entry); saveState(); renderLeaves();
     };
 
-    // --- CSV exports ---
     $('btnExportEmployees').onclick = () => {
       const rows = [['EmpID','Name','PIN','Active']];
       Object.keys(state.employees).forEach(id => {
@@ -332,22 +328,26 @@
       KSC.downloadCSV(rows, 'leaves.csv');
     };
 
-    // --- Apps Script sync / report ---
-    async function postToScript(action, payload){
-      const url = state.settings.scriptUrl;
-      if(!url){ alert('أدخلي رابط السكريبت أولاً.'); return {ok:false}; }
-      try{
-        const res = await fetch(url, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({action, payload})
-        });
-        const data = await res.json();
-        return data;
-      }catch(e){
-        alert('تعذر الاتصال بالسكريبت.'); return {ok:false, error:String(e)};
-      }
-    }
+async function postToScript(action, payload) {
+  const url = USE_PROXY ? PROXY_URL : APPS_SCRIPT_URL;
+
+  if (!url) {
+    alert('لم يتم ضبط رابط الخادم في الكود.');
+    return { ok: false, error: 'No URL' };
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, payload })
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { ok:false, error:'Bad JSON', raw:text }; }
+  } catch (e) {
+    return { ok:false, error: String(e) };
+  }
+}
 
     $('btnSyncEmployees').onclick = async () => {
       const payload = state.employees;
