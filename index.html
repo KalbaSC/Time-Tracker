@@ -4,267 +4,68 @@
   <meta charset="UTF-8" />
   <title>ملخّص البصمة — نادي كلباء الرياضي الثقافي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    :root{
-      --bg:#222222; --accent:#f4e733; --text:#ffffff; --muted:#cfcfcf;
-      --panel:#000000; --border:#f4e733; --soft:#444;
-      --ok:#2bd886; --warn:#ffc266; --bad:#ff6b6b;
-      --radius:16px; --transition: all 0.3s ease;
-    }
-    html, body { height: 100%; }
+    :root{ --bg:#222222; --accent:#f4e733; --text:#ffffff; --muted:#cfcfcf;
+      --panel:#000000; --border:#f4e733; --ok:#2bd886; --warn:#ffc266; --bad:#ff6b6b; --radius:16px; }
+    html, body { height:100% }
     body{
-      margin:0; font-family: "Tajawal","NotoKufiArabic",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+      margin:0; font-family:"Tajawal","NotoKufiArabic",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
       color:var(--text); background:var(--bg);
       background-image:
-        repeating-linear-gradient(45deg, rgba(244,231,51,.08) 0px, rgba(244,231,51,.08) 2px, transparent 2px, transparent 14px),
-        repeating-linear-gradient(-45deg, rgba(244,231,51,.06) 0px, rgba(244,231,51,.06) 1px, transparent 1px, transparent 16px),
-        radial-gradient(circle at 20% 30%, rgba(244,231,51,.05) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(244,231,51,.04) 0%, transparent 40%);
+        repeating-linear-gradient(45deg, rgba(244,231,51,.08) 0 2px, transparent 2px 14px),
+        repeating-linear-gradient(-45deg, rgba(244,231,51,.06) 0 1px, transparent 1px 16px),
+        radial-gradient(circle at 20% 30%, rgba(244,231,51,.05) 0, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(244,231,51,.04) 0, transparent 40%);
       min-height:100vh; display:flex; flex-direction:column;
     }
-    header{
-      background:#222; padding:16px 5%; width:90%; margin:0 auto;
-      border-bottom:3px solid var(--accent); position:sticky; top:0; z-index:1001;
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .header-right{display:flex; align-items:center; gap:15px; flex:1; min-width:0}
-    .header-right img.logo{height:64px; object-fit:contain; transition: var(--transition);}
-    .header-right img.logo:hover { transform: scale(1.05); }
+    header{ background:#222; padding:16px 5%; width:90%; margin:0 auto;
+      border-bottom:3px solid var(--accent); position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .header-right{display:flex; align-items:center; gap:15px}
+    .header-right img.logo{height:64px; object-fit:contain}
     .header-right .divider{width:1.5px; height:60px; background:var(--accent)}
-    .header-info{text-align:right} .title{margin:0; font-weight:800; font-size:18px}
+    .header-info{text-align:right}
+    .title{margin:0; font-weight:800; font-size:18px}
     .subtitle{margin:0; font-size:14px; color:var(--accent)}
-    
     main{flex:1; width:90%; margin:20px auto; display:grid; gap:16px}
-    @media (min-width:1100px){ main{grid-template-columns:1fr 2fr} }
-    
-    .panel{
-      background:var(--panel); border:2px solid var(--border); border-radius:var(--radius);
-      padding:20px; box-shadow:0 6px 20px rgba(0,0,0,.25);
-      transition: var(--transition);
-    }
-    .panel:hover { box-shadow: 0 8px 25px rgba(244,231,51,0.15); }
-    
-    .controls-container { margin-bottom: 20px; }
-    .controls-header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--soft);
-    }
-    .controls-title { 
-      font-size: 18px; 
-      font-weight: 700; 
-      color: var(--accent); 
-      margin: 0;
-    }
-    .controls{display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; align-items:flex-end}
-    .control{display:flex; flex-direction:column; gap:6px;}
-    label{font-size:12px; color:var(--muted); font-weight: 600;}
-    input, select{
-      padding:12px 14px; background:#0f0f0f; color:var(--text); 
-      border:1px solid #333; border-radius:12px; outline:none;
-      transition: var(--transition);
-    }
-    input:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(244,231,51,0.2);
-    }
-    input[type="file"]{padding:10px; background:transparent; border:1px dashed #555; cursor: pointer;}
-    input[type="file"]:hover { border-color: var(--accent); }
-    
-    /* Button improvements */
-    .btn{
-      appearance:none; border:none; border-radius:12px; padding:12px 16px;
-      background:var(--accent); color:#000; font-weight:800; cursor:pointer;
-      transition:var(--transition); box-shadow:0 4px 0 #a88600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #a88600; }
+    @media (min-width:1100px){ main{grid-template-columns:1.15fr 2fr} }
+    .panel{ background:var(--panel); border:2px solid var(--border); border-radius:var(--radius);
+      padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+    .controls{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
+    .control{display:flex; flex-direction:column; gap:6px; min-width:170px}
+    label{font-size:12px; color:var(--muted)}
+    input, select{padding:10px 12px; background:#0f0f0f; color:var(--text); border:1px solid #333; border-radius:12px}
+    input[type="file"]{padding:8px; background:transparent; border:none}
+    .btn{appearance:none; border:none; border-radius:12px; padding:10px 14px; background:var(--accent); color:#000; font-weight:800; cursor:pointer;
+      transition:transform .06s ease, box-shadow .2s ease; box-shadow:0 4px 0 #a88600}
     .btn:active{transform:translateY(1px); box-shadow:0 3px 0 #a88600}
-    .btn.secondary{
-      background:#1b1b1b; color:var(--text); border:1px solid #333; box-shadow:none;
-    }
-    .btn.secondary:hover {
-      background: #2a2a2a;
-      border-color: var(--accent);
-    }
-    
-    .note{color:var(--muted); font-size:12px; line-height: 1.5;}
-    .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    
-    .kpi-container { margin: 20px 0; }
-    .grid-4{display:grid; gap:12px; margin-top: 15px;}
-    @media (min-width:900px){ .grid-4{grid-template-columns:repeat(4,1fr)} }
-    .kpi{
-      background:#0f0f0f; border:1px solid #333; border-radius:12px; padding:16px;
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-    .kpi:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .kpi .label{font-size:12px; color:#fffde0; margin-bottom: 8px;} 
-    .kpi .value{font-size:22px; font-weight:800;}
-    .kpi.ok{border-color:rgba(43,216,134,.4)} 
-    .kpi.warn{border-color:rgba(255,194,102,.5)}
-    .kpi.bad{border-color:rgba(255,107,107,.5)}
-    
-    .table-container { margin-top: 20px; }
-    .table-header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 15px;
-    }
-    .table-title { 
-      font-size: 18px; 
-      font-weight: 700; 
-      color: var(--accent); 
-      margin: 0;
-    }
-    .table-wrap{
-      position:relative; overflow:auto; max-height:70vh; border-radius:12px; 
-      outline:1px solid #2a2a2a;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .table-wrap::before{
-      content:""; position:absolute; inset:-1px; border-radius:12px; pointer-events:none;
+    .btn.secondary{background:#1b1b1b; color:var(--text); border:1px solid #333; box-shadow:none}
+    .note{color:var(--muted); font-size:12px}
+    .grid-4{display:grid; gap:10px} @media (min-width:900px){ .grid-4{grid-template-columns:repeat(4,1fr)} }
+    .kpi{background:#0f0f0f; border:1px solid #333; border-radius:12px; padding:12px}
+    .kpi .label{font-size:12px; color:#fffde0} .kpi .value{font-size:20px; font-weight:800}
+    .kpi.ok{border-color:rgba(43,216,134,.4)} .kpi.bad{border-color:rgba(255,107,107,.5)}
+    .table-wrap{position:relative; overflow:auto; max-height:70vh; border-radius:12px; outline:1px solid #2a2a2a}
+    .table-wrap::before{content:""; position:absolute; inset:-1px; border-radius:12px; pointer-events:none;
       background:linear-gradient(90deg,transparent,rgba(244,231,51,.2),transparent) top/100% 2px no-repeat,
-                 linear-gradient(90deg,transparent,rgba(244,231,51,.2),transparent) bottom/100% 2px no-repeat
-    }
+                 linear-gradient(90deg,transparent,rgba(244,231,51,.2),transparent) bottom/100% 2px no-repeat}
     table{width:100%; border-collapse:separate; border-spacing:0; margin-top:6px}
-    thead th{
-      position:sticky; top:0; background:#111; z-index:1; text-align:right; 
-      padding:14px 12px; font-size:13px; color:#fff17a; border-bottom:1px solid var(--accent);
-      font-weight: 700;
-    }
-    tbody td{padding:12px; border-bottom:1px solid #2a2a2a; vertical-align:top}
-    tbody tr{
-      transition: var(--transition);
-    }
-    tbody tr:hover{
-      background:#1a1a1a;
-      transform: scale(1.005);
-    }
+    thead th{position:sticky; top:0; background:#111; z-index:1; text-align:right; padding:10px; font-size:12px; color:#fff17a; border-bottom:1px solid var(--accent)}
+    tbody td{padding:10px; border-bottom:1px solid #2a2a2a; vertical-align:top}
+    tbody tr:hover{background:#0f0f0f}
     .left{text-align:left} .center{text-align:center}
-    .pill{
-      display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px;
-      font-weight: 600;
-    }
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px}
     .pill.ok{background:rgba(43,216,134,.12); color:var(--ok)}
     .pill.warn{background:rgba(255,194,102,.12); color:var(--warn)}
     .pill.bad{background:rgba(255,107,107,.12); color:var(--bad)}
-    
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,.75); 
-      display:none; align-items:center; justify-content:center; z-index:9999;
-      backdrop-filter: blur(4px);
-    }
-    .modal{
-      width:min(980px,94vw); max-height:86vh; overflow:auto; 
-      background:#0f0f0f; border:2px solid var(--border); border-radius:16px; 
-      box-shadow:0 10px 35px rgba(0,0,0,.65);
-      animation: modalAppear 0.3s ease-out;
-    }
-    @keyframes modalAppear {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .modal header{
-      position:sticky; top:0; background:#111; padding:16px 20px; 
-      border-bottom:1px solid var(--accent); 
-      display:flex; justify-content:space-between; align-items:center;
-    }
-    .modal h3{margin:0; font-size:18px} 
-    .modal .content{padding:16px 20px}
-    .close{
-      background:#1b1b1b; color:#eee; border:1px solid #333; border-radius:10px; 
-      padding:8px 12px; cursor:pointer;
-      transition: var(--transition);
-    }
-    .close:hover {
-      background: #2a2a2a;
-      border-color: var(--accent);
-    }
-    
-    .muted{color:var(--muted)} 
-    .mono{font-family:ui-monospace,Menlo,Consolas,"Courier New",monospace}
-    .hint{font-size:12px; color:#fffde0; line-height: 1.5;}
-    
-    @media (max-width:768px){ 
-      .header-right img.logo{height:40px} 
-      .header-right .divider{display:none} 
-      .controls { grid-template-columns: 1fr; }
-      .grid-4 { grid-template-columns: repeat(2, 1fr); }
-      main { width: 95%; }
-    }
-    
-    @media (max-width:480px) {
-      .grid-4 { grid-template-columns: 1fr; }
-      .panel { padding: 15px; }
-    }
-    
-    /* Loading indicator */
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: var(--accent);
-      animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .status-indicator {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-right: 6px;
-    }
-    .status-ok { background-color: var(--ok); }
-    .status-warn { background-color: var(--warn); }
-    .status-bad { background-color: var(--bad); }
-    
-    .section-divider {
-      height: 1px;
-      background: linear-gradient(to right, transparent, var(--accent), transparent);
-      margin: 20px 0;
-    }
-    
-    .file-upload-area {
-      border: 2px dashed #555;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      transition: var(--transition);
-      cursor: pointer;
-      margin-bottom: 15px;
-    }
-    .file-upload-area:hover {
-      border-color: var(--accent);
-      background: rgba(244,231,51,0.05);
-    }
-    .file-upload-area.active {
-      border-color: var(--accent);
-      background: rgba(244,231,51,0.1);
-    }
-    .file-upload-icon {
-      font-size: 40px;
-      margin-bottom: 10px;
-      color: var(--accent);
-    }
+    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:9999}
+    .modal{width:min(980px,94vw); max-height:86vh; overflow:auto; background:#0f0f0f; border:2px solid var(--border); border-radius:16px; box-shadow:0 10px 35px rgba(0,0,0,.45)}
+    .modal header{position:sticky; top:0; background:#111; padding:12px 16px; border-bottom:1px solid var(--accent); display:flex; justify-content:space-between; align-items:center}
+    .modal h3{margin:0; font-size:18px} .modal .content{padding:12px 16px}
+    .close{background:#1b1b1b; color:#eee; border:1px solid #333; border-radius:10px; padding:6px 10px; cursor:pointer}
+    .muted{color:var(--muted)} .mono{font-family:ui-monospace,Menlo,Consolas,"Courier New",monospace}
   </style>
 </head>
 <body>
@@ -281,175 +82,142 @@
   </header>
 
   <main>
+    <!-- الإعدادات -->
     <section class="panel">
-      <div class="controls-container">
-        <div class="controls-header">
-          <h2 class="controls-title">إعدادات التقرير</h2>
-          <div class="flex">
-            <button id="recalc" class="btn">
-              <span class="loading" id="loadingIndicator" style="display:none"></span>
-              تحديث الحساب
-            </button>
-          </div>
+      <div class="controls">
+        <div class="control">
+          <label>تحميل ملف البصمة (Excel)</label>
+          <input id="file" type="file" accept=".xlsx,.xls" />
         </div>
-        
-        <div class="file-upload-area" id="fileUploadArea">
-          <div class="file-upload-icon">📁</div>
-          <p>انقر لتحميل ملف البصمة (Excel) أو اسحب الملف هنا</p>
-          <p class="note">يجب أن يحتوي الملف على الأعمدة: Employee ID, First Name, Date, Time</p>
+
+        <div class="control">
+          <label>العرض</label>
+          <select id="view">
+            <option value="daily">يومي</option>
+            <option value="weekly">أسبوعي</option>
+            <option value="monthly">شهري</option>
+          </select>
         </div>
-        <input id="file" type="file" accept=".xlsx,.xls" style="display: none;" />
 
-        <div class="controls">
-          <div class="control">
-            <label>العرض</label>
-            <select id="view">
-              <option value="daily">يومي</option>
-              <option value="weekly">أسبوعي</option>
-              <option value="monthly">شهري</option>
-            </select>
-          </div>
-
-          <div class="control">
-            <label>الساعات المتوقعة/اليوم (الأحد–الخميس)</label>
-            <input id="expectedWD" type="number" min="0" step="0.25" value="7" />
-          </div>
-
-          <div class="control">
-            <label>ساعات السبت المتوقعة (اختياري)</label>
-            <input id="expectedSat" type="number" min="0" step="0.25" value="3" />
-          </div>
-
-          <div class="control">
-            <label>سياسة السبت</label>
-            <select id="satPolicy">
-              <option value="punch">احتساب فقط عند وجود بصمة</option>
-              <option value="calendar">احتساب تقويمي دائمًا</option>
-              <option value="off">عدم احتساب السبت نهائيًا</option>
-            </select>
-          </div>
-
-          <div class="control">
-            <label>احتساب المتوقّع بناءً على</label>
-            <select id="expectedMode">
-              <option value="calendar">أيام العمل التقويمية</option>
-              <option value="punched">الأيام التي بها بصمة</option>
-            </select>
-          </div>
-
-          <div class="control">
-            <label>بداية الأسبوع</label>
-            <select id="weekStart">
-              <option value="0">الأحد</option>
-              <option value="1" selected>الاثنين</option>
-              <option value="6">السبت</option>
-            </select>
-          </div>
-
-          <div class="control">
-            <label>تقريب المدد</label>
-            <select id="rounding">
-              <option value="0" selected>بدون تقريب</option>
-              <option value="1">1 دقيقة</option>
-              <option value="5">5 دقائق</option>
-              <option value="10">10 دقائق</option>
-              <option value="15">15 دقيقة</option>
-            </select>
-          </div>
-
-          <div class="control">
-            <label>تصفية بالموظف</label>
-            <input id="empFilter" type="text" placeholder="الاسم أو الرقم الوظيفي" />
-          </div>
-
-          <div class="control">
-            <label>من تاريخ</label>
-            <input id="fromDate" type="date" />
-          </div>
-          <div class="control">
-            <label>إلى تاريخ</label>
-            <input id="toDate" type="date" />
-          </div>
+        <div class="control">
+          <label>الساعات المتوقعة/اليوم (الأحد–الخميس)</label>
+          <input id="expectedWD" type="number" min="0" step="0.25" value="7" />
         </div>
-        
-        <div class="section-divider"></div>
-        
-        <div class="flex" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <p class="note">
-              الأعمدة المتوقعة: <b>Employee ID</b>، <b>First Name</b>، <b>Date</b>، <b>Time</b> (أوقات مفصولة بفواصل: IN, OUT, IN, OUT…). يُتجاهل آخر دخول بلا خروج.
-            </p>
-          </div>
-          <div class="flex">
-            <button id="downloadSummary" class="btn secondary">📥 تنزيل CSV (الملخص)</button>
-            <button id="downloadDetails" class="btn secondary">📊 تنزيل CSV (تفصيلي)</button>
-          </div>
+
+        <div class="control">
+          <label>ساعات السبت (اختياري)</label>
+          <input id="expectedSat" type="number" min="0" step="0.25" value="3" />
+        </div>
+
+        <div class="control">
+          <label>سياسة السبت</label>
+          <select id="satPolicy">
+            <option value="punch" selected>يُحتسب فقط عند وجود بصمة</option>
+            <option value="calendar">يُحتسب تقويمياً دائماً</option>
+            <option value="off">لا يُحتسب</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>احتساب المتوقّع بناءً على</label>
+          <select id="expectedMode">
+            <option value="calendar" selected>أيام العمل التقويمية</option>
+            <option value="punched">الأيام التي بها بصمة</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>بداية الأسبوع</label>
+          <select id="weekStart">
+            <option value="0" selected>الأحد</option>
+            <option value="1">الاثنين</option>
+            <option value="6">السبت</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>تقريب المدد</label>
+          <select id="rounding">
+            <option value="0" selected>بدون تقريب</option>
+            <option value="5">5 دقائق</option>
+            <option value="10">10 دقائق</option>
+            <option value="15">15 دقيقة</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>تصفية بالموظف</label>
+          <input id="empFilter" type="text" placeholder="الاسم أو الرقم الوظيفي" />
+        </div>
+
+        <div class="control">
+          <label>من تاريخ</label>
+          <input id="fromDate" type="date" />
+        </div>
+        <div class="control">
+          <label>إلى تاريخ</label>
+          <input id="toDate" type="date" />
+        </div>
+
+        <div class="control">
+          <label>&nbsp;</label>
+          <button id="recalc" class="btn">تحديث الحساب</button>
+        </div>
+        <div class="control">
+          <label>&nbsp;</label>
+          <button id="downloadSummary" class="btn secondary">تنزيل CSV (الملخص)</button>
+        </div>
+        <div class="control">
+          <label>&nbsp;</label>
+          <button id="downloadDetails" class="btn secondary">تنزيل CSV (تفصيلي)</button>
         </div>
       </div>
 
-      <div class="kpi-container">
-        <h3 class="controls-title">نظرة عامة على المؤشرات</h3>
-        <div class="grid-4" id="kpis">
-          <div class="kpi">
-            <div class="label">إجمالي العمل</div>
-            <div class="value" id="kpiWorked">00:00</div>
-          </div>
-          <div class="kpi">
-            <div class="label">إجمالي المتوقّع</div>
-            <div class="value" id="kpiExpected">00:00</div>
-          </div>
-          <div class="kpi ok">
-            <div class="label">إجمالي الزيادة</div>
-            <div class="value" id="kpiOver">00:00</div>
-          </div>
-          <div class="kpi bad">
-            <div class="label">إجمالي النقص</div>
-            <div class="value" id="kpiShort">00:00</div>
-          </div>
-        </div>
+      <!-- KPIs -->
+      <div class="grid-4" style="margin-top:10px" id="kpis">
+        <div class="kpi"><div class="label">إجمالي العمل</div><div class="value" id="kpiWorked">00:00</div></div>
+        <div class="kpi"><div class="label">إجمالي المتوقّع</div><div class="value" id="kpiExpected">00:00</div></div>
+        <div class="kpi ok"><div class="label">إجمالي الزيادة</div><div class="value" id="kpiOver">00:00</div></div>
+        <div class="kpi bad"><div class="label">إجمالي النقص</div><div class="value" id="kpiShort">00:00</div></div>
       </div>
+
+      <p class="note" style="margin-top:8px" id="hintPolicy"></p>
     </section>
 
-    <section class="panel">
-      <div class="table-container">
-        <div class="table-header">
-          <h2 class="table-title">نتائج البصمة</h2>
-          <div class="note"><span id="meta">لا يوجد ملف محمّل.</span></div>
-        </div>
-
-        <div class="table-wrap">
-          <table id="table">
-            <thead>
-              <tr>
-                <th>الرقم الوظيفي</th>
-                <th>الاسم</th>
-                <th>الفترة</th>
-                <th class="left">ساعات العمل</th>
-                <th class="left">المتوقّع</th>
-                <th class="left">الزيادة</th>
-                <th class="left">النقص</th>
-                <th class="center">التفاصيل</th>
-              </tr>
-            </thead>
-            <tbody id="tbody">
-              <tr><td colspan="8" class="note" style="text-align: center; padding: 40px;">حمّلي الملف لعرض النتائج.</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="hint" id="hintPolicy" style="margin-top:12px"></p>
+    <!-- النتائج -->
+    <section class="panel" style="min-height:480px">
+      <div class="table-wrap">
+        <table id="table">
+          <thead>
+            <tr>
+              <th>الرقم الوظيفي</th>
+              <th>الاسم</th>
+              <th>الفترة</th>
+              <th class="left">ساعات العمل</th>
+              <th class="left">المتوقّع</th>
+              <th class="left">الزيادة</th>
+              <th class="left">النقص</th>
+              <th class="center">التفاصيل</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="8" class="note">حمّلي الملف لعرض النتائج.</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
 
+  <!-- نافذة التفاصيل -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <header>
         <h3 id="modalTitle">تفاصيل البصمة</h3>
-        <button class="close" id="closeModal">✕ إغلاق</button>
+        <button class="close" id="closeModal">إغلاق</button>
       </header>
       <div class="content">
         <div class="muted" id="modalMeta"></div>
-        <div class="table-wrap" style="margin-top:16px; max-height:60vh">
+        <div class="table-wrap" style="margin-top:10px; max-height:60vh">
           <table>
             <thead>
               <tr>
@@ -472,34 +240,15 @@
   const expectedWDInp = $('expectedWD'), expectedSatInp = $('expectedSat'), satPolicySel = $('satPolicy');
   const expectedModeSel = $('expectedMode'), roundingSel = $('rounding');
   const empFilterInp = $('empFilter'), fromDateInp = $('fromDate'), toDateInp = $('toDate');
-  const metaEl = $('meta'), tbody = $('tbody'), hintPolicy = $('hintPolicy');
+  const tbody = $('tbody'), hintPolicy = $('hintPolicy');
   const kpiWorked = $('kpiWorked'), kpiExpected = $('kpiExpected'), kpiOver = $('kpiOver'), kpiShort = $('kpiShort');
   const recalcBtn = $('recalc'), dlSumBtn = $('downloadSummary'), dlDetBtn = $('downloadDetails');
-  const fileUploadArea = $('fileUploadArea'), loadingIndicator = $('loadingIndicator');
 
   const modalBackdrop = $('modalBackdrop'), closeModalBtn = $('closeModal'), modalTitle = $('modalTitle'), modalMeta = $('modalMeta'), detailsBody = $('detailsBody');
 
-  let rawRows = [];
-  let groupedDetails = new Map();
+  let rawRows = []; // {empId, name, date, pairs:[{in,out}], workedSec}
+  let groupedDetails = new Map(); // key -> data for modal & CSV
   let lastSummaryCSV = '', lastDetailedCSV = '';
-
-  // File upload area interaction
-  fileUploadArea.addEventListener('click', () => fileInput.click());
-  fileUploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    fileUploadArea.classList.add('active');
-  });
-  fileUploadArea.addEventListener('dragleave', () => {
-    fileUploadArea.classList.remove('active');
-  });
-  fileUploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    fileUploadArea.classList.remove('active');
-    if (e.dataTransfer.files.length) {
-      fileInput.files = e.dataTransfer.files;
-      handleFile();
-    }
-  });
 
   fileInput.addEventListener('change', handleFile);
   [recalcBtn, viewSel, weekStartSel, expectedWDInp, expectedSatInp, satPolicySel, expectedModeSel, roundingSel, empFilterInp, fromDateInp, toDateInp]
@@ -509,42 +258,14 @@
   dlSumBtn.addEventListener('click', ()=> downloadCSV(lastSummaryCSV, 'timecard_summary.csv'));
   dlDetBtn.addEventListener('click', ()=> downloadCSV(lastDetailedCSV, 'timecard_details.csv'));
 
-  // Set default dates (current month)
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  
-  fromDateInp.value = formatDateForInput(firstDay);
-  toDateInp.value = formatDateForInput(lastDay);
-
-  function formatDateForInput(date) {
-    return date.toISOString().split('T')[0];
-  }
-
   function downloadCSV(text, filename){
     if (!text){ alert('لا توجد بيانات للتنزيل بعد.'); return; }
     const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a'); 
-    a.href = URL.createObjectURL(blob); 
-    a.download = filename; 
-    document.body.appendChild(a); 
-    a.click(); 
-    a.remove();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   }
 
   function handleFile(){
-    const f = fileInput.files?.[0]; 
-    if (!f) return;
-    
-    // Update file upload area text
-    fileUploadArea.innerHTML = `
-      <div class="file-upload-icon">✅</div>
-      <p>تم تحميل الملف: ${f.name}</p>
-      <p class="note">جارٍ معالجة البيانات...</p>
-    `;
-    
-    loadingIndicator.style.display = 'inline-block';
-    
+    const f = fileInput.files?.[0]; if (!f) return;
     const reader = new FileReader();
     reader.onload = evt => {
       try{
@@ -553,530 +274,355 @@
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
 
-        // Find header row - more flexible approach
-        let headerIdx = -1;
-        let headerRow = null;
-        
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-          if (row && row.some(cell => 
-            String(cell).toLowerCase().includes('employee') && 
-            String(cell).toLowerCase().includes('id')
-          )) {
-            headerIdx = i;
-            headerRow = row;
-            break;
-          }
+        // locate header row: contains "Employee ID"
+        let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
+        if (headerIdx === -1) headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
+        if (headerIdx === -1) { alert('تعذّر العثور على صف العناوين الذي يحتوي "Employee ID".'); return; }
+
+        const header = rows[headerIdx].map(x => String(x).trim());
+        const lower = header.map(h => h.toLowerCase());
+
+        // base indices
+        let idxEmp = lower.findIndex(h => h.includes('employee id'));
+        let idxName = lower.findIndex(h => h.includes('first name'));
+        let idxDate = lower.findIndex(h => h === 'date');
+
+        // candidate time columns (priority order)
+        const candidates = ['times','time','punches','in/out','in - out','clock'];
+        let idxTime = -1;
+        for (const c of candidates){
+          const i = lower.findIndex(h => h === c);
+          if (i !== -1){ idxTime = i; break; }
+        }
+        if (idxTime === -1){ // fallback: any column that contains 'time'
+          idxTime = lower.findIndex(h => h.includes('time'));
         }
 
-        if (headerIdx === -1) { 
-          alert('تعذّر العثور على صف العناوين الذي يحتوي "Employee ID". يرجى التأكد من تنسيق الملف.'); 
-          resetFileUploadArea();
-          loadingIndicator.style.display = 'none';
-          return; 
-        }
-
-        // Map columns more flexibly
-        const header = headerRow.map(h => String(h).toLowerCase().trim());
-        const colIdx = {
-          empId: header.findIndex(h => h.includes('employee') && h.includes('id')),
-          name:  header.findIndex(h => h.includes('first') && h.includes('name')),
-          date:  header.findIndex(h => h.includes('date')),
-          timeList: header.findIndex(h => h.includes('time')),
-        };
-
-        // Fallback searches if exact matches not found
-        if (colIdx.empId === -1) colIdx.empId = header.findIndex(h => h.includes('id'));
-        if (colIdx.name === -1) colIdx.name = header.findIndex(h => h.includes('name'));
-        if (colIdx.date === -1) colIdx.date = header.findIndex(h => h.includes('date'));
-        if (colIdx.timeList === -1) colIdx.timeList = header.findIndex(h => h.includes('time'));
-
-        console.log('Found columns:', colIdx);
+        if (idxEmp === -1) idxEmp = 0;
+        if (idxName === -1) idxName = 1;
+        if (idxDate === -1) idxDate = 2;
+        if (idxTime === -1) idxTime = 3;
 
         const out = [];
         for (let i = headerIdx + 1; i < rows.length; i++){
-          const r = rows[i]; 
-          if (!r || r.length === 0) continue;
-          
-          const empId = String(r[colIdx.empId] ?? '').trim();
-          const name = String(r[colIdx.name] ?? '').trim();
-          const dateCell = r[colIdx.date];
-          const timesStr = String(r[colIdx.timeList] ?? '').trim();
-          
-          if (!empId || empId === 'undefined' || !name || name === 'undefined') continue;
+          const r = rows[i]; if (!r || r.length===0) continue;
+          const empId = String(r[idxEmp] ?? '').trim();
+          const name = String(r[idxName] ?? '').trim();
+          const dateCell = r[idxDate];
+          if (!empId || !name || !dateCell) continue;
 
-          const d = parseExcelDate(dateCell); 
-          if (!d) continue;
+          const d = parseExcelDate(dateCell); if (!d) continue;
 
-          const pairs = pairsFromCSV(timesStr);
+          // prefer non-empty Times over Time
+          let timeCell = '';
+          const idxTimesExact = lower.findIndex(h => h === 'times');
+          const idxTimeExact  = lower.findIndex(h => h === 'time');
+          const timesVal = idxTimesExact !== -1 ? String(r[idxTimesExact] ?? '') : '';
+          const timeVal  = idxTimeExact  !== -1 ? String(r[idxTimeExact]  ?? '') : '';
+          if (timesVal.trim()) timeCell = timesVal; else if (timeVal.trim()) timeCell = timeVal; else timeCell = String(r[idxTime] ?? '');
+
+          const pairs = pairsFromFlexibleCell(timeCell);
           const workedSec = sumPairs(pairs, parseInt(roundingSel.value,10)||0);
           out.push({empId, name, date: d, pairs, workedSec});
         }
-        
         rawRows = out;
-        metaEl.textContent = `${f.name} — تم تحليل ${out.length} سجل بصمة بنجاح`;
-        
-        fileUploadArea.innerHTML = `
-          <div class="file-upload-icon">✅</div>
-          <p>تم تحميل الملف: ${f.name}</p>
-          <p class="note">تم تحليل ${out.length} سجل بصمة بنجاح</p>
-        `;
-        
-        loadingIndicator.style.display = 'none';
         render();
-      }catch(err){ 
-        console.error('Error processing file:', err); 
-        alert('حدث خطأ أثناء قراءة الملف: ' + err.message); 
-        resetFileUploadArea();
-        loadingIndicator.style.display = 'none';
-      }
+      }catch(err){ console.error(err); alert('حدث خطأ أثناء قراءة الملف.'); }
     };
     reader.readAsArrayBuffer(f);
   }
 
-  function resetFileUploadArea() {
-    fileUploadArea.innerHTML = `
-      <div class="file-upload-icon">📁</div>
-      <p>انقر لتحميل ملف البصمة (Excel) أو اسحب الملف هنا</p>
-      <p class="note">يجب أن يحتوي الملف على الأعمدة: Employee ID, First Name, Date, Time</p>
-    `;
-  }
-
   function render(){
     if (!rawRows.length){
-      tbody.innerHTML = `<tr><td colspan="8" class="note" style="text-align: center; padding: 40px;">حمّلي الملف لعرض النتائج.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="note">حمّلي الملف لعرض النتائج.</td></tr>`;
       lastSummaryCSV = lastDetailedCSV = '';
       updateKPIs(0,0,0,0);
       hintPolicy.textContent = '';
       return;
     }
+    const empFilter = (empFilterInp.value||'').trim().toLowerCase();
+    const fromDate = fromDateInp.value ? new Date(fromDateInp.value) : null;
+    const toDate   = toDateInp.value   ? new Date(toDateInp.value)   : null;
+    const view = viewSel.value;
+    const weekStart = parseInt(weekStartSel.value,10);
+    const expectedWD = (+expectedWDInp.value||0) * 3600;
+    const expectedSat = (+expectedSatInp.value||0) * 3600;
+    const satPolicy = satPolicySel.value; // 'punch'|'calendar'|'off'
+    const expectedMode = expectedModeSel.value; // 'calendar'|'punched'
 
-    // Show loading indicator
-    loadingIndicator.style.display = 'inline-block';
-    
-    // Use setTimeout to allow UI to update before heavy processing
-    setTimeout(() => {
-      try {
-        // filters
-        const empFilter = (empFilterInp.value||'').trim().toLowerCase();
-        const fromDate = fromDateInp.value ? new Date(fromDateInp.value) : null;
-        const toDate = toDateInp.value ? new Date(toDateInp.value) : null;
-        const view = viewSel.value;
-        const weekStart = parseInt(weekStartSel.value,10);
-        const expectedWD = (+expectedWDInp.value||0) * 3600;
-        const expectedSat = (+expectedSatInp.value||0) * 3600;
-        const satPolicy = satPolicySel.value;
-        const expectedMode = expectedModeSel.value;
-        const rounding = parseInt(roundingSel.value,10)||0;
+    // policy hint
+    const satText = satPolicy==='punch' ? 'السبت يُحتسب فقط عند وجود بصمة' : satPolicy==='calendar' ? 'السبت يُحتسب تقويمياً دائماً' : 'السبت لا يُحتسب';
+    const modeText = expectedMode==='calendar' ? 'أيام العمل التقويمية (الأحد–الخميس، والسبت حسب السياسة)' : 'الأيام التي بها بصمة فقط';
+    hintPolicy.textContent = `سياسة الحساب: ${modeText}. الجمعة مستبعدة دائماً. ${satText}.`;
 
-        // group data
-        const map = new Map();
-        for (const row of rawRows){
-          if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
-          if (fromDate && row.date < fromDate) continue;
-          if (toDate && row.date > toDate) continue;
+    const map = new Map();
+    for (const row of rawRows){
+      if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
+      if (fromDate && row.date < fromDate) continue;
+      if (toDate && row.date > toDate) continue;
 
-          let periodKey = '';
-          if (view === 'daily'){ 
-            periodKey = ymd(row.date); 
-          } else if (view === 'weekly'){ 
-            periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); 
-          } else { 
-            periodKey = 'M:'+ym(row.date); 
-          }
+      let periodKey = '';
+      if (view === 'daily'){ periodKey = ymd(row.date); }
+      else if (view === 'weekly'){ periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); }
+      else { periodKey = 'M:'+ym(row.date); }
 
-          const key = `${row.empId}||${row.name}||${periodKey}`;
-          if (!map.has(key)){
-            map.set(key, {
-              empId: row.empId, 
-              name: row.name, 
-              period: periodKey, 
-              workedSec: 0, 
-              days: new Map()
-            });
-          }
-          const obj = map.get(key);
-          obj.workedSec += row.workedSec;
-          obj.days.set(ymd(row.date), {
-            pairs: row.pairs, 
-            workedSec: row.workedSec, 
-            dow: row.date.getDay()
-          });
-        }
-
-        // compute expected time and differences
-        const summaryRows = [];
-        let totalWorked = 0, totalExpected = 0, totalOver = 0, totalShort = 0;
-        
-        for (const obj of map.values()){
-          let expectedSec = 0;
-
-          if (view === 'daily'){
-            // For daily view, use the specific day
-            const dkey = [...obj.days.keys()][0];
-            const info = obj.days.get(dkey);
-            expectedSec = calculateExpectedForDay(info.dow, expectedWD, expectedSat, satPolicy, expectedMode, info.pairs.length > 0);
-          } else {
-            // For weekly/monthly views
-            const range = getPeriodRange(obj.period, weekStart);
-            if (expectedMode === 'calendar'){
-              // Count calendar days
-              expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun-Thu
-              if (satPolicy === 'calendar') {
-                expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
-              }
-            } else {
-              // Only count days with punches
-              for (const [dkey, info] of obj.days){
-                expectedSec += calculateExpectedForDay(info.dow, expectedWD, expectedSat, satPolicy, expectedMode, info.pairs.length > 0);
-              }
-            }
-          }
-
-          const delta = obj.workedSec - expectedSec;
-          const over = Math.max(0, delta);
-          const short = Math.max(0, -delta);
-
-          totalWorked += obj.workedSec;
-          totalExpected += expectedSec;
-          totalOver += over;
-          totalShort += short;
-
-          summaryRows.push({
-            key: `${obj.empId}||${obj.name}||${obj.period}`,
-            empId: obj.empId, 
-            name: obj.name,
-            period: formatPeriodDisplay(obj.period, weekStart),
-            workedSec: obj.workedSec,
-            expectedSec: expectedSec,
-            overSec: over,
-            shortSec: short,
-            days: obj.days
-          });
-        }
-
-        // Sort rows
-        summaryRows.sort((a,b) => a.empId.localeCompare(b.empId) || a.period.localeCompare(b.period));
-
-        // Render table
-        renderTable(summaryRows);
-
-        // Update KPIs
-        updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
-
-        // Update policy hint
-        updatePolicyHint(expectedMode, satPolicy);
-
-        // Prepare CSV data
-        prepareCSVData(summaryRows);
-
-        // Store for modal
-        groupedDetails = map;
-        
-      } catch (error) {
-        console.error('Error in render:', error);
-        tbody.innerHTML = `<tr><td colspan="8" class="note" style="text-align: center; padding: 40px; color: var(--bad);">خطأ في عرض البيانات: ${error.message}</td></tr>`;
-      } finally {
-        // Hide loading indicator
-        loadingIndicator.style.display = 'none';
+      const key = `${row.empId}||${row.name}||${periodKey}`;
+      if (!map.has(key)){
+        map.set(key, {empId:row.empId, name:row.name, period:periodKey, workedSec:0, days:new Map()});
       }
-    }, 50);
-  }
-
-  function renderTable(rows) {
-    if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="note" style="text-align: center; padding: 40px;">لا توجد بيانات تطابق عوامل التصفية المحددة.</td></tr>`;
-      return;
+      const obj = map.get(key);
+      obj.workedSec += row.workedSec;
+      obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
     }
 
-    tbody.innerHTML = rows.map(row => `
+    const rows = [];
+    let totalWorked=0, totalExpected=0, totalOver=0, totalShort=0;
+    groupedDetails = new Map();
+
+    for (const obj of map.values()){
+      let expectedSec = 0;
+
+      if (view === 'daily'){
+        const dkey = [...obj.days.keys()][0];
+        const info = obj.days.get(dkey);
+        expectedSec = expectedForDay(info.dow, expectedWD, expectedSat, satPolicy, true);
+      } else {
+        const range = periodRange(obj.period);
+        if (expectedMode === 'calendar'){
+          expectedSec += expectedWD * countDOW(range.start, range.end, [0,1,2,3,4]); // Sun..Thu
+          if (satPolicy === 'calendar') expectedSec += expectedSat * countDOW(range.start, range.end, [6]);
+        } else {
+          for (const [dkey, info] of obj.days){
+            const hasPunch = (info.pairs && info.pairs.length>0);
+            expectedSec += expectedForDay(info.dow, expectedWD, expectedSat, satPolicy, hasPunch);
+          }
+        }
+      }
+
+      const delta = obj.workedSec - expectedSec;
+      const over = Math.max(0, delta);
+      const short = Math.max(0, -delta);
+
+      totalWorked += obj.workedSec; totalExpected += expectedSec; totalOver += over; totalShort += short;
+
+      rows.push({
+        key: `${obj.empId}||${obj.name}||${obj.period}`,
+        empId: obj.empId, name: obj.name,
+        period: prettyPeriod(obj.period, weekStart),
+        worked: obj.workedSec, expected: expectedSec, overtime: over, short
+      });
+
+      groupedDetails.set(`${obj.empId}||${obj.name}||${obj.period}`, {...obj, expectedSec, over, short});
+    }
+
+    rows.sort((a,b)=> (a.empId.localeCompare(b.empId,'ar') || a.period.localeCompare(b.period,'ar')));
+    tbody.innerHTML = rows.map(r => `
       <tr>
-        <td class="mono">${escapeHtml(row.empId)}</td>
-        <td>${escapeHtml(row.name)}</td>
-        <td>${escapeHtml(row.period)}</td>
-        <td class="left">${secondsToHhMm(row.workedSec)}</td>
-        <td class="left">${secondsToHhMm(row.expectedSec)}</td>
-        <td class="left">${row.overSec > 0 ? `<span class="pill ok">${secondsToHhMm(row.overSec)}</span>` : `<span class="pill">00:00</span>`}</td>
-        <td class="left">${row.shortSec > 0 ? `<span class="pill bad">-${secondsToHhMm(row.shortSec)}</span>` : `<span class="pill ok">00:00</span>`}</td>
-        <td class="center"><button class="btn secondary" data-key="${escapeHtml(row.key)}">تفاصيل</button></td>
+        <td>${esc(r.empId)}</td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.period)}</td>
+        <td class="left">${secToHHMM(r.worked)}</td>
+        <td class="left">${secToHHMM(r.expected)}</td>
+        <td class="left">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
+        <td class="left">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
+        <td class="center"><button class="btn secondary" data-key="${esc(r.key)}">تفاصيل</button></td>
       </tr>
     `).join('');
 
-    // Add event listeners to detail buttons
-    tbody.querySelectorAll('button[data-key]').forEach(btn => {
-      btn.addEventListener('click', () => openDetails(btn.getAttribute('data-key')));
-    });
+    [...tbody.querySelectorAll('button[data-key]')].forEach(btn => btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key'))));
+
+    updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
+    lastSummaryCSV = buildSummaryCSV(rows);
+    lastDetailedCSV = buildDetailedCSV(weekStart);
   }
 
-  function updateKPIs(worked, expected, over, short){
-    kpiWorked.textContent = secondsToHhMm(worked);
-    kpiExpected.textContent = secondsToHhMm(expected);
-    kpiOver.textContent = secondsToHhMm(over);
-    kpiShort.textContent = secondsToHhMm(short);
+  /* === Business rules & helpers === */
+
+  // CSV escape helper (FIX for ReferenceError)
+  function csvEsc(s){
+    s = String(s);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
   }
 
-  function updatePolicyHint(expectedMode, satPolicy) {
-    const modeText = expectedMode === 'calendar' ? 'أيام العمل التقويمية' : 'الأيام التي بها بصمة';
-    const satText = 
-      satPolicy === 'punch' ? 'السبت يُحتسب فقط عند وجود بصمة' :
-      satPolicy === 'calendar' ? 'السبت يُحتسب تقويميًا دائمًا' :
-      'السبت لا يُحتسب';
-    
-    hintPolicy.textContent = `سياسة الحساب: ${modeText} — ${satText}. الجمعة مستبعدة دائماً.`;
-  }
-
-  function prepareCSVData(rows) {
-    // Summary CSV
-    const summaryHeader = ['الرقم الوظيفي', 'الاسم', 'الفترة', 'ساعات العمل', 'المتوقّع', 'الزيادة', 'النقص'];
-    const summaryData = rows.map(r => [
-      r.empId, r.name, r.period, 
-      secondsToHhMm(r.workedSec), 
-      secondsToHhMm(r.expectedSec),
-      secondsToHhMm(r.overSec),
-      r.shortSec > 0 ? `-${secondsToHhMm(r.shortSec)}` : '00:00'
-    ]);
-    lastSummaryCSV = [summaryHeader, ...summaryData]
-      .map(row => row.map(csvEscape).join(','))
-      .join('\n');
-
-    // Detailed CSV
-    const detailHeader = ['الرقم الوظيفي', 'الاسم', 'الفترة', 'التاريخ', 'اليوم', 'الأزواج (دخول→خروج)', 'ساعات العمل'];
-    const detailData = [];
-    
-    for (const row of rows) {
-      const days = [...row.days.keys()].sort();
-      for (const dateStr of days) {
-        const dayInfo = row.days.get(dateStr);
-        const date = parseYmd(dateStr);
-        const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const pairsStr = dayInfo.pairs.map(p => `${p.in}→${p.out}`).join('; ');
-        
-        detailData.push([
-          row.empId,
-          row.name,
-          row.period,
-          dateStr,
-          dayNames[date.getDay()],
-          pairsStr,
-          secondsToHhMm(dayInfo.workedSec)
-        ]);
-      }
-    }
-    
-    lastDetailedCSV = [detailHeader, ...detailData]
-      .map(row => row.map(csvEscape).join(','))
-      .join('\n');
-  }
-
-  function openDetails(key){
-    const obj = groupedDetails.get(key);
-    if (!obj) return;
-    
-    modalTitle.textContent = `تفاصيل البصمة — ${obj.name} (${obj.empId})`;
-    modalMeta.innerHTML = `الفترة: <b>${escapeHtml(formatPeriodDisplay(obj.period, parseInt(weekStartSel.value,10)))}</b> — أيام مغطّاة: ${obj.days.size}`;
-
-    const days = [...obj.days.keys()].sort();
-    detailsBody.innerHTML = days.map(dateStr => {
-      const day = obj.days.get(dateStr);
-      const pairsHtml = day.pairs.length ? 
-        day.pairs.map(p => pairToHtml(p)).join(' &nbsp; ') : 
-        '<span class="muted">لا يوجد أزواج</span>';
-      
-      const dayNames = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
-      const dayColor = day.dow === 6 ? 'rgba(255,194,102,.18)' : 
-                      day.dow === 5 ? 'rgba(255,107,107,.18)' : 
-                      'rgba(244,231,51,.14)';
-      
-      return `<tr>
-        <td>${escapeHtml(dateStr)} <span class="pill" style="background:${dayColor}; color:#fff">${dayNames[day.dow]}</span></td>
-        <td>${pairsHtml}</td>
-        <td class="left">${secondsToHhMm(day.workedSec)}</td>
-      </tr>`;
-    }).join('');
-    
-    modalBackdrop.style.display = 'flex';
-    modalBackdrop.setAttribute('aria-hidden','false');
-  }
-
-  function closeModal(){ 
-    modalBackdrop.style.display = 'none'; 
-    modalBackdrop.setAttribute('aria-hidden','true'); 
-  }
-
-  // ========== UTILITY FUNCTIONS ==========
-
-  function parseExcelDate(v){
-    if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
-    if (typeof v === 'number') {
-      // Excel date (number of days since 1900-01-01)
-      const excelEpoch = new Date(1899, 11, 30);
-      return new Date(excelEpoch.getTime() + v * 86400000);
-    }
-    if (typeof v === 'string') {
-      const parsed = new Date(v);
-      return isNaN(parsed.getTime()) ? null : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-    }
-    return null;
-  }
-
-  function pairsFromCSV(csv){
-    if (!csv) return [];
-    const parts = csv.split(',').map(s => s.trim()).filter(Boolean);
-    const pairs = [];
-    for (let i = 0; i < parts.length; i += 2) {
-      pairs.push({
-        in: parts[i] || '',
-        out: parts[i + 1] || ''
-      });
-    }
-    return pairs;
-  }
-
-  function sumPairs(pairs, roundingMin){
-    let total = 0;
-    for (const p of pairs) {
-      if (!p.in || !p.out) continue;
-      const inSec = timeToSeconds(p.in);
-      const outSec = timeToSeconds(p.out);
-      if (inSec === null || outSec === null) continue;
-      
-      let duration = outSec - inSec;
-      if (duration < 0) duration += 24 * 3600; // Cross midnight
-      
-      if (roundingMin > 0) {
-        const roundingSec = roundingMin * 60;
-        duration = Math.round(duration / roundingSec) * roundingSec;
-      }
-      
-      total += Math.max(0, duration);
-    }
-    return total;
-  }
-
-  function timeToSeconds(timeStr){
-    if (!timeStr) return null;
-    const match = timeStr.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-    if (!match) return null;
-    const hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    const seconds = match[3] ? parseInt(match[3], 10) : 0;
-    return hours * 3600 + minutes * 60 + seconds;
-  }
-
-  function secondsToHhMm(seconds){
-    const absSeconds = Math.abs(seconds);
-    const h = Math.floor(absSeconds / 3600);
-    const m = Math.floor((absSeconds % 3600) / 60);
-    return `${seconds < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  }
-
-  function ymd(d){ 
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-
-  function ym(d){ 
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  }
-
-  function parseYmd(ymdStr){
-    const parts = ymdStr.split('-');
-    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-  }
-
-  function getWeekStart(date, startDay){
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = (day - startDay + 7) % 7;
-    d.setDate(d.getDate() - diff);
-    return d;
-  }
-
-  function getPeriodRange(periodKey, weekStart){
-    if (periodKey.startsWith('W:')) {
-      const startDate = parseYmd(periodKey.substring(2));
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-      return { start: startDate, end: endDate };
-    } else if (periodKey.startsWith('M:')) {
-      const [year, month] = periodKey.substring(2).split('-').map(Number);
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0);
-      return { start: startDate, end: endDate };
-    } else {
-      const date = parseYmd(periodKey);
-      return { start: date, end: date };
-    }
-  }
-
-  function formatPeriodDisplay(periodKey, weekStart){
-    if (periodKey.startsWith('W:')) {
-      const startDate = parseYmd(periodKey.substring(2));
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-      return `أسبوع ${ymd(startDate)} → ${ymd(endDate)}`;
-    } else if (periodKey.startsWith('M:')) {
-      const [year, month] = periodKey.substring(2).split('-').map(Number);
-      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-      return `${monthNames[month - 1]} ${year}`;
-    } else {
-      return periodKey;
-    }
-  }
-
-  function countWeekdays(start, end, targetDays){
-    let count = 0;
-    const current = new Date(start);
-    while (current <= end) {
-      if (targetDays.includes(current.getDay())) {
-        count++;
-      }
-      current.setDate(current.getDate() + 1);
-    }
-    return count;
-  }
-
-  function calculateExpectedForDay(dayOfWeek, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch){
-    // 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday
-    if (dayOfWeek >= 0 && dayOfWeek <= 4) {
-      // Sunday to Thursday
-      if (expectedMode === 'punched' && !hasPunch) return 0;
-      return expectedWD;
-    } else if (dayOfWeek === 5) {
-      // Friday - always off
-      return 0;
-    } else if (dayOfWeek === 6) {
-      // Saturday
+  // Sun..Thu working, Fri off, Sat optional by policy
+  function expectedForDay(dow, expectedWD, expectedSat, satPolicy, hasPunch){
+    if (dow >= 0 && dow <= 4) return expectedWD; // Sun..Thu
+    if (dow === 5) return 0; // Friday
+    if (dow === 6){ // Saturday
       if (satPolicy === 'off') return 0;
-      if (satPolicy === 'punch' && !hasPunch) return 0;
-      return expectedSat;
+      if (satPolicy === 'calendar') return expectedSat;
+      return hasPunch ? expectedSat : 0; // 'punch'
     }
     return 0;
   }
 
-  function pairToHtml(pair){
-    const inPill = `<span class="pill" style="background:rgba(244,231,51,.16); color:#000; border:1px solid #f4e733;">دخول ${escapeHtml(pair.in)}</span>`;
-    const outPill = pair.out ? 
-      `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${escapeHtml(pair.out)}</span>` : 
-      `<span class="pill warn">خروج غير مسجل</span>`;
-    
-    const duration = pair.out ? secondsToHhMm(timeToSeconds(pair.out) - timeToSeconds(pair.in)) : '00:00';
-    
-    return `<span class="mono">${inPill} → ${outPill}</span> <span class="muted">(المدة: ${duration})</span>`;
+  function buildSummaryCSV(rows){
+    const header = ['Employee ID','Name','Period','Worked (HH:MM)','Expected (HH:MM)','Overtime (HH:MM)','Shortfall (HH:MM)'];
+    const data = rows.map(r => [r.empId, r.name, r.period, secToHHMM(r.worked), secToHHMM(r.expected), secToHHMM(r.overtime), (r.short?`-${secToHHMM(r.short)}`:'00:00')]);
+    return [header, ...data].map(row => row.map(csvEsc).join(',')).join('\n');
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  function csvEscape(field) {
-    if (field === null || field === undefined) return '';
-    const string = String(field);
-    if (string.includes(',') || string.includes('"') || string.includes('\n')) {
-      return '"' + string.replace(/"/g, '""') + '"';
+  function buildDetailedCSV(weekStart){
+    const header = ['Employee ID','Name','Period','Date','Pair #','IN','OUT','Duration (HH:MM)','Day Total (HH:MM)'];
+    const lines = [header];
+    for (const [key, obj] of groupedDetails){
+      const [empId, name, period] = key.split('||');
+      const days = [...obj.days.keys()].sort();
+      for (const d of days){
+        const info = obj.days.get(d);
+        const pairs = info.pairs || [];
+        const dayTotal = secToHHMM(info.workedSec);
+        if (pairs.length === 0){
+          lines.push([empId, name, prettyPeriod(obj.period, parseInt(weekStartSel.value,10)), d, '', '', '', '00:00', dayTotal]);
+        } else {
+          pairs.forEach((p, idx)=>{
+            const dur = p.out ? secToHHMM(diffSec(p.in, p.out)) : '00:00';
+            lines.push([empId, name, prettyPeriod(obj.period, parseInt(weekStartSel.value,10)), d, idx+1, p.in||'', p.out||'', dur, dayTotal]);
+          });
+        }
+      }
     }
-    return string;
+    return lines.map(row => row.map(csvEsc).join(',')).join('\n');
+  }
+
+  function parseExcelDate(v){
+    if (v instanceof Date && !isNaN(v)) return normalizeDate(v);
+    if (typeof v === 'number'){
+      const epoch = new Date(Date.UTC(1899,11,30)); return normalizeDate(new Date(epoch.getTime() + v*86400000));
+    }
+    const t = Date.parse(String(v).trim()); return isNaN(t) ? null : normalizeDate(new Date(t));
+  }
+  function normalizeDate(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+  // Flexible parser: Arabic/English labels/separators, AM/PM, 24h or dot-separated.
+  function pairsFromFlexibleCell(cell){
+    if (!cell) return [];
+    let s = String(cell).replace(/\r/g,'\n');
+
+    // Split by commas (EN/AR), semicolons, pipes, line breaks, or multiple spaces
+    const parts = s.split(/[\u060C,;|\n]+|\s{2,}/).map(x=>x.trim()).filter(Boolean);
+
+    // Normalize tokens: remove labels and convert 08.30 to 08:30
+    const norm = parts.map(t => t
+      .replace(/^(in|out|دخول|خروج)\s*:?/i,'')
+      .replace(/\./g,':')
+      .replace(/\s*(am|pm)$/i, (m)=>m.toUpperCase())
+      .trim()
+    );
+
+    // Merge "08:30 AM"
+    const tokens = [];
+    for (let i=0;i<norm.length;i++){
+      const cur = norm[i], next = norm[i+1]||'';
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(cur) && /^(AM|PM)$/i.test(next)){
+        tokens.push(cur + ' ' + next); i++;
+      } else {
+        tokens.push(cur);
+      }
+    }
+
+    // Filter valid times (24h or 12h with AM/PM)
+    const timeRe = /^(\d{1,2}):(\d{2})(?::(\d{2}))?(\s?(AM|PM))?$/i;
+    const times = tokens.filter(t => timeRe.test(t));
+
+    const out = [];
+    for (let i=0;i<times.length;i+=2){
+      const a = times[i]; const b = times[i+1] ?? null;
+      out.push({in: to24(a), out: b ? to24(b) : null});
+    }
+    return out;
+  }
+
+  function to24(t){
+    t = String(t).trim();
+    const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?(\s?(AM|PM))?$/i.exec(t);
+    if (!m) return null;
+    let h = parseInt(m[1],10), mm = parseInt(m[2],10), ss = parseInt(m[3]||'0',10);
+    const ap = (m[5]||'').toUpperCase();
+    if (ap === 'AM'){ if (h===12) h = 0; }
+    else if (ap === 'PM'){ if (h<12) h += 12; }
+    return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
+
+  function sumPairs(pairs, roundingMin){
+    let total=0;
+    for (const p of pairs){
+      if (!p.in || !p.out) continue;
+      let sec = diffSec(p.in, p.out);
+      if (roundingMin>0) sec = roundSeconds(sec, roundingMin*60);
+      total += sec;
+    }
+    return total;
+  }
+
+  function roundSeconds(sec, step){ return Math.round(sec/step)*step; }
+  function hmsToSec(hms){
+    const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(hms||''); if (!m) return 0;
+    return (+m[1])*3600 + (+m[2])*60 + (+(m[3]||0));
+  }
+
+  // FIXED: clearer diff across midnight
+  function diffSec(a, b){
+    const start = hmsToSec(to24(a));
+    const end   = hmsToSec(to24(b));
+    let d = end - start;
+    if (d < 0) d += 24 * 3600; // crosses midnight
+    return d;
+  }
+
+  function secToHHMM(sec){ const v=Math.abs(sec); const h=Math.floor(v/3600), m=Math.floor((v%3600)/60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+  function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function ym(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+  function getWeekStart(d, startDow){ const date = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const dow = date.getDay(); const diff = (dow - startDow + 7) % 7; date.setDate(date.getDate() - diff); return date; }
+  function prettyPeriod(p, ws){
+    if (p.startsWith('W:')){ const d=new Date(p.slice(2)); const e=new Date(d); e.setDate(e.getDate()+6);
+      const names=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']; return `أسبوع ${ymd(d)} → ${ymd(e)} (بداية ${names[ws]})`; }
+    if (p.startsWith('M:')) return p.slice(2);
+    return p;
+  }
+  function periodRange(period){
+    if (period.startsWith('W:')){ const s=new Date(period.slice(2)); const e=new Date(s); e.setDate(e.getDate()+6); return {start:s,end:e}; }
+    if (period.startsWith('M:')){ const [y,m]=period.slice(2).split('-').map(Number); const s=new Date(y,m-1,1); const e=new Date(y,m,0); return {start:s,end:e}; }
+    const d=new Date(period); return {start:d,end:d};
+  }
+  function countDOW(start,end,dows){
+    const set = new Set(dows); let cnt=0;
+    const d=new Date(start.getFullYear(),start.getMonth(),start.getDate());
+    const last=new Date(end.getFullYear(),end.getMonth(),end.getDate());
+    for (; d<=last; d.setDate(d.getDate()+1)){ if (set.has(d.getDay())) cnt++; }
+    return cnt;
+  }
+  function updateKPIs(worked, expected, over, short){
+    kpiWorked.textContent = secToHHMM(worked);
+    kpiExpected.textContent = secToHHMM(expected);
+    kpiOver.textContent = secToHHMM(over);
+    kpiShort.textContent = secToHHMM(short);
+  }
+  function esc(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]); }
+  function openDetails(key){
+    const obj = groupedDetails.get(key); if (!obj) return;
+    const [empId, name, period] = key.split('||');
+    modalTitle.textContent = `تفاصيل البصمة — ${name} (${empId})`;
+    modalMeta.innerHTML = `الفترة: <b>${esc(prettyPeriod(period, parseInt(weekStartSel.value,10)))}</b> — أيام مغطّاة: ${obj.days.size}`;
+    const days = [...obj.days.keys()].sort();
+    detailsBody.innerHTML = days.map(d=>{
+      const info = obj.days.get(d);
+      const pairsHtml = (info.pairs && info.pairs.length) ? info.pairs.map(p=> pairHTML(p)).join(' &nbsp; ') : '<span class="muted">لا يوجد أزواج</span>';
+      return `<tr><td>${esc(d)} ${dowBadge(info.dow)}</td><td>${pairsHtml}</td><td class="left">${secToHHMM(info.workedSec)}</td></tr>`;
+    }).join('');
+    modalBackdrop.style.display = 'flex'; modalBackdrop.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){ modalBackdrop.style.display = 'none'; modalBackdrop.setAttribute('aria-hidden','true'); }
+  function dowBadge(dow){
+    const names=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+    const color = (dow===6)?'rgba(255,194,102,.18)':(dow===5?'rgba(255,107,107,.18)':'rgba(244,231,51,.14)');
+    return ` <span class="pill" style="background:${color}; color:#fff">${names[dow]}</span>`;
+  }
+  function pairHTML(p){
+    const pin  = `<span class="pill" style="background:rgba(244,231,51,.16); color:#000; border:1px solid #f4e733;">دخول ${esc(p.in)}</span>`;
+    const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${esc(p.out)}</span>` : `<span class="pill warn">خروج غير مسجل</span>`;
+    const dur = p.out ? secToHHMM(diffSec(p.in, p.out)) : '00:00';
+    return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
   }
 })();
 </script>
