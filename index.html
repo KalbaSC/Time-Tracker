@@ -86,6 +86,7 @@
     .stat-value{font-size:24px; font-weight:800; margin:8px 0}
     .stat-label{font-size:12px; color:var(--muted)}
     .highlight{color:var(--accent)}
+    .debug-info{background:rgba(255,0,0,0.1); padding:8px; border-radius:8px; margin:8px 0; font-size:12px; display:none}
   </style>
 </head>
 <body>
@@ -225,6 +226,8 @@
         <div class="kpi ok"><div class="label">إجمالي الزيادة</div><div class="value" id="kpiOver">00:00</div></div>
         <div class="kpi bad"><div class="label">إجمالي النقص</div><div class="value" id="kpiShort">00:00</div></div>
       </div>
+      
+      <div class="debug-info" id="debugInfo"></div>
     </section>
 
     <section class="panel" style="min-height:480px">
@@ -289,6 +292,7 @@
   const metaEl = $('meta'), tbody = $('tbody'), hintPolicy = $('hintPolicy');
   const kpiWorked = $('kpiWorked'), kpiExpected = $('kpiExpected'), kpiOver = $('kpiOver'), kpiShort = $('kpiShort');
   const recalcBtn = $('recalc'), dlSumBtn = $('downloadSummary'), dlDetBtn = $('downloadDetails');
+  const debugInfo = $('debugInfo');
 
   const modalBackdrop = $('modalBackdrop'), closeModalBtn = $('closeModal'), modalTitle = $('modalTitle'), modalMeta = $('modalMeta'), detailsBody = $('detailsBody');
 
@@ -369,6 +373,7 @@
       updateKPIs(0,0,0,0);
       updateGeneralStats(0,0,0,0);
       hintPolicy.textContent = '';
+      debugInfo.style.display = 'none';
       return;
     }
 
@@ -385,19 +390,36 @@
     const map = new Map();
     const employeeStats = new Map(); // لتخزين إحصائيات الموظفين
     
+    // Group data by employee and period
     for (const row of rawRows){
       if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
       if (fromDate && row.date < fromDate) continue;
       if (toDate && row.date > toDate) continue;
 
       let periodKey = '';
-      if (view === 'daily'){ periodKey = ymd(row.date); }
-      else if (view === 'weekly'){ periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); }
-      else { periodKey = 'M:'+ym(row.date); }
+      if (view === 'daily'){ 
+        periodKey = ymd(row.date); 
+      }
+      else if (view === 'weekly'){ 
+        periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); 
+      }
+      else { 
+        // Monthly view - use year-month as key
+        periodKey = 'M:'+ym(row.date); 
+      }
 
       const key = `${row.empId}||${row.name}||${periodKey}`;
       if (!map.has(key)){
-        map.set(key, {empId:row.empId, name:row.name, period:periodKey, workedSec:0, days:new Map()});
+        map.set(key, {
+          empId: row.empId, 
+          name: row.name, 
+          period: periodKey, 
+          workedSec: 0, 
+          days: new Map(),
+          dateRange: view === 'monthly' ? getMonthRange(row.date) : 
+                    view === 'weekly' ? getWeekRange(getWeekStart(row.date, weekStart)) : 
+                    {start: row.date, end: row.date}
+        });
       }
       const obj = map.get(key);
       obj.workedSec += row.workedSec;
@@ -414,22 +436,50 @@
 
     const rows = [];
     let totalWorked=0, totalExpected=0, totalOver=0, totalShort=0;
+    
+    // Debug info
+    let debugText = `View: ${view}, Expected Mode: ${expectedMode}, Sat Policy: ${satPolicy}<br>`;
+    
     for (const obj of map.values()){
       let expectedSec = 0;
+      const range = obj.dateRange;
 
       if (view === 'daily'){
         const dkey = [...obj.days.keys()][0];
         const info = obj.days.get(dkey);
         expectedSec = expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, expectedMode, !!info.pairs?.length);
-      } else {
-        const range = periodRange(obj.period, weekStart);
+        debugText += `Daily: ${dkey} - Worked: ${secToHHMM(obj.workedSec)}, Expected: ${secToHHMM(expectedSec)}<br>`;
+      } 
+      else if (view === 'weekly') {
         if (expectedMode === 'calendar'){
+          // Count actual weekdays in the week range
           expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun..Thu
-          if (satPolicy === 'calendar') expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
+          if (satPolicy === 'calendar') {
+            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
+          }
+          debugText += `Weekly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
         } else {
+          // Based on punched days only
           for (const [dkey, info] of obj.days){
             expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
           }
+          debugText += `Weekly Punched: ${obj.days.size} days with punches<br>`;
+        }
+      }
+      else { // Monthly
+        if (expectedMode === 'calendar'){
+          // Count actual weekdays in the month
+          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun..Thu
+          if (satPolicy === 'calendar') {
+            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
+          }
+          debugText += `Monthly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
+        } else {
+          // Based on punched days only
+          for (const [dkey, info] of obj.days){
+            expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
+          }
+          debugText += `Monthly Punched: ${obj.days.size} days with punches<br>`;
         }
       }
 
@@ -437,13 +487,20 @@
       const over = Math.max(0, delta);
       const short = Math.max(0, -delta);
 
-      totalWorked += obj.workedSec; totalExpected += expectedSec; totalOver += over; totalShort += short;
+      totalWorked += obj.workedSec; 
+      totalExpected += expectedSec; 
+      totalOver += over; 
+      totalShort += short;
 
       rows.push({
         key: `${obj.empId}||${obj.name}||${obj.period}`,
-        empId: obj.empId, name: obj.name,
+        empId: obj.empId, 
+        name: obj.name,
         period: prettyPeriod(obj.period, weekStart),
-        worked: obj.workedSec, expected: expectedSec, overtime: over, short
+        worked: obj.workedSec, 
+        expected: expectedSec, 
+        overtime: over, 
+        short
       });
 
       groupedDetails.set(`${obj.empId}||${obj.name}||${obj.period}`, {
@@ -476,8 +533,24 @@
                  : 'السبت لا يُحتسب';
     hintPolicy.textContent = `سياسة الحساب: ${modeText} — ${satText}. الجمعة مستبعدة دائماً.`;
 
+    // Show debug info
+    debugInfo.innerHTML = debugText;
+    debugInfo.style.display = 'block';
+
     lastSummaryCSV = buildSummaryCSV(rows);
     lastDetailedCSV = buildDetailedCSV();
+  }
+
+  function getMonthRange(date) {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return {start, end};
+  }
+
+  function getWeekRange(weekStart) {
+    const end = new Date(weekStart);
+    end.setDate(weekStart.getDate() + 6);
+    return {start: weekStart, end};
   }
 
   function updateGeneralStats(employeeStats, totalWorked, totalRecords) {
@@ -627,22 +700,27 @@
     date.setDate(date.getDate() - diff); return date;
   }
   function prettyPeriod(p, ws){
-    if (p.startsWith('W:')){ const d=new Date(p.slice(2)); const end=new Date(d); end.setDate(end.getDate()+6);
+    if (p.startsWith('W:')){ 
+      const d=new Date(p.slice(2)); 
+      const end=new Date(d); 
+      end.setDate(end.getDate()+6);
       const names=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-      return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${names[ws]})`; }
-    if (p.startsWith('M:')) return p.slice(2);
+      return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${names[ws]})`; 
+    }
+    if (p.startsWith('M:')) {
+      const [y,m] = p.slice(2).split('-').map(Number);
+      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      return `${monthNames[m-1]} ${y}`;
+    }
     return p;
-  }
-  function periodRange(period, weekStart){
-    if (period.startsWith('W:')){ const s=new Date(period.slice(2)); const e=new Date(s); e.setDate(e.getDate()+6); return {start:s,end:e}; }
-    if (period.startsWith('M:')){ const [y,m]=period.slice(2).split('-').map(Number); const s=new Date(y,m-1,1); const e=new Date(y,m,0); return {start:s,end:e}; }
-    const d=new Date(period); return {start:d,end:d};
   }
   function countWeekdays(start,end,allowedDows){
     const set = new Set(allowedDows); let cnt=0;
-    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    for (; d<=last; d.setDate(d.getDate()+1)){ if (set.has(d.getDay())) cnt++; }
+    const d = new Date(start);
+    const last = new Date(end);
+    for (; d<=last; d.setDate(d.getDate()+1)){ 
+      if (set.has(d.getDay())) cnt++; 
+    }
     return cnt;
   }
   function updateKPIs(worked, expected, over, short){
