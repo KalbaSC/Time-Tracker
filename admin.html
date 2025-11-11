@@ -202,21 +202,22 @@
   const LS_ADMIN = 'kscAdminLogged';
   const $ = id => document.getElementById(id);
 
-  // ==== Helper to send data to Apps Script ====
-  async function postToScript(action, payload) {
-    try {
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, payload }),
-      });
-      return await res.json();
-    } catch (err) {
-      console.error("Script error:", err);
-      alert("⚠️ لم يتم الاتصال بـ Google Sheet. تحقق من الإنترنت أو رابط السكربت.");
-      return { ok: false, error: err.message };
-    }
+async function postToScript(action, payload) {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors", // 👈 disables browser CORS checks
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, payload }),
+    });
+    console.log("✅ Request sent to Google Apps Script (no-cors mode)");
+    return { ok: true }; // we assume success since we can’t read response
+  } catch (err) {
+    console.error("❌ Script connection error:", err);
+    alert("⚠️ لم يتم الاتصال بـ Google Sheet. تحقق من الإنترنت أو رابط السكربت.");
+    return { ok: false, error: err.message };
   }
+}
 
   function readAdmin(){ try{return JSON.parse(localStorage.getItem(ADMIN_STATE)||'{}')}catch{return {}} }
   function saveAdmin(s){ localStorage.setItem(ADMIN_STATE, JSON.stringify(s)); }
