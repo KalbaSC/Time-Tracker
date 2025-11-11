@@ -227,7 +227,6 @@
         <div class="kpi bad"><div class="label">إجمالي النقص</div><div class="value" id="kpiShort">00:00</div></div>
       </div>
       
-      <div class="debug-info" id="debugInfo"></div>
     </section>
 
     <section class="panel" style="min-height:480px">
@@ -292,11 +291,9 @@
   const metaEl = $('meta'), tbody = $('tbody'), hintPolicy = $('hintPolicy');
   const kpiWorked = $('kpiWorked'), kpiExpected = $('kpiExpected'), kpiOver = $('kpiOver'), kpiShort = $('kpiShort');
   const recalcBtn = $('recalc'), dlSumBtn = $('downloadSummary'), dlDetBtn = $('downloadDetails');
-  const debugInfo = $('debugInfo');
 
   const modalBackdrop = $('modalBackdrop'), closeModalBtn = $('closeModal'), modalTitle = $('modalTitle'), modalMeta = $('modalMeta'), detailsBody = $('detailsBody');
 
-  // إحصائيات عامة
   const totalEmployees = $('totalEmployees'), avgDailyHours = $('avgDailyHours'), maxHours = $('maxHours'), minHours = $('minHours');
 
   let rawRows = []; 
@@ -373,7 +370,6 @@
       updateKPIs(0,0,0,0);
       updateGeneralStats(0,0,0,0);
       hintPolicy.textContent = '';
-      debugInfo.style.display = 'none';
       return;
     }
 
@@ -388,9 +384,8 @@
     const expectedMode = expectedModeSel.value;
 
     const map = new Map();
-    const employeeStats = new Map(); // لتخزين إحصائيات الموظفين
+    const employeeStats = new Map();
     
-    // Group data by employee and period
     for (const row of rawRows){
       if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
       if (fromDate && row.date < fromDate) continue;
@@ -404,7 +399,6 @@
         periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); 
       }
       else { 
-        // Monthly view - use year-month as key
         periodKey = 'M:'+ym(row.date); 
       }
 
@@ -425,7 +419,6 @@
       obj.workedSec += row.workedSec;
       obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
       
-      // تحديث إحصائيات الموظف
       if (!employeeStats.has(row.empId)) {
         employeeStats.set(row.empId, {name: row.name, totalWorked: 0, daysWorked: 0});
       }
@@ -437,7 +430,6 @@
     const rows = [];
     let totalWorked=0, totalExpected=0, totalOver=0, totalShort=0;
     
-    // Debug info
     let debugText = `View: ${view}, Expected Mode: ${expectedMode}, Sat Policy: ${satPolicy}<br>`;
     
     for (const obj of map.values()){
@@ -452,30 +444,26 @@
       } 
       else if (view === 'weekly') {
         if (expectedMode === 'calendar'){
-          // Count actual weekdays in the week range
-          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun..Thu
+          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
           if (satPolicy === 'calendar') {
-            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
+            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]);
           }
           debugText += `Weekly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
         } else {
-          // Based on punched days only
           for (const [dkey, info] of obj.days){
             expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
           }
           debugText += `Weekly Punched: ${obj.days.size} days with punches<br>`;
         }
       }
-      else { // Monthly
+      else {
         if (expectedMode === 'calendar'){
-          // Count actual weekdays in the month
-          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun..Thu
+          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
           if (satPolicy === 'calendar') {
-            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
+            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); 
           }
           debugText += `Monthly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
         } else {
-          // Based on punched days only
           for (const [dkey, info] of obj.days){
             expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
           }
@@ -533,10 +521,6 @@
                  : 'السبت لا يُحتسب';
     hintPolicy.textContent = `سياسة الحساب: ${modeText} — ${satText}. الجمعة مستبعدة دائماً.`;
 
-    // Show debug info
-    debugInfo.innerHTML = debugText;
-    debugInfo.style.display = 'block';
-
     lastSummaryCSV = buildSummaryCSV(rows);
     lastDetailedCSV = buildDetailedCSV();
   }
@@ -554,15 +538,12 @@
   }
 
   function updateGeneralStats(employeeStats, totalWorked, totalRecords) {
-    // إحصائيات عامة
     totalEmployees.textContent = employeeStats.size;
     
     if (employeeStats.size > 0) {
-      // حساب متوسط ساعات العمل اليومية
       const avgHours = totalWorked / employeeStats.size / 3600;
       avgDailyHours.textContent = `${Math.floor(avgHours)}:${String(Math.round((avgHours % 1) * 60)).padStart(2, '0')}`;
       
-      // حساب أعلى وأقل ساعات عمل
       let maxWorked = 0;
       let minWorked = Infinity;
       
@@ -582,12 +563,11 @@
   }
 
   function expectedForDayKey(dkey, dow, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch){
-    if (dow >= 0 && dow <= 4) return expectedWD; // Sun..Thu
-    if (dow === 5) return 0; // Friday off
+    if (dow >= 0 && dow <= 4) return expectedWD;
+    if (dow === 5) return 0; 
     if (dow === 6){
       if (satPolicy === 'off') return 0;
       if (satPolicy === 'calendar') return expectedSat;
-      // 'punch' — only if punched
       return hasPunch ? expectedSat : 0;
     }
     return 0;
@@ -686,7 +666,7 @@
   }
   function diffSec(a,b){
     let d = hmsToSec(b) - hmsToSec(a);
-    if (d<0) d += 24*3600; // عبور منتصف الليل
+    if (d<0) d += 24*3600;
     return d;
   }
   function secToHHMM(sec){
