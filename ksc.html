@@ -569,13 +569,12 @@
       return total;
     }
 
-    // ---- Export helper ----
     function downloadCSV(rows, filename) {
       const csv = rows.map(r => 
         r.map(x => (',' in (x+'') ? '"'+(x+'').replace(/"/g,'""')+'"' : x)
          .join(',')
       ).join('\n');
-      
+      )
       const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob); 
       const a = document.createElement('a'); 
@@ -585,18 +584,15 @@
       URL.revokeObjectURL(url);
     }
 
-    // ---- Tab Navigation ----
     function initTabs() {
       const tabLinks = document.querySelectorAll('.tab-link');
       const actionButtons = document.querySelectorAll('.action-btn[data-tab]');
       
-      // Set active tab based on URL hash or default to dashboard
       let activeTab = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
       if (!document.getElementById(activeTab)) activeTab = 'dashboard';
       
       showTab(activeTab);
       
-      // Add event listeners to tab links
       tabLinks.forEach(link => {
         link.addEventListener('click', function(e) {
           e.preventDefault();
@@ -606,7 +602,6 @@
         });
       });
       
-      // Add event listeners to action buttons
       actionButtons.forEach(button => {
         button.addEventListener('click', function() {
           const tabId = this.getAttribute('data-tab');
@@ -617,18 +612,15 @@
     }
     
     function showTab(tabId) {
-      // Hide all tabs
       document.querySelectorAll('.tab-container').forEach(tab => {
         tab.classList.remove('active');
       });
       
-      // Show selected tab
       const activeTab = document.getElementById(tabId);
       if (activeTab) {
         activeTab.classList.add('active');
       }
       
-      // Update active nav link
       document.querySelectorAll('.nav a').forEach(link => {
         link.classList.remove('active');
       });
@@ -638,7 +630,6 @@
         activeNavLink.classList.add('active');
       }
       
-      // Refresh data for the active tab
       refreshTabData(tabId);
     }
     
@@ -662,10 +653,8 @@
       }
     }
     
-    // ---- Dashboard Functions ----
     function refreshDashboard(active, db) {
       if (!active) {
-        // Show login prompt if not logged in
         $('dash-today').textContent = '00:00';
         $('dash-left').textContent = '00:00';
         $('dash-week').textContent = '00:00';
@@ -679,16 +668,13 @@
       const key = ymd(today);
       const pairs = emp.punches[key] || [];
       
-      // Today's worked hours
       const workedSec = sumPairs(pairs);
       $('dash-today').textContent = secToHHMM(workedSec);
       
-      // Today's remaining hours
       const expectedSec = expectedSecondsForDate(today, pairs.length > 0);
       const leftSec = Math.max(0, expectedSec - workedSec);
       $('dash-left').textContent = secToHHMM(leftSec);
       
-      // Week's worked hours
       const ws = new Date(today); 
       ws.setDate(today.getDate() - today.getDay());
       const we = new Date(ws); 
@@ -696,7 +682,6 @@
       const wWorked = computeRangeWorked(emp, ws, we);
       $('dash-week').textContent = secToHHMM(wWorked);
       
-      // Last action
       if (!pairs.length) {
         $('dash-last').textContent = '—';
       } else {
@@ -704,7 +689,6 @@
         $('dash-last').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
       }
       
-      // Today's punches table
       if (!pairs.length) {
         $('dash-todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
       } else {
