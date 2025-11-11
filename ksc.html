@@ -333,10 +333,13 @@
         </section>
 
         <section class="card" id="adminBox" style="display:none">
-          <div class="toolbar" style="justify-content:space-between">
-            <h2>لوحة التحكم</h2>
-            <span class="badge">وضع متصل بالسكريبت: <b id="connState">غير محدد</b></span>
-          </div>
+<div class="toolbar" style="justify-content:space-between">
+  <h2>لوحة التحكم</h2>
+  <div>
+    <button id="btnLogout" class="secondary">🚪 تسجيل الخروج</button>
+  </div>
+  <span class="badge">وضع متصل بالسكريبت: <b id="connState">غير محدد</b></span>
+</div>
 
           <div class="two">
             <!-- Employees -->
@@ -1115,143 +1118,147 @@ function downloadCSV(rows, filename) {
     }
     
     function initAdmin() {
-      // --- Gate ---
-      $('btnAdminLogin').onclick = () => {
-        const pass = $('adminPass').value.trim();
-        const ok = pass && pass === state.settings.adminPass;
-        
-        if (ok) {
-          localStorage.setItem(LS_ADMIN, '1');
-          $('gateBox').style.display = 'none';
-          $('adminBox').style.display = '';
-          loadAdminState();
-        } else {
-          $('gateMsg').textContent = 'رمز الإدارة غير صحيح.';
-        }
-      };
-      
-      $('btnLogout').onclick = () => {
-        localStorage.removeItem(LS_ADMIN);
-        setActive(null);
-        showTab('auth');
-      };
-      
-      // --- Employees actions ---
-      $('btnAddEmp').onclick = () => {
-        const name = $('empNameIn').value.trim();
-        const id = $('empIdIn').value.trim();
-        const pin = $('empPinIn').value.trim();
-        const active = $('empActiveIn').value === '1';
-        
-        if (!name || !id || !pin) { 
-          alert('أدخلي الاسم والرقم الوظيفي والـ PIN.'); 
-          return; 
-        }
-        
-        state.employees[id] = { name, pin, active };
-        saveAdminState(); 
-        renderEmployees();
-        
-        // also store to user DB (used by punch pages)
-        const db = readDB(); 
-        db[id] = db[id] || { name: '', pin: '', punches: {} };
-        db[id].name = name; 
-        db[id].pin = pin; 
-        if (!db[id].punches) db[id].punches = {};
-        writeDB(db);
-      };
-      
-      $('btnDelEmp').onclick = () => {
-        const id = $('empIdIn').value.trim();
-        if (!id) { 
-          alert('أدخلي الرقم الوظيفي المراد حذفه.'); 
-          return; 
-        }
-        
-        if (!state.employees[id]) { 
-          alert('الموظف غير موجود.'); 
-          return; 
-        }
-        
-        if (!confirm('تأكيد حذف الموظف وجميع سجلاته المحلية؟')) return;
-        
-        delete state.employees[id]; 
-        saveAdminState(); 
-        renderEmployees();
-        
-        const db = readDB(); 
-        delete db[id]; 
-        writeDB(db);
-      };
-      
-      // --- Settings ---
-      $('btnSaveSettings').onclick = () => {
-        state.settings.wdHours = +$('confWDDuration').value || 7;
-        state.settings.satHours = +$('confSatDuration').value || 3;
-        state.settings.adminPass = $('confAdminPass').value || 'kalbaHR2025';
-        saveAdminState();
-        alert('تم حفظ الإعدادات.');
-      };
-      
-      // --- Leaves ---
-      $('btnAddLeave').onclick = async () => {
-        const id = $('lvEmpId').value.trim();
-        const type = $('lvType').value;
-        const from = $('lvFrom').value;
-        const to = $('lvTo').value || from;
-        const note = $('lvNote').value.trim();
-        const f = $('lvFile').files[0];
-        
-        if (!id || !from) { 
-          alert('الرقم الوظيفي وتاريخ البداية مطلوبان.'); 
-          return; 
-        }
-        
-        const entry = { id, type, from, to, note, fileName: f ? f.name : '' };
-        if (f) { 
-          entry.base64 = await fileToBase64(f); 
-        }
-        
-        state.leaves.push(entry); 
-        saveAdminState(); 
-        renderLeaves();
-      };
-      
-      $('btnExportEmployees').onclick = () => {
-        const rows = [['EmpID','Name','PIN','Active']];
-        Object.keys(state.employees).forEach(id => {
-          const e = state.employees[id]; 
-          rows.push([id, e.name, e.pin, e.active ? '1' : '0']);
-        });
-        downloadCSV(rows, 'employees.csv');
-      };
-      
-      $('btnExportLeaves').onclick = () => {
-        const rows = [['EmpID','Type','From','To','Note','FileName']];
-        state.leaves.forEach(l => 
-          rows.push([l.id, l.type, l.from, l.to, l.note || '', l.fileName || ''])
-        );
-        downloadCSV(rows, 'leaves.csv');
-      };
-      
-      $('btnSyncEmployees').onclick = async () => {
-        const payload = state.employees;
-        const r = await postToScript('syncEmployees', payload);
-        alert(r.ok ? 'تمت مزامنة الموظفين.' : ('فشل: ' + (r.error || '')));
-      };
-      
-      $('btnSyncLeaves').onclick = async () => {
-        const payload = state.leaves;
-        const r = await postToScript('syncLeaves', payload);
-        alert(r.ok ? 'تمت مزامنة الإجازات.' : ('فشل: ' + (r.error || '')));
-      };
-      
-      $('btnAskReport').onclick = async () => {
-        const r = await postToScript('generateReport', {period: 'weekly'});
-        alert(r.ok ? ('تم توليد التقرير: ' + (r.url || '')) : ('فشل: ' + (r.error || '')));
-      };
+  // --- Gate ---
+  $('btnAdminLogin').onclick = () => {
+    const pass = $('adminPass').value.trim();
+    const ok = pass && pass === state.settings.adminPass;
+
+    if (ok) {
+      localStorage.setItem(LS_ADMIN, '1');
+      $('gateBox').style.display = 'none';
+      $('adminBox').style.display = '';
+      loadAdminState();
+    } else {
+      $('gateMsg').textContent = 'رمز الإدارة غير صحيح.';
     }
-    
+  };
+
+  // --- Logout button (optional safety) ---
+  const btnLogout = $('btnLogout');
+  if (btnLogout) {
+    btnLogout.onclick = () => {
+      localStorage.removeItem(LS_ADMIN);
+      setActive(null);
+      showTab('auth');
+    };
+  }
+
+  // --- Employees actions ---
+  $('btnAddEmp').onclick = () => {
+    const name = $('empNameIn').value.trim();
+    const id = $('empIdIn').value.trim();
+    const pin = $('empPinIn').value.trim();
+    const active = $('empActiveIn').value === '1';
+
+    if (!name || !id || !pin) {
+      alert('أدخلي الاسم والرقم الوظيفي والـ PIN.');
+      return;
+    }
+
+    state.employees[id] = { name, pin, active };
+    saveAdminState();
+    renderEmployees();
+
+    // also store to user DB (used by punch pages)
+    const db = readDB();
+    db[id] = db[id] || { name: '', pin: '', punches: {} };
+    db[id].name = name;
+    db[id].pin = pin;
+    if (!db[id].punches) db[id].punches = {};
+    writeDB(db);
+  };
+
+  $('btnDelEmp').onclick = () => {
+    const id = $('empIdIn').value.trim();
+    if (!id) {
+      alert('أدخلي الرقم الوظيفي المراد حذفه.');
+      return;
+    }
+
+    if (!state.employees[id]) {
+      alert('الموظف غير موجود.');
+      return;
+    }
+
+    if (!confirm('تأكيد حذف الموظف وجميع سجلاته المحلية؟')) return;
+
+    delete state.employees[id];
+    saveAdminState();
+    renderEmployees();
+
+    const db = readDB();
+    delete db[id];
+    writeDB(db);
+  };
+
+  // --- Settings ---
+  $('btnSaveSettings').onclick = () => {
+    state.settings.wdHours = +$('confWDDuration').value || 7;
+    state.settings.satHours = +$('confSatDuration').value || 3;
+    state.settings.adminPass = $('confAdminPass').value || 'kalbaHR2025';
+    saveAdminState();
+    alert('تم حفظ الإعدادات.');
+  };
+
+  // --- Leaves ---
+  $('btnAddLeave').onclick = async () => {
+    const id = $('lvEmpId').value.trim();
+    const type = $('lvType').value;
+    const from = $('lvFrom').value;
+    const to = $('lvTo').value || from;
+    const note = $('lvNote').value.trim();
+    const f = $('lvFile').files[0];
+
+    if (!id || !from) {
+      alert('الرقم الوظيفي وتاريخ البداية مطلوبان.');
+      return;
+    }
+
+    const entry = { id, type, from, to, note, fileName: f ? f.name : '' };
+    if (f) {
+      entry.base64 = await fileToBase64(f);
+    }
+
+    state.leaves.push(entry);
+    saveAdminState();
+    renderLeaves();
+  };
+
+  $('btnExportEmployees').onclick = () => {
+    const rows = [['EmpID', 'Name', 'PIN', 'Active']];
+    Object.keys(state.employees).forEach(id => {
+      const e = state.employees[id];
+      rows.push([id, e.name, e.pin, e.active ? '1' : '0']);
+    });
+    downloadCSV(rows, 'employees.csv');
+  };
+
+  $('btnExportLeaves').onclick = () => {
+    const rows = [['EmpID', 'Type', 'From', 'To', 'Note', 'FileName']];
+    state.leaves.forEach(l =>
+      rows.push([l.id, l.type, l.from, l.to, l.note || '', l.fileName || ''])
+    );
+    downloadCSV(rows, 'leaves.csv');
+  };
+
+  $('btnSyncEmployees').onclick = async () => {
+    const payload = state.employees;
+    const r = await postToScript('syncEmployees', payload);
+    alert(r.ok ? 'تمت مزامنة الموظفين.' : 'فشل: ' + (r.error || ''));
+  };
+
+  $('btnSyncLeaves').onclick = async () => {
+    const payload = state.leaves;
+    const r = await postToScript('syncLeaves', payload);
+    alert(r.ok ? 'تمت مزامنة الإجازات.' : 'فشل: ' + (r.error || ''));
+  };
+
+  $('btnAskReport').onclick = async () => {
+    const r = await postToScript('generateReport', { period: 'weekly' });
+    alert(r.ok ? 'تم توليد التقرير: ' + (r.url || '') : 'فشل: ' + (r.error || ''));
+  };
+}
+
     // ---- Initialize Everything ----
     document.addEventListener('DOMContentLoaded', function() {
       initTabs();
