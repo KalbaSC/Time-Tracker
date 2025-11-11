@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام البصمة | نادي كلباء الرياضي الثقافي</title>
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --card: #111213;
+      --accent: #f6c21a;
+      --accent-2: #1f1f1f;
+      --text: #f2f2f2;
+      --muted: #aaaaaa;
+      --ok: #14b86a;
+      --bad: #ef4444;
+      --radius: 18px;
+      --shadow: 0 6px 20px rgba(0,0,0,.25);
+      font-family: "Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Kufi Arabic", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); direction: rtl; }
+    a { color: var(--accent); text-decoration: none; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; min-height: 100vh; display: flex; flex-direction: column; }
+    .header { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; color: #111; font-weight: 900; }
+    .brand-title { font-weight: 800; letter-spacing: .5px; }
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav a { padding: 10px 14px; background: var(--accent-2); border-radius: 12px; transition: all 0.3s ease; }
+    .nav a:hover { background: #2a2a2a; }
+    .nav a.active { background: var(--accent); color: #111; }
+    .card { background: linear-gradient(180deg, #141515, #0f0f0f); border: 1px solid #1f1f1f; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+    .card h2 { margin: 0 0 16px 0; font-size: 20px; color: var(--accent); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .col { flex: 1 1 280px; }
+    label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
+    input, select, button { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #2a2a2a; background: #0f0f0f; color: var(--text); transition: all 0.3s ease; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button { cursor: pointer; background: var(--accent); color: #111; border-color: #d4a412; font-weight: 700; transition: all 0.3s ease; }
+    button:hover { background: #ffda41; transform: translateY(-2px); }
+    button.secondary { background: #1c1c1c; color: var(--text); border-color: #2b2b2b; }
+    button.secondary:hover { background: #2a2a2a; }
+    .note { color: var(--muted); font-size: 13px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .kpi { background: #0f0f0f; border: 1px solid #212121; border-radius: 14px; padding: 16px; transition: all 0.3s ease; }
+    .kpi:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+    .kpi .label { color: var(--muted); font-size: 12px; }
+    .kpi .value { font-size: 22px; font-weight: 800; margin-top: 4px; }
+    .kpi.ok .value { color: var(--ok); }
+    .kpi.bad .value { color: var(--bad); }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { border-bottom: 1px solid #222; padding: 12px; text-align: right; }
+    .table th { color: var(--muted); font-weight: 600; }
+    .footer { margin-top: auto; padding-top: 20px; color: var(--muted); font-size: 12px; text-align: center; }
+    .alert { padding: 12px; background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; }
+    .success { border-color: #116b3a; background: #0c2218; }
+    .error { border-color: #7a1c1c; background: #1a0d0d; }
+    .center { display: flex; justify-content: center; align-items: center; }
+    .small { font-size: 12px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    hr.sep { border: none; border-top: 1px dashed #2a2a2a; margin: 15px 0; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #1f1f1f; border: 1px solid #2a2a2a; color: #aaa; font-size: 12px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn-danger { background: #2a1212; border-color: #4a1e1e; color: #f4b4b4; }
+    .btn-ok { background: #0f2418; border-color: #205a3f; color: #9fe0bc; }
+    .hint { color: #aaa; font-size: 12px; margin-top: 6px; }
+    .table-wrap { max-height: 340px; overflow: auto; border: 1px solid #222; border-radius: 12px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .gate { max-width: 720px; margin: 60px auto; }
+    .info { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center; background: #0f0f0f; border-radius: 12px; padding: 15px; border: 1px solid #222; }
+    .info-item { flex: 1 1 250px; }
+    .buttons { display: flex; justify-content: center; gap: 20px; margin: 25px 0; flex-wrap: wrap; }
+    #punchMsg { text-align: center; font-size: 15px; padding: 10px; border-radius: 10px; margin-top: 10px; }
+    .msg-ok { background: rgba(20,184,106,0.15); border: 1px solid #14b86a; color: #14b86a; }
+    .msg-err { background: rgba(239,68,68,0.15); border: 1px solid #ef4444; color: #ef4444; }
+    .value.ok { color: #14b86a; }
+    .value.bad { color: #ef4444; }
+    .tab-container { display: none; }
+    .tab-container.active { display: block; }
+    .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #2a2a2a; }
+    .tab { padding: 12px 20px; background: #1a1a1a; border-radius: 8px 8px 0 0; cursor: pointer; transition: all 0.3s ease; }
+    .tab.active { background: var(--accent); color: #111; }
+    .tab:hover:not(.active) { background: #2a2a2a; }
+    .welcome { text-align: center; margin-bottom: 30px; }
+    .welcome h1 { color: var(--accent); margin-bottom: 10px; }
+    .welcome p { color: var(--muted); max-width: 600px; margin: 0 auto; }
+    .quick-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: var(--card); border-radius: var(--radius); padding: 20px; text-align: center; border: 1px solid #2a2a2a; transition: all 0.3s ease; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+    .stat-value { font-size: 28px; font-weight: 800; margin: 10px 0; }
+    .stat-label { color: var(--muted); font-size: 14px; }
+    .action-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+    .action-btn { padding: 15px 25px; border-radius: 12px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+    .action-btn i { font-size: 20px; }
+    .dashboard-section { margin-bottom: 30px; }
+    .section-title { color: var(--accent); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a; }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .dashboard-card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid #2a2a2a; }
+    .dashboard-card h3 { margin-bottom: 15px; color: var(--accent); }
+    @media (max-width: 768px) {
+      .container { padding: 15px; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .nav { margin-top: 10px; }
+      .two { grid-template-columns: 1fr; }
+      .buttons { flex-direction: column; }
+      .action-buttons { flex-direction: column; }
+      .tabs { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-title">نظام البصمة - نادي كلباء</div>
+      </div>
+      <nav class="nav">
+        <a id="nav-login" href="#" class="tab-link" data-tab="auth">تسجيل الدخول</a>
+        <a id="nav-punch" href="#" class="tab-link" data-tab="punch">البصمة</a>
+        <a id="nav-summary" href="#" class="tab-link" data-tab="summary">ملخصي</a>
+        <a id="nav-admin" href="#" class="tab-link" data-tab="admin">الإدارة</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Dashboard Tab -->
+      <div id="dashboard" class="tab-container active">
+        <div class="welcome">
+          <h1>مرحباً بك في نظام البصمة</h1>
+          <p>نظام متكامل لتسجيل الحضور والانصراف وإدارة ساعات العمل للموظفين</p>
+        </div>
+        
+        <div class="quick-stats">
+          <div class="stat-card">
+            <div class="stat-label">ساعات العمل اليوم</div>
+            <div class="stat-value" id="dash-today">00:00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">المتبقي اليوم</div>
+            <div class="stat-value" id="dash-left">00:00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">ساعات الأسبوع</div>
+            <div class="stat-value" id="dash-week">00:00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">آخر حركة</div>
+            <div class="stat-value" id="dash-last">—</div>
+          </div>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="action-btn" data-tab="punch">
+            <i>⬆️</i> بصمة دخول
+          </button>
+          <button class="action-btn" data-tab="punch">
+            <i>⬇️</i> بصمة خروج
+          </button>
+          <button class="action-btn secondary" data-tab="summary">
+            <i>📊</i> عرض الملخص
+          </button>
+        </div>
+        
+        <div class="dashboard-section">
+          <h2 class="section-title">بصمات اليوم</h2>
+          <div class="dashboard-card">
+            <table class="table">
+              <thead><tr><th>الوقت</th><th>النوع</th></tr></thead>
+              <tbody id="dash-todayTable"><tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentication Tab -->
+      <div id="auth" class="tab-container">
+        <section class="card">
+          <h2>تسجيل الدخول</h2>
+          <div class="row">
+            <div class="col">
+              <label>الرقم الوظيفي</label>
+              <input id="empId" placeholder="مثال: 12034" />
+            </div>
+            <div class="col">
+              <label>الرمز السري (PIN)</label>
+              <input id="empPin" type="password" inputmode="numeric" placeholder="4–6 أرقام" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <button id="btnLogin">تسجيل الدخول</button>
+            </div>
+            <div class="col">
+              <button class="secondary" id="toRegister">إنشاء حساب موظف</button>
+            </div>
+          </div>
+          <p id="msg" class="note"></p>
+          <hr class="sep">
+          <div class="small note">ملاحظة: النسخة تجريبية وتخزن البيانات محليًا (المتصفح فقط).</div>
+        </section>
+
+        <section class="card" id="registerBox" style="display:none">
+          <h2>تسجيل موظف جديد</h2>
+          <div class="row">
+            <div class="col">
+              <label>الاسم</label>
+              <input id="empName" placeholder="الاسم الثلاثي" />
+            </div>
+            <div class="col">
+              <label>الرقم الوظيفي</label>
+              <input id="empIdReg" placeholder="مثال: 12034" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>الرمز السري (PIN)</label>
+              <input id="empPinReg" type="password" inputmode="numeric" placeholder="4–6 أرقام" />
+            </div>
+            <div class="col">
+              <label>تأكيد الرمز السري</label>
+              <input id="empPin2Reg" type="password" inputmode="numeric" placeholder="أعد الإدخال" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col"><button id="btnRegister">تسجيل</button></div>
+            <div class="col"><button class="secondary" id="cancelReg">إلغاء</button></div>
+          </div>
+          <p id="regMsg" class="note"></p>
+        </section>
+      </div>
+
+      <!-- Punch Tab -->
+      <div id="punch" class="tab-container">
+        <section class="card">
+          <h2>البصمة</h2>
+          <div class="info">
+            <div class="info-item">
+              <div class="label">الموظف</div>
+              <div class="value" id="empName">—</div>
+            </div>
+            <div class="info-item">
+              <div class="label">الرقم الوظيفي</div>
+              <div class="value" id="empId">—</div>
+            </div>
+            <div class="info-item">
+              <div class="label">آخر حركة</div>
+              <div class="value" id="lastAction">—</div>
+            </div>
+            <div class="info-item">
+              <div class="label">ساعات اليوم (عملت)</div>
+              <div class="value" id="todayWorked">00:00</div>
+            </div>
+            <div class="info-item">
+              <div class="label" id="leftLabel">المتبقي</div>
+              <div class="value" id="todayLeft">00:00</div>
+            </div>
+          </div>
+
+          <div class="buttons">
+            <button id="btnIn">⬆️ بصمة دخول</button>
+            <button id="btnOut">⬇️ بصمة خروج</button>
+          </div>
+
+          <div id="punchMsg"></div>
+        </section>
+
+        <section class="card">
+          <h2>بصمات اليوم</h2>
+          <table class="table">
+            <thead>
+              <tr><th>الوقت</th><th>النوع</th></tr>
+            </thead>
+            <tbody id="todayTable">
+              <tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- Summary Tab -->
+      <div id="summary" class="tab-container">
+        <section class="card">
+          <h2>ملخص الساعات</h2>
+          <div id="authState" class="alert error small" style="display:none"></div>
+
+          <div class="kpi-grid">
+            <div class="kpi"><div class="label">اليوم — عملت</div><div class="value" id="tWorked">00:00</div></div>
+            <div class="kpi"><div class="label">اليوم — المتوقّع</div><div class="value" id="tExpected">00:00</div></div>
+            <div class="kpi ok"><div class="label">اليوم — المتبقي</div><div class="value" id="tLeft">00:00</div></div>
+            <div class="kpi"><div class="label">آخر حركة</div><div class="value" id="lastAction">—</div></div>
+          </div>
+
+          <hr class="sep">
+
+          <div class="kpi-grid">
+            <div class="kpi"><div class="label">هذا الأسبوع — عملت</div><div class="value" id="wWorked">00:00</div></div>
+            <div class="kpi"><div class="label">هذا الأسبوع — المتوقّع</div><div class="value" id="wExpected">00:00</div></div>
+            <div class="kpi ok"><div class="label">هذا الأسبوع — المتبقي</div><div class="value" id="wLeft">00:00</div></div>
+            <div class="kpi"><div class="label">هذا الشهر — عملت</div><div class="value" id="mWorked">00:00</div></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>بصمات اليوم</h2>
+          <table class="table">
+            <thead><tr><th>الوقت</th><th>النوع</th></tr></thead>
+            <tbody id="todayTable"><tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr></tbody>
+          </table>
+          <div class="row" style="margin-top:10px">
+            <div class="col"><button class="secondary" id="download">📥 تنزيل سجلاتي (CSV)</button></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Admin Tab -->
+      <div id="admin" class="tab-container">
+        <!-- Admin Gate -->
+        <section class="card gate" id="gateBox">
+          <h2>تسجيل دخول الإدارة</h2>
+          <div class="grid">
+            <div class="col">
+              <label>رمز مدير الموارد البشرية (HR)</label>
+              <input id="adminPass" type="password" placeholder="مثال: kalbaHR2025">
+              <div class="hint">يمكن تغييره من قسم الإعدادات لاحقًا.</div>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:10px">
+            <button id="btnAdminLogin">دخول الإدارة</button>
+          </div>
+          <p id="gateMsg" class="note"></p>
+        </section>
+
+        <section class="card" id="adminBox" style="display:none">
+          <div class="toolbar" style="justify-content:space-between">
+            <h2>لوحة التحكم</h2>
+            <span class="badge">وضع متصل بالسكريبت: <b id="connState">غير محدد</b></span>
+          </div>
+
+          <div class="two">
+            <!-- Employees -->
+            <div class="card">
+              <h2>الموظفون</h2>
+              <div class="grid">
+                <div class="col">
+                  <label>الاسم</label>
+                  <input id="empNameIn" placeholder="الاسم الثلاثي">
+                </div>
+                <div class="col">
+                  <label>الرقم الوظيفي</label>
+                  <input id="empIdIn" placeholder="مثال: 12034" class="mono">
+                </div>
+                <div class="col">
+                  <label>الرمز السري (PIN)</label>
+                  <input id="empPinIn" type="password" inputmode="numeric" placeholder="4–6 أرقام">
+                </div>
+                <div class="col">
+                  <label>الحالة</label>
+                  <select id="empActiveIn">
+                    <option value="1">نشط</option>
+                    <option value="0">موقوف</option>
+                  </select>
+                </div>
+              </div>
+              <div class="toolbar" style="margin-top:10px">
+                <button id="btnAddEmp">➕ إضافة / تحديث</button>
+                <button id="btnDelEmp" class="btn-danger">🗑️ حذف</button>
+                <button id="btnSyncEmployees" class="secondary">⤴️ مزامنة إلى Google Sheet</button>
+              </div>
+
+              <div class="table-wrap" style="margin-top:10px">
+                <table class="table">
+                  <thead><tr><th>الاسم</th><th>الرقم</th><th>الحالة</th></tr></thead>
+                  <tbody id="empTable"><tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Work Hours / Settings -->
+            <div class="card">
+              <h2>ساعات العمل المتوقعة</h2>
+              <div class="grid">
+                <div class="col">
+                  <label>الأحد – الخميس (ساعات)</label>
+                  <input id="confWDDuration" value="7" type="number" min="0" step="0.5">
+                  <div class="hint">افتراضيًا 7 ساعات (9–1) + (4:30–7:30) أو (5–8).</div>
+                </div>
+                <div class="col">
+                  <label>السبت (اختياري) — ساعات إذا حضر</label>
+                  <input id="confSatDuration" value="3" type="number" min="0" step="0.5">
+                </div>
+                <div class="col">
+                  <label>كلمة مرور الإدارة</label>
+                  <input id="confAdminPass" type="password" placeholder="kalbaHR2025">
+                </div>
+              </div>
+              <div class="toolbar" style="margin-top:10px">
+                <button id="btnSaveSettings" class="btn-ok">💾 حفظ الإعدادات</button>
+              </div>
+              <p class="small">* تُستخدم هذه الإعدادات لحساب المتبقي/الإضافي ولمزامنة البيانات مع Google Sheets.</p>
+            </div>
+          </div>
+
+          <!-- Leaves -->
+          <div class="card">
+            <h2>الإجازات</h2>
+            <div class="grid">
+              <div class="col">
+                <label>الموظف (الرقم الوظيفي)</label>
+                <input id="lvEmpId" class="mono" placeholder="1234">
+              </div>
+              <div class="col">
+                <label>النوع</label>
+                <select id="lvType">
+                  <option value="Sick">مرضية</option>
+                  <option value="Annual">سنوية</option>
+                  <option value="Unpaid">بدون راتب</option>
+                  <option value="Other">أخرى</option>
+                </select>
+              </div>
+              <div class="col">
+                <label>من تاريخ</label>
+                <input id="lvFrom" type="date">
+              </div>
+              <div class="col">
+                <label>إلى تاريخ</label>
+                <input id="lvTo" type="date">
+              </div>
+              <div class="col">
+                <label>ملاحظة</label>
+                <input id="lvNote" placeholder="تفاصيل إضافية (اختياري)">
+              </div>
+              <div class="col">
+                <label>مرفق (صورة/ PDF)</label>
+                <input id="lvFile" type="file" accept=".png,.jpg,.jpeg,.pdf">
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top:10px">
+              <button id="btnAddLeave">➕ تسجيل إجازة</button>
+              <button id="btnSyncLeaves" class="secondary">⤴️ مزامنة الإجازات إلى Google Sheet</button>
+            </div>
+            <div class="table-wrap" style="margin-top:10px">
+              <table class="table">
+                <thead><tr><th>الرقم</th><th>النوع</th><th>من</th><th>إلى</th><th>ملاحظة</th></tr></thead>
+                <tbody id="lvTable"><tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>تقارير</h2>
+            <div class="toolbar">
+              <button id="btnExportEmployees" class="secondary">📥 تنزيل الموظفين (CSV)</button>
+              <button id="btnExportLeaves" class="secondary">📥 تنزيل الإجازات (CSV)</button>
+              <button id="btnAskReport" class="btn-ok">📊 طلب تقرير من السكريبت</button>
+            </div>
+            <p class="small">زر التقرير يرسل طلبًا للسكريبت لإنتاج تقارير أسبوعية/شهرية حسب ما ستضبطونه هناك.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div class="footer">© نادي كلباء الرياضي الثقافي</div>
+  </div>
+
+  <script>
+    // ---- Storage ----
+    const EMP_DB_KEY = 'kscEmployees';
+    const ACTIVE_KEY = 'kscActiveEmp';
+    const LS_ADMIN = 'kscAdmin';
+    
+    function $(id) { return document.getElementById(id); }
+    
+    function readDB() { 
+      try { 
+        return JSON.parse(localStorage.getItem(EMP_DB_KEY)||'{}'); 
+      } catch(e) { 
+        console.error("Error reading DB:", e);
+        return {}; 
+      } 
+    }
+    
+    function writeDB(db) { 
+      try {
+        localStorage.setItem(EMP_DB_KEY, JSON.stringify(db)); 
+      } catch(e) {
+        console.error("Error writing DB:", e);
+      }
+    }
+    
+    function getActive() { 
+      try { 
+        return JSON.parse(localStorage.getItem(ACTIVE_KEY)||'null'); 
+      } catch(e) { 
+        console.error("Error getting active user:", e);
+        return null; 
+      } 
+    }
+    
+    function setActive(obj) { 
+      if(obj) {
+        localStorage.setItem(ACTIVE_KEY, JSON.stringify(obj)); 
+      } else {
+        localStorage.removeItem(ACTIVE_KEY); 
+      }
+    }
+    
+    function ensureEmp(db, id) { 
+      if(!db[id]) db[id] = { name:'', pin:'', punches:{} }; 
+      if(!db[id].punches) db[id].punches={}; 
+    }
+
+    // ---- Time helpers ----
+    function pad(n) { return String(n).padStart(2,'0'); }
+    function ymd(d) { return d.toISOString().slice(0,10); }
+    function nowHHMM() { 
+      const d = new Date(); 
+      return pad(d.getHours())+':'+pad(d.getMinutes()); 
+    }
+    
+    function timeToSec(hhmm) { 
+      if(!hhmm) return 0; 
+      const [h,m] = hhmm.split(':').map(Number); 
+      return h*3600 + m*60; 
+    }
+    
+    function secToHHMM(sec) { 
+      sec = Math.max(0, Math.floor(sec)); 
+      const h = Math.floor(sec/3600); 
+      const m = Math.floor((sec%3600)/60); 
+      return pad(h)+':'+pad(m); 
+    }
+    
+    function sumPairs(pairs) { 
+      return (pairs||[]).reduce((acc, p) => 
+        acc + Math.max(0, timeToSec(p.out||nowHHMM()) - timeToSec(p.in||nowHHMM())), 0); 
+    }
+
+    // ---- Expected hours policy ----
+    function expectedSecondsForDate(date, hasPunch) {
+      const dow = date.getDay(); // 0 Sun, 5 Fri, 6 Sat (UAE)
+      if (dow >= 1 && dow <= 4) return 7*3600;        // Mon-Thu
+      if (dow === 0) return 7*3600;                   // Sun
+      if (dow === 6) return hasPunch ? 3*3600 : 0;    // Sat optional
+      return 0; // Friday
+    }
+
+    function computeRangeWorked(emp, start, end) {
+      let total = 0; 
+      const cur = new Date(start);
+      while(cur <= end) { 
+        const key = ymd(cur); 
+        total += sumPairs(emp.punches[key] || []); 
+        cur.setDate(cur.getDate() + 1); 
+      }
+      return total;
+    }
+    
+    function computeRangeExpected(emp, start, end) {
+      let total = 0; 
+      const cur = new Date(start);
+      while(cur <= end) {
+        const key = ymd(cur); 
+        const hasPunch = (emp.punches[key] || []).length > 0;
+        total += expectedSecondsForDate(new Date(cur), hasPunch);
+        cur.setDate(cur.getDate() + 1);
+      }
+      return total;
+    }
+
+    // ---- Export helper ----
+    function downloadCSV(rows, filename) {
+      const csv = rows.map(r => 
+        r.map(x => (',' in (x+'') ? '"'+(x+'').replace(/"/g,'""')+'"' : x)
+         .join(',')
+      ).join('\n');
+      
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = filename; 
+      a.click(); 
+      URL.revokeObjectURL(url);
+    }
+
+    // ---- Tab Navigation ----
+    function initTabs() {
+      const tabLinks = document.querySelectorAll('.tab-link');
+      const actionButtons = document.querySelectorAll('.action-btn[data-tab]');
+      
+      // Set active tab based on URL hash or default to dashboard
+      let activeTab = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
+      if (!document.getElementById(activeTab)) activeTab = 'dashboard';
+      
+      showTab(activeTab);
+      
+      // Add event listeners to tab links
+      tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const tabId = this.getAttribute('data-tab');
+          showTab(tabId);
+          window.location.hash = tabId;
+        });
+      });
+      
+      // Add event listeners to action buttons
+      actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const tabId = this.getAttribute('data-tab');
+          showTab(tabId);
+          window.location.hash = tabId;
+        });
+      });
+    }
+    
+    function showTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-container').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Show selected tab
+      const activeTab = document.getElementById(tabId);
+      if (activeTab) {
+        activeTab.classList.add('active');
+      }
+      
+      // Update active nav link
+      document.querySelectorAll('.nav a').forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      const activeNavLink = document.querySelector(`.nav a[data-tab="${tabId}"]`);
+      if (activeNavLink) {
+        activeNavLink.classList.add('active');
+      }
+      
+      // Refresh data for the active tab
+      refreshTabData(tabId);
+    }
+    
+    function refreshTabData(tabId) {
+      const active = getActive();
+      const db = readDB();
+      
+      switch(tabId) {
+        case 'dashboard':
+          refreshDashboard(active, db);
+          break;
+        case 'punch':
+          refreshPunch(active, db);
+          break;
+        case 'summary':
+          refreshSummary(active, db);
+          break;
+        case 'admin':
+          refreshAdmin();
+          break;
+      }
+    }
+    
+    // ---- Dashboard Functions ----
+    function refreshDashboard(active, db) {
+      if (!active) {
+        // Show login prompt if not logged in
+        $('dash-today').textContent = '00:00';
+        $('dash-left').textContent = '00:00';
+        $('dash-week').textContent = '00:00';
+        $('dash-last').textContent = '—';
+        $('dash-todayTable').innerHTML = '<tr><td colspan="2" class="small note">يرجى تسجيل الدخول أولاً.</td></tr>';
+        return;
+      }
+      
+      const emp = db[active.empId] || {punches:{}};
+      const today = new Date();
+      const key = ymd(today);
+      const pairs = emp.punches[key] || [];
+      
+      // Today's worked hours
+      const workedSec = sumPairs(pairs);
+      $('dash-today').textContent = secToHHMM(workedSec);
+      
+      // Today's remaining hours
+      const expectedSec = expectedSecondsForDate(today, pairs.length > 0);
+      const leftSec = Math.max(0, expectedSec - workedSec);
+      $('dash-left').textContent = secToHHMM(leftSec);
+      
+      // Week's worked hours
+      const ws = new Date(today); 
+      ws.setDate(today.getDate() - today.getDay());
+      const we = new Date(ws); 
+      we.setDate(ws.getDate() + 6);
+      const wWorked = computeRangeWorked(emp, ws, we);
+      $('dash-week').textContent = secToHHMM(wWorked);
+      
+      // Last action
+      if (!pairs.length) {
+        $('dash-last').textContent = '—';
+      } else {
+        const last = pairs[pairs.length - 1];
+        $('dash-last').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
+      }
+      
+      // Today's punches table
+      if (!pairs.length) {
+        $('dash-todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
+      } else {
+        $('dash-todayTable').innerHTML = pairs.map(p => 
+          `<tr><td>${p.in}${p.out ? ' → ' + p.out : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
+        ).join('');
+      }
+    }
+    
+    function refreshPunch(active, db) {
+      if (!active) {
+        showTab('auth');
+        return;
+      }
+      
+      const emp = db[active.empId];
+      $('empName').textContent = emp.name;
+      $('empId').textContent = active.empId;
+      
+      const todayDate = new Date();
+      const key = ymd(todayDate);
+      const pairs = emp.punches[key] || [];
+      
+      if (!pairs.length) {
+        $('todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
+        $('lastAction').textContent = '—';
+      } else {
+        $('todayTable').innerHTML = pairs.map(p =>
+          `<tr><td>${p.in}${p.out ? ' → ' + p.out : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
+        ).join('');
+        const last = pairs[pairs.length - 1];
+        $('lastAction').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
+      }
+      
+      const workedSec = sumPairs(pairs);
+      const expectedSec = expectedSecondsForDate(todayDate, pairs.length > 0);
+      
+      $('todayWorked').textContent = secToHHMM(workedSec);
+      
+      const leftEl = $('todayLeft');
+      const leftLabel = $('leftLabel');
+      
+      leftEl.classList.remove('ok','bad');
+      
+      if (workedSec >= expectedSec && expectedSec > 0) {
+        leftLabel.textContent = 'الوقت الإضافي';
+        leftEl.textContent = secToHHMM(workedSec - expectedSec);
+        leftEl.classList.add('ok');
+      } else {
+        leftLabel.textContent = 'المتبقي';
+        leftEl.textContent = secToHHMM(Math.max(0, expectedSec - workedSec));
+        leftEl.classList.add(expectedSec - workedSec > 0 ? 'bad' : 'ok');
+      }
+    }
+    
+    function refreshSummary(active, db) {
+      const authState = $('authState');
+      if (!active) { 
+        authState.style.display = 'block'; 
+        authState.textContent = 'يرجى تسجيل الدخول أولًا.'; 
+        setTimeout(() => showTab('auth'), 1200); 
+        return;
+      }
+      
+      authState.style.display = 'none';
+      const emp = db[active.empId] || {punches:{}};
+      
+      const today = new Date(); 
+      const key = ymd(today); 
+      const pairs = emp.punches[key] || [];
+      const worked = sumPairs(pairs);
+      const expected = expectedSecondsForDate(today, pairs.length > 0);
+      
+      $('tWorked').textContent = secToHHMM(worked);
+      $('tExpected').textContent = secToHHMM(expected);
+      $('tLeft').textContent = secToHHMM(Math.max(0, expected - worked));
+      
+      if (!pairs.length) { 
+        $('todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>'; 
+        $('lastAction').textContent = '—'; 
+      } else {
+        $('todayTable').innerHTML = pairs.map(p => 
+          `<tr><td class="mono">${p.in}${p.out ? (' → ' + p.out) : ''}</td><td>${p.out ? 'زوج مكتمل' : 'دخول مفتوح'}</td></tr>`
+        ).join('');
+        const last = pairs[pairs.length - 1]; 
+        $('lastAction').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
+      }
+      
+      const ws = new Date(today); 
+      ws.setDate(today.getDate() - today.getDay());
+      const we = new Date(ws); 
+      we.setDate(ws.getDate() + 6);
+      const wWorked = computeRangeWorked(emp, ws, we);
+      const wExpected = computeRangeExpected(emp, ws, we);
+      
+      $('wWorked').textContent = secToHHMM(wWorked);
+      $('wExpected').textContent = secToHHMM(wExpected);
+      $('wLeft').textContent = secToHHMM(Math.max(0, wExpected - wWorked));
+      
+      const ms = new Date(today.getFullYear(), today.getMonth(), 1);
+      const me = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const mWorked = computeRangeWorked(emp, ms, me);
+      $('mWorked').textContent = secToHHMM(mWorked);
+    }
+    
+    function refreshAdmin() {
+      if (localStorage.getItem(LS_ADMIN) === '1') {
+        $('gateBox').style.display = 'none'; 
+        $('adminBox').style.display = '';
+        loadAdminState();
+      } else {
+        $('gateBox').style.display = ''; 
+        $('adminBox').style.display = 'none';
+      }
+    }
+    
+    function initAuth() {
+      const empId = $('empId'), empPin = $('empPin'), msg = $('msg');
+      const regBox = $('registerBox'), toRegister = $('toRegister'), cancelReg = $('cancelReg');
+      const empName = $('empName'), empIdReg = $('empIdReg'), empPinReg = $('empPinReg'), empPin2Reg = $('empPin2Reg'), regMsg = $('regMsg');
+      
+      toRegister.onclick = () => { 
+        regBox.style.display = 'block'; 
+        window.scrollTo(0, document.body.scrollHeight); 
+      };
+      
+      cancelReg.onclick = () => { 
+        regBox.style.display = 'none'; 
+      };
+      
+      $('btnLogin').onclick = () => {
+        const id = (empId.value || '').trim(); 
+        const pin = (empPin.value || '').trim();
+        
+        if (!id || !pin) { 
+          msg.textContent = 'أدخلي الرقم الوظيفي والرمز السري.'; 
+          return; 
+        }
+        
+        const db = readDB();
+        if (!db[id]) { 
+          msg.textContent = 'الموظف غير مسجل.'; 
+          return; 
+        }
+        
+        if (db[id].pin !== pin) { 
+          msg.textContent = 'الرمز السري غير صحيح.'; 
+          return; 
+        }
+        
+        setActive({empId: id});
+        msg.textContent = 'تم الدخول.';
+        showTab('dashboard');
+      };
+      
+      $('btnRegister').onclick = () => {
+        const name = (empName.value || '').trim(); 
+        const id = (empIdReg.value || '').trim();
+        const pin = (empPinReg.value || '').trim(); 
+        const pin2 = (empPin2Reg.value || '').trim();
+        
+        if (!name || !id || !pin || !pin2) { 
+          regMsg.textContent = 'يرجى تعبئة جميع الحقول.'; 
+          return; 
+        }
+        
+        if (pin !== pin2) { 
+          regMsg.textContent = 'الرمز السري وتأكيده غير متطابقين.'; 
+          return; 
+        }
+        
+        const db = readDB();
+        if (db[id]) { 
+          regMsg.textContent = 'هذا الرقم الوظيفي مسجل مسبقًا.'; 
+          return; 
+        }
+        
+        db[id] = {name, pin, punches: {}}; 
+        writeDB(db);
+        regMsg.textContent = 'تم التسجيل! بإمكانك الآن تسجيل الدخول.';
+      };
+      
+      const active = getActive();
+      if (active && active.empId) { 
+        showTab('dashboard');
+      }
+    }
+    
+    const allowedZones = [
+      { name: 'النادي الرئيسي', lat: 25.05962, lng: 56.348197, radius: 150 },
+      { name: 'الملعب الفرعي', lat: 25.045830, lng: 56.358105, radius: 150 },
+    ];
+    
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180, φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2 - lat1) * Math.PI/180;
+      const Δλ = (lon2 - lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+    
+    function isInsideAllowed(lat, lng) {
+      for (const z of allowedZones) {
+        const dist = getDistance(lat, lng, z.lat, z.lng);
+        if (dist <= z.radius) return { ok: true, zone: z.name, dist };
+      }
+      return { ok: false };
+    }
+    
+    function requestLocation(cb) {
+      if (!navigator.geolocation) {
+        alert('⚠️ جهازك لا يدعم تحديد الموقع');
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        pos => cb(true, pos.coords.latitude, pos.coords.longitude),
+        err => {
+          alert('❌ يرجى السماح بالوصول إلى الموقع.');
+          cb(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    
+    function initPunch() {
+      const active = getActive();
+      if (!active) { 
+        showTab('auth'); 
+        return;
+      }
+      
+      const db = readDB();
+      const emp = db[active.empId];
+      
+      function handlePunch(type) {
+        requestLocation((ok, lat, lng) => {
+          if (!ok) return;
+          
+          const check = isInsideAllowed(lat, lng);
+          if (!check.ok) {
+            $('punchMsg').className = 'msg-err';
+            $('punchMsg').textContent = '❌ خارج نطاق الموقع المسموح به.';
+            return;
+          }
+          
+          const today = ymd(new Date());
+          emp.punches[today] = emp.punches[today] || [];
+          const ps = emp.punches[today];
+          
+          if (type === 'in') {
+            if (ps.length && !ps[ps.length-1].out) {
+              $('punchMsg').className = 'msg-err';
+              $('punchMsg').textContent = '⚠️ لديك دخول مفتوح لم يُغلق بعد.';
+              return;
+            }
+            
+            ps.push({ in: nowHHMM(), out: '' });
+            $('punchMsg').className = 'msg-ok';
+            $('punchMsg').textContent = '✅ تم تسجيل الدخول بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
+          } else {
+            if (!ps.length) {
+              $('punchMsg').className = 'msg-err';
+              $('punchMsg').textContent = '⚠️ لا يوجد دخول لإغلاقه.';
+              return;
+            }
+            
+            const last = ps[ps.length-1];
+            if (last.out) {
+              $('punchMsg').className = 'msg-err';
+              $('punchMsg').textContent = '⚠️ آخر دخول مغلق بالفعل.';
+              return;
+            }
+            
+            last.out = nowHHMM();
+            $('punchMsg').className = 'msg-ok';
+            $('punchMsg').textContent = '✅ تم تسجيل الخروج بنجاح من داخل المنطقة المسموح بها (' + check.zone + ')';
+          }
+          
+          writeDB(db);
+          refreshPunch(active, db);
+          refreshDashboard(active, db);
+        });
+      }
+      
+      $('btnIn').onclick = () => handlePunch('in');
+      $('btnOut').onclick = () => handlePunch('out');
+    }
+    
+    function initSummary() {
+      $('download').onclick = () => {
+        const active = getActive();
+        if (!active) return;
+        
+        const db = readDB();
+        const emp = db[active.empId] || {punches:{}};
+        
+        const rows = [['Date','Pairs (IN→OUT)','Worked (hh:mm)']];
+        const allDays = Object.keys(emp.punches || {}).sort();
+        
+        for (const d of allDays) {
+          const pairs = emp.punches[d] || [];
+          const pairsStr = pairs.map(p => `${p.in}→${p.out||''}`).join('; ');
+          rows.push([d, pairsStr, secToHHMM(sumPairs(pairs))]);
+        }
+        
+        downloadCSV(rows, `punches_${active.empId}.csv`);
+      };
+    }
+    
+    const state = {
+      employees: {},
+      leaves: [],
+      settings: {
+        wdHours: 7,
+        satHours: 3,
+        adminPass: 'kalbaHR2025',
+        scriptUrl: ''
+      }
+    };
+    
+    function loadAdminState() {
+      try {
+        const s = JSON.parse(localStorage.getItem('kscAdminState') || 'null');
+        if (s) { 
+          Object.assign(state, s); 
+        }
+      } catch(e) {
+        console.error("Error loading admin state:", e);
+      }
+      
+      $('confWDDuration').value = state.settings.wdHours;
+      $('confSatDuration').value = state.settings.satHours;
+      $('confAdminPass').value = state.settings.adminPass;
+      renderEmployees();
+      renderLeaves();
+    }
+    
+    function saveAdminState() {
+      try {
+        localStorage.setItem('kscAdminState', JSON.stringify(state));
+      } catch(e) {
+        console.error("Error saving admin state:", e);
+      }
+    }
+    
+    function renderEmployees() {
+      const tbody = $('empTable');
+      const ids = Object.keys(state.employees);
+      
+      if (!ids.length) { 
+        tbody.innerHTML = '<tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr>'; 
+        return; 
+      }
+      
+      tbody.innerHTML = ids.map(id => {
+        const e = state.employees[id];
+        return '<tr><td>' + e.name + '</td><td class="mono">' + id + '</td><td>' + (e.active ? 'نشط' : 'موقوف') + '</td></tr>';
+      }).join('');
+    }
+    
+    function renderLeaves() {
+      const tbody = $('lvTable');
+      if (!state.leaves.length) { 
+        tbody.innerHTML = '<tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr>'; 
+        return; 
+      }
+      
+      tbody.innerHTML = state.leaves.map(l => (
+        '<tr><td class="mono">' + l.id + '</td><td>' + l.type + '</td><td>' + l.from + '</td><td>' + l.to + '</td><td>' + (l.note || '') + '</td></tr>'
+      )).join('');
+    }
+    
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result.split(',')[1]);
+        r.onerror = reject; 
+        r.readAsDataURL(file);
+      });
+    }
+    
+    async function postToScript(action, payload) {
+      console.log(`Would send ${action} with payload:`, payload);
+      
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve({ ok: true, message: 'تمت العملية بنجاح (محاكاة)' });
+        }, 1000);
+      });
+    }
+    
+    function initAdmin() {
+      $('btnAdminLogin').onclick = () => {
+        const pass = $('adminPass').value.trim();
+        const ok = pass && pass === state.settings.adminPass;
+        
+        if (ok) {
+          localStorage.setItem(LS_ADMIN, '1');
+          $('gateBox').style.display = 'none';
+          $('adminBox').style.display = '';
+          loadAdminState();
+        } else {
+          $('gateMsg').textContent = 'رمز الإدارة غير صحيح.';
+        }
+      };
+      
+      $('btnLogout').onclick = () => {
+        localStorage.removeItem(LS_ADMIN);
+        setActive(null);
+        showTab('auth');
+      };
+      
+      $('btnAddEmp').onclick = () => {
+        const name = $('empNameIn').value.trim();
+        const id = $('empIdIn').value.trim();
+        const pin = $('empPinIn').value.trim();
+        const active = $('empActiveIn').value === '1';
+        
+        if (!name || !id || !pin) { 
+          alert('أدخلي الاسم والرقم الوظيفي والـ PIN.'); 
+          return; 
+        }
+        
+        state.employees[id] = { name, pin, active };
+        saveAdminState(); 
+        renderEmployees();
+        
+        const db = readDB(); 
+        db[id] = db[id] || { name: '', pin: '', punches: {} };
+        db[id].name = name; 
+        db[id].pin = pin; 
+        if (!db[id].punches) db[id].punches = {};
+        writeDB(db);
+      };
+      
+      $('btnDelEmp').onclick = () => {
+        const id = $('empIdIn').value.trim();
+        if (!id) { 
+          alert('أدخلي الرقم الوظيفي المراد حذفه.'); 
+          return; 
+        }
+        
+        if (!state.employees[id]) { 
+          alert('الموظف غير موجود.'); 
+          return; 
+        }
+        
+        if (!confirm('تأكيد حذف الموظف وجميع سجلاته المحلية؟')) return;
+        
+        delete state.employees[id]; 
+        saveAdminState(); 
+        renderEmployees();
+        
+        const db = readDB(); 
+        delete db[id]; 
+        writeDB(db);
+      };
+      
+      $('btnSaveSettings').onclick = () => {
+        state.settings.wdHours = +$('confWDDuration').value || 7;
+        state.settings.satHours = +$('confSatDuration').value || 3;
+        state.settings.adminPass = $('confAdminPass').value || 'kalbaHR2025';
+        saveAdminState();
+        alert('تم حفظ الإعدادات.');
+      };
+      
+      $('btnAddLeave').onclick = async () => {
+        const id = $('lvEmpId').value.trim();
+        const type = $('lvType').value;
+        const from = $('lvFrom').value;
+        const to = $('lvTo').value || from;
+        const note = $('lvNote').value.trim();
+        const f = $('lvFile').files[0];
+        
+        if (!id || !from) { 
+          alert('الرقم الوظيفي وتاريخ البداية مطلوبان.'); 
+          return; 
+        }
+        
+        const entry = { id, type, from, to, note, fileName: f ? f.name : '' };
+        if (f) { 
+          entry.base64 = await fileToBase64(f); 
+        }
+        
+        state.leaves.push(entry); 
+        saveAdminState(); 
+        renderLeaves();
+      };
+      
+      $('btnExportEmployees').onclick = () => {
+        const rows = [['EmpID','Name','PIN','Active']];
+        Object.keys(state.employees).forEach(id => {
+          const e = state.employees[id]; 
+          rows.push([id, e.name, e.pin, e.active ? '1' : '0']);
+        });
+        downloadCSV(rows, 'employees.csv');
+      };
+      
+      $('btnExportLeaves').onclick = () => {
+        const rows = [['EmpID','Type','From','To','Note','FileName']];
+        state.leaves.forEach(l => 
+          rows.push([l.id, l.type, l.from, l.to, l.note || '', l.fileName || ''])
+        );
+        downloadCSV(rows, 'leaves.csv');
+      };
+      
+      $('btnSyncEmployees').onclick = async () => {
+        const payload = state.employees;
+        const r = await postToScript('syncEmployees', payload);
+        alert(r.ok ? 'تمت مزامنة الموظفين.' : ('فشل: ' + (r.error || '')));
+      };
+      
+      $('btnSyncLeaves').onclick = async () => {
+        const payload = state.leaves;
+        const r = await postToScript('syncLeaves', payload);
+        alert(r.ok ? 'تمت مزامنة الإجازات.' : ('فشل: ' + (r.error || '')));
+      };
+      
+      $('btnAskReport').onclick = async () => {
+        const r = await postToScript('generateReport', {period: 'weekly'});
+        alert(r.ok ? ('تم توليد التقرير: ' + (r.url || '')) : ('فشل: ' + (r.error || '')));
+      };
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      initTabs();
+      initAuth();
+      initPunch();
+      initSummary();
+      initAdmin();
+      
+      setInterval(() => {
+        if (document.getElementById('dashboard').classList.contains('active')) {
+          const active = getActive();
+          const db = readDB();
+          refreshDashboard(active, db);
+        }
+      }, 60000);
+    });
+  </script>
+</body>
+</html>
