@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الموظف | نظام البصمة - نادي كلباء</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0b0b; --card:#111213; --accent:#f6c21a; --accent-2:#1f1f1f;
+      --text:#f2f2f2; --muted:#aaaaaa; --ok:#14b86a; --bad:#ef4444;
+      --radius:18px; --shadow:0 6px 20px rgba(0,0,0,.25);
+      font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Kufi Arabic",sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);color:var(--text)}
+    a{color:var(--accent);text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:24px;min-height:100vh;display:flex;flex-direction:column}
+    .header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)}
+    .brand-title{font-weight:800;letter-spacing:.5px}
+    .card{background:linear-gradient(180deg,#141515,#0f0f0f);border:1px solid #1f1f1f;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+    .card h2{margin:0 0 12px 0;font-size:20px;color:var(--accent)}
+    label{display:block;margin-bottom:6px;color:var(--muted);font-size:14px}
+    input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #2a2a2a;background:#0f0f0f;color:var(--text);transition:all .25s ease}
+    input:focus{outline:none;border-color:var(--accent)}
+    button{cursor:pointer;background:var(--accent);color:#111;border-color:#d4a412;font-weight:800}
+    button:hover{background:#ffda41;transform:translateY(-2px)}
+    button.secondary{background:#1c1c1c;color:var(--text);border-color:#2b2b2b}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1 1 280px}
+    .note{color:var(--muted);font-size:13px}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0}
+    .stat{background:#0f0f0f;border:1px solid #212121;border-radius:14px;padding:16px;text-align:center}
+    .stat .v{font-size:26px;font-weight:900;margin-top:4px}
+    .v.ok{color:var(--ok)} .v.bad{color:var(--bad)}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border-bottom:1px solid #222;padding:10px;text-align:right}
+    .small{font-size:12px}
+    .center{display:flex;justify-content:center;align-items:center}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+    #punchMsg{text-align:center;font-size:14px;padding:10px;border-radius:10px;margin-top:10px}
+    .msg-ok{background:rgba(20,184,106,.15);border:1px solid #14b86a;color:#14b86a}
+    .msg-err{background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#ef4444}
+    @media(max-width:768px){.container{padding:16px}.header{align-items:flex-start}.row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <img src="logo.png" alt="Kalba SC Logo" />
+        <div class="brand-title">نظام البصمة — صفحة الموظف</div>
+      </div>
+      <div id="loginState" class="note"></div>
+    </header>
+
+    <main>
+      <!-- Login Card -->
+      <section id="authBox" class="card">
+        <h2>تسجيل الدخول</h2>
+        <div class="row">
+          <div class="col">
+            <label>الرقم الوظيفي</label>
+            <input id="empId" placeholder="مثال: 12034" />
+          </div>
+          <div class="col">
+            <label>الرمز السري (PIN)</label>
+            <input id="empPin" type="password" inputmode="numeric" placeholder="4–6 أرقام" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="col"><button id="btnLogin">تسجيل الدخول</button></div>
+          <div class="col"><button id="btnLogout" class="secondary">تسجيل الخروج</button></div>
+        </div>
+        <p id="msg" class="note" style="margin-top:6px"></p>
+        <p class="note small" style="margin-top:8px">* يتم تخزين البيانات محليًا على هذا المتصفح.</p>
+      </section>
+
+      <!-- Dashboard -->
+      <section id="dashBox" class="card" style="display:none">
+        <h2>لوحة الموظف</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="t">عمل اليوم</div><div id="sToday" class="v">00:00</div></div>
+          <div class="stat"><div class="t">المتبقي اليوم</div><div id="sLeft" class="v">00:00</div></div>
+          <div class="stat"><div class="t">ساعات الأسبوع</div><div id="sWeek" class="v">00:00</div></div>
+          <div class="stat"><div class="t">آخر حركة</div><div id="sLast" class="v">—</div></div>
+        </div>
+        <div class="actions">
+          <button id="btnIn">⬆️ بصمة دخول</button>
+          <button id="btnOut">⬇️ بصمة خروج</button>
+        </div>
+        <div id="punchMsg"></div>
+      </section>
+
+      <!-- Today pairs -->
+      <section id="todayBox" class="card" style="display:none">
+        <h2>بصمات اليوم</h2>
+        <table class="table">
+          <thead><tr><th>الوقت</th><th>النوع</th></tr></thead>
+          <tbody id="todayTable"><tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr></tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer class="center note" style="margin-top:auto;padding-top:10px">© نادي كلباء الرياضي الثقافي</footer>
+  </div>
+
+  <script>
+    // ===== Shared Storage Keys =====
+    const EMP_DB_KEY = 'kscEmployees';      // { [id]: {name, pin, punches:{'YYYY-MM-DD':[{in,out}]}} }
+    const ACTIVE_KEY = 'kscActiveEmp';      // { empId }
+    const ADMIN_STATE = 'kscAdminState';    // { settings:{wdHours,satHours,adminPass} ... }
+
+    // ===== Helpers =====
+    const $ = id => document.getElementById(id);
+    const pad = n => String(n).padStart(2,'0');
+    const ymd = d => d.toISOString().slice(0,10);
+    const nowHHMM = () => {const d = new Date(); return pad(d.getHours())+':'+pad(d.getMinutes());};
+    const timeToSec = hhmm => { if(!hhmm) return 0; const [h,m]=hhmm.split(':').map(Number); return h*3600+m*60; };
+    const secToHHMM = sec => { sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return pad(h)+':'+pad(m); };
+    const sumPairs = pairs => (pairs||[]).reduce((a,p)=>a+Math.max(0,timeToSec(p.out||nowHHMM())-timeToSec(p.in||nowHHMM())),0);
+
+    function readDB(){ try{return JSON.parse(localStorage.getItem(EMP_DB_KEY)||'{}')}catch{ return {} } }
+    function writeDB(db){ localStorage.setItem(EMP_DB_KEY, JSON.stringify(db)); }
+    function getActive(){ try{return JSON.parse(localStorage.getItem(ACTIVE_KEY)||'null')}catch{return null} }
+    function setActive(v){ v?localStorage.setItem(ACTIVE_KEY,JSON.stringify(v)):localStorage.removeItem(ACTIVE_KEY); }
+    function readAdmin(){ try{return JSON.parse(localStorage.getItem(ADMIN_STATE)||'{}')}catch{ return {} } }
+
+    function expectedSecondsForDate(date, hasPunch){
+      // Load expected hours from admin settings; fallback to 7/3
+      const admin = readAdmin();
+      const wdH = (admin.settings && +admin.settings.wdHours) || 7;
+      const satH = (admin.settings && +admin.settings.satHours) || 3;
+
+      const dow = date.getDay(); // 0 Sun, 5 Fri, 6 Sat (UAE workweek Sun-Thu)
+      if (dow>=1 && dow<=4) return wdH*3600;   // Mon-Thu
+      if (dow===0) return wdH*3600;            // Sun
+      if (dow===6) return hasPunch ? satH*3600 : 0; // Sat optional
+      return 0; // Friday
+    }
+
+    function computeRangeWorked(emp, start, end){
+      let total=0, cur=new Date(start);
+      while(cur<=end){ const key=ymd(cur); total+=sumPairs(emp.punches[key]||[]); cur.setDate(cur.getDate()+1); }
+      return total;
+    }
+    function computeRangeExpected(emp, start, end){
+      let total=0, cur=new Date(start);
+      while(cur<=end){ const key=ymd(cur); const has=(emp.punches[key]||[]).length>0; total+=expectedSecondsForDate(new Date(cur), has); cur.setDate(cur.getDate()+1); }
+      return total;
+    }
+
+    // ===== UI Logic =====
+    function refreshAll(){
+      const active = getActive();
+      const db = readDB();
+      const loginState = $('loginState');
+
+      if(!active || !db[active.empId]){
+        $('authBox').style.display='';
+        $('dashBox').style.display='none';
+        $('todayBox').style.display='none';
+        loginState.textContent = 'غير مسجل الدخول';
+        return;
+      }
+      const emp = db[active.empId];
+      $('authBox').style.display='none';
+      $('dashBox').style.display='';
+      $('todayBox').style.display='';
+      loginState.textContent = 'مسجل كـ: '+(emp.name||('موظف #' + active.empId));
+
+      const today = new Date();
+      const key = ymd(today);
+      const pairs = emp.punches[key] || [];
+
+      // Stats
+      const workedSec = sumPairs(pairs);
+      $('sToday').textContent = secToHHMM(workedSec);
+
+      const expectedSec = expectedSecondsForDate(today, pairs.length>0);
+      const left = Math.max(0, expectedSec - workedSec);
+      $('sLeft').textContent = secToHHMM(left);
+      $('sLeft').className = 'v ' + (left>0 ? 'bad':'ok');
+
+      // Week
+      const ws = new Date(today); ws.setDate(today.getDate()-today.getDay());
+      const we = new Date(ws); we.setDate(ws.getDate()+6);
+      const wWorked = computeRangeWorked(emp, ws, we);
+      $('sWeek').textContent = secToHHMM(wWorked);
+
+      // Last
+      if(!pairs.length){ $('sLast').textContent='—'; }
+      else {
+        const last = pairs[pairs.length-1];
+        $('sLast').textContent = last.out ? ('خروج '+last.out) : ('دخول '+last.in);
+      }
+
+      // Today table
+      const tbody = $('todayTable');
+      if(!pairs.length){ tbody.innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>'; }
+      else {
+        tbody.innerHTML = pairs.map(p=>'<tr><td>'+p.in+(p.out?(' → '+p.out):'')+'</td><td>'+(p.out?'زوج مكتمل':'دخول مفتوح')+'</td></tr>').join('');
+      }
+    }
+
+    function initAuth(){
+      $('btnLogin').onclick = () => {
+        const id = ($('empId').value||'').trim();
+        const pin = ($('empPin').value||'').trim();
+        const db = readDB();
+
+        if(!id || !pin){ $('msg').textContent='يرجى إدخال الرقم الوظيفي والـ PIN.'; return; }
+        if(!db[id]){ $('msg').textContent='الموظف غير مسجل. تواصل مع الموارد البشرية.'; return; }
+        if(db[id].pin !== pin){ $('msg').textContent='الرمز السري غير صحيح.'; return; }
+
+        setActive({empId:id});
+        $('msg').textContent='تم الدخول.';
+        refreshAll();
+      };
+
+      $('btnLogout').onclick = () => { setActive(null); refreshAll(); };
+    }
+
+    function handlePunch(type){
+      const active = getActive(); if(!active){ return; }
+      const db = readDB(); const emp = db[active.empId]; if(!emp){ return; }
+
+      const key = ymd(new Date());
+      emp.punches[key] = emp.punches[key] || [];
+      const ps = emp.punches[key];
+
+      const msgEl = $('punchMsg');
+      function ok(m){ msgEl.className='msg-ok'; msgEl.textContent=m; }
+      function err(m){ msgEl.className='msg-err'; msgEl.textContent=m; }
+
+      if(type==='in'){
+        if(ps.length && !ps[ps.length-1].out){ err('⚠️ لديك دخول مفتوح لم يُغلق بعد.'); return; }
+        ps.push({in: nowHHMM(), out: ''});
+        writeDB(db);
+        ok('✅ تم تسجيل الدخول.');
+      }else{
+        if(!ps.length){ err('⚠️ لا يوجد دخول لإغلاقه.'); return; }
+        const last = ps[ps.length-1];
+        if(last.out){ err('⚠️ آخر دخول مغلق بالفعل.'); return; }
+        last.out = nowHHMM();
+        writeDB(db);
+        ok('✅ تم تسجيل الخروج.');
+      }
+      refreshAll();
+    }
+
+    function initPunchButtons(){
+      $('btnIn').onclick = ()=>handlePunch('in');
+      $('btnOut').onclick = ()=>handlePunch('out');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+      initPunchButtons();
+      refreshAll();
+      setInterval(refreshAll, 60000);
+    });
+  </script>
+</body>
+</html>

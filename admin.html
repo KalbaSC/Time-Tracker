@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الإدارة | نظام البصمة - نادي كلباء</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0b0b; --card:#111213; --accent:#f6c21a; --accent-2:#1f1f1f;
+      --text:#f2f2f2; --muted:#aaaaaa; --ok:#14b86a; --bad:#ef4444;
+      --radius:18px; --shadow:0 6px 20px rgba(0,0,0,.25);
+      font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Kufi Arabic",sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);color:var(--text)}
+    a{color:var(--accent);text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:24px;min-height:100vh;display:flex;flex-direction:column}
+    .header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)}
+    .brand-title{font-weight:800;letter-spacing:.5px}
+    .card{background:linear-gradient(180deg,#141515,#0f0f0f);border:1px solid #1f1f1f;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+    .card h2{margin:0 0 12px 0;font-size:20px;color:var(--accent)}
+    label{display:block;margin-bottom:6px;color:var(--muted);font-size:14px}
+    input,select,button{width:100%;padding:12px;border-radius:12px;border:1px solid #2a2a2a;background:#0f0f0f;color:var(--text);transition:all .25s ease}
+    input:focus,select:focus{outline:none;border-color:var(--accent)}
+    button{cursor:pointer;background:var(--accent);color:#111;border-color:#d4a412;font-weight:800}
+    button:hover{background:#ffda41;transform:translateY(-2px)}
+    button.secondary{background:#1c1c1c;color:var(--text);border-color:#2b2b2b}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1 1 260px}
+    .note{color:var(--muted);font-size:13px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border-bottom:1px solid #222;padding:10px;text-align:right}
+    .small{font-size:12px}
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#1f1f1f;border:1px solid #2a2a2a;color:#aaa;font-size:12px}
+    .kpi{background:#0f0f0f;border:1px solid #212121;border-radius:14px;padding:16px;text-align:center}
+    .kpi .v{font-size:22px;font-weight:900;margin-top:4px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn-danger{background:#2a1212;border-color:#4a1e1e;color:#f4b4b4}
+    @media(max-width:900px){.two{grid-template-columns:1fr} .container{padding:16px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <img src="logo.png" alt="Kalba SC Logo" />
+        <div class="brand-title">نظام البصمة — إدارة الموارد البشرية</div>
+      </div>
+      <span class="badge" id="authTag">غير مسجل</span>
+    </header>
+
+    <main>
+      <!-- HR Login -->
+      <section id="gateBox" class="card">
+        <h2>تسجيل دخول الإدارة</h2>
+        <div class="row">
+          <div class="col">
+            <label>رمز مدير الموارد البشرية (HR)</label>
+            <input id="adminPass" type="password" placeholder="مثال: kalbaHR2025">
+          </div>
+          <div class="col">
+            <button id="btnAdminLogin">دخول الإدارة</button>
+          </div>
+          <div class="col">
+            <button id="btnLogout" class="secondary">تسجيل الخروج</button>
+          </div>
+        </div>
+        <p id="gateMsg" class="note" style="margin-top:6px"></p>
+      </section>
+
+      <!-- HR Dashboard -->
+      <section id="adminBox" class="card" style="display:none">
+        <div class="toolbar" style="justify-content:space-between;margin-bottom:10px">
+          <h2>لوحة التحكم</h2>
+          <span class="badge">الاتصال: محلي</span>
+        </div>
+
+        <!-- KPIs -->
+        <div class="row" style="margin-bottom:12px">
+          <div class="col kpi"><div class="t">عدد الموظفين</div><div id="kEmployees" class="v">0</div></div>
+          <div class="col kpi"><div class="t">نشطون اليوم</div><div id="kActiveToday" class="v">0</div></div>
+          <div class="col kpi"><div class="t">طلبات إجازة</div><div id="kLeaves" class="v">0</div></div>
+        </div>
+
+        <div class="two">
+          <!-- Employees Management -->
+          <div class="card">
+            <h2>إدارة الموظفين</h2>
+            <div class="row">
+              <div class="col">
+                <label>الاسم</label>
+                <input id="empNameIn" placeholder="الاسم الثلاثي">
+              </div>
+              <div class="col">
+                <label>الرقم الوظيفي</label>
+                <input id="empIdIn" placeholder="مثال: 12034">
+              </div>
+              <div class="col">
+                <label>الرمز السري (PIN)</label>
+                <input id="empPinIn" type="password" inputmode="numeric" placeholder="4–6 أرقام">
+              </div>
+              <div class="col">
+                <label>الحالة</label>
+                <select id="empActiveIn">
+                  <option value="1">نشط</option>
+                  <option value="0">موقوف</option>
+                </select>
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top:8px">
+              <button id="btnAddEmp">➕ إضافة / تحديث</button>
+              <button id="btnDelEmp" class="btn-danger">🗑️ حذف</button>
+              <button id="btnExportEmployees" class="secondary">📥 تنزيل الموظفين (CSV)</button>
+            </div>
+            <div style="margin-top:10px;max-height:320px;overflow:auto;border:1px solid #222;border-radius:12px">
+              <table class="table">
+                <thead><tr><th>الاسم</th><th>الرقم</th><th>الحالة</th></tr></thead>
+                <tbody id="empTable"><tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="card">
+            <h2>الإعدادات</h2>
+            <div class="row">
+              <div class="col">
+                <label>ساعات العمل (الأحد–الخميس)</label>
+                <input id="confWDDuration" value="7" type="number" min="0" step="0.5">
+                <div class="note small">افتراضيًا 7 ساعات.</div>
+              </div>
+              <div class="col">
+                <label>ساعات السبت (اختياري)</label>
+                <input id="confSatDuration" value="3" type="number" min="0" step="0.5">
+              </div>
+              <div class="col">
+                <label>كلمة مرور الإدارة</label>
+                <input id="confAdminPass" type="password" placeholder="kalbaHR2025">
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top:8px">
+              <button id="btnSaveSettings">💾 حفظ الإعدادات</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leaves -->
+        <div class="card">
+          <h2>الإجازات</h2>
+          <div class="row">
+            <div class="col">
+              <label>الموظف (الرقم الوظيفي)</label>
+              <input id="lvEmpId" placeholder="1234">
+            </div>
+            <div class="col">
+              <label>النوع</label>
+              <select id="lvType">
+                <option value="Sick">مرضية</option>
+                <option value="Annual">سنوية</option>
+                <option value="Unpaid">بدون راتب</option>
+                <option value="Other">أخرى</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>من تاريخ</label>
+              <input id="lvFrom" type="date">
+            </div>
+            <div class="col">
+              <label>إلى تاريخ</label>
+              <input id="lvTo" type="date">
+            </div>
+            <div class="col">
+              <label>ملاحظة</label>
+              <input id="lvNote" placeholder="تفاصيل (اختياري)">
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:8px">
+            <button id="btnAddLeave">➕ تسجيل إجازة</button>
+            <button id="btnExportLeaves" class="secondary">📥 تنزيل الإجازات (CSV)</button>
+          </div>
+          <div style="margin-top:10px;max-height:320px;overflow:auto;border:1px solid #222;border-radius:12px">
+            <table class="table">
+              <thead><tr><th>الرقم</th><th>النوع</th><th>من</th><th>إلى</th><th>ملاحظة</th></tr></thead>
+              <tbody id="lvTable"><tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="note" style="margin-top:auto;padding-top:10px;text-align:center">© نادي كلباء الرياضي الثقافي</footer>
+  </div>
+
+  <script>
+    // ===== Keys & State =====
+    const EMP_DB_KEY = 'kscEmployees';
+    const ADMIN_STATE = 'kscAdminState'; // { settings:{wdHours,satHours,adminPass}, employees:{}, leaves:[] }
+    const LS_ADMIN = 'kscAdminLogged';   // "1" when logged in
+
+    // ===== Helpers =====
+    const $ = id => document.getElementById(id);
+    function readAdmin(){ try{return JSON.parse(localStorage.getItem(ADMIN_STATE)||'{}')}catch{return {}} }
+    function saveAdmin(s){ localStorage.setItem(ADMIN_STATE, JSON.stringify(s)); }
+    function readEmpDB(){ try{return JSON.parse(localStorage.getItem(EMP_DB_KEY)||'{}')}catch{return {}} }
+    function writeEmpDB(db){ localStorage.setItem(EMP_DB_KEY, JSON.stringify(db)); }
+    const ymd = d => d.toISOString().slice(0,10);
+    const pad = n => String(n).padStart(2,'0');
+    const timeToSec = hhmm => { if(!hhmm) return 0; const [h,m]=hhmm.split(':').map(Number); return h*3600+m*60; };
+    const secToHHMM = sec => { sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return pad(h)+':'+pad(m); };
+    const sumPairs = pairs => (pairs||[]).reduce((a,p)=>a+Math.max(0,timeToSec(p.out||p.in)-timeToSec(p.in||p.out)),0);
+
+    // ===== Auth =====
+    function refreshAuth(){
+      const logged = localStorage.getItem(LS_ADMIN)==='1';
+      $('authTag').textContent = logged ? 'إداري' : 'غير مسجل';
+      $('gateBox').style.display = '';
+      $('adminBox').style.display = logged ? '' : 'none';
+    }
+
+    function initGate(){
+      $('btnAdminLogin').onclick = () => {
+        const pass = ($('adminPass').value||'').trim();
+        const st = readAdmin();
+        const expected = (st.settings && st.settings.adminPass) || 'kalbaHR2025';
+        if(pass && pass===expected){
+          localStorage.setItem(LS_ADMIN,'1');
+          $('gateMsg').textContent = 'تم الدخول.';
+          refreshAll();
+        }else{
+          $('gateMsg').textContent = 'رمز الإدارة غير صحيح.';
+        }
+      };
+      $('btnLogout').onclick = () => {
+        localStorage.removeItem(LS_ADMIN);
+        refreshAuth();
+      };
+    }
+
+    // ===== Employees CRUD =====
+    function renderEmployees(){
+      const st = readAdmin();
+      const tbody = $('empTable');
+      const employees = st.employees || {};
+      const ids = Object.keys(employees);
+      if(!ids.length){ tbody.innerHTML = '<tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr>'; return; }
+      tbody.innerHTML = ids.map(id=>{
+        const e = employees[id];
+        return '<tr><td>'+e.name+'</td><td>'+id+'</td><td>'+(e.active?'نشط':'موقوف')+'</td></tr>';
+      }).join('');
+      $('kEmployees').textContent = ids.length;
+    }
+
+    function addOrUpdateEmp(){
+      const name = ($('empNameIn').value||'').trim();
+      const id = ($('empIdIn').value||'').trim();
+      const pin = ($('empPinIn').value||'').trim();
+      const active = $('empActiveIn').value==='1';
+      if(!name||!id||!pin){ alert('أدخلي الاسم والرقم الوظيفي والـ PIN.'); return; }
+
+      const st = readAdmin();
+      st.employees = st.employees || {};
+      st.employees[id] = { name, pin, active };
+      saveAdmin(st);
+
+      // sync to employee DB (punch storage)
+      const db = readEmpDB();
+      db[id] = db[id] || { name:'', pin:'', punches:{} };
+      db[id].name = name; db[id].pin = pin; db[id].punches = db[id].punches || {};
+      writeEmpDB(db);
+
+      renderEmployees();
+      alert('تم الحفظ.');
+    }
+
+    function deleteEmp(){
+      const id = ($('empIdIn').value||'').trim();
+      if(!id){ alert('أدخلي الرقم الوظيفي المراد حذفه.'); return; }
+      const st = readAdmin();
+      if(!st.employees || !st.employees[id]){ alert('الموظف غير موجود.'); return; }
+      if(!confirm('تأكيد حذف الموظف وجميع سجلاته المحلية؟')) return;
+
+      delete st.employees[id];
+      saveAdmin(st);
+
+      const db = readEmpDB();
+      delete db[id];
+      writeEmpDB(db);
+
+      renderEmployees();
+      alert('تم الحذف.');
+    }
+
+    // ===== Settings =====
+    function loadSettings(){
+      const st = readAdmin();
+      $('confWDDuration').value = (st.settings && st.settings.wdHours) || 7;
+      $('confSatDuration').value = (st.settings && st.settings.satHours) || 3;
+      $('confAdminPass').value = (st.settings && st.settings.adminPass) || 'kalbaHR2025';
+    }
+    function saveSettings(){
+      const st = readAdmin();
+      st.settings = st.settings || {};
+      st.settings.wdHours = +$('confWDDuration').value || 7;
+      st.settings.satHours = +$('confSatDuration').value || 3;
+      st.settings.adminPass = ($('confAdminPass').value||'kalbaHR2025');
+      saveAdmin(st);
+      alert('تم حفظ الإعدادات.');
+    }
+
+    // ===== Leaves =====
+    function renderLeaves(){
+      const st = readAdmin();
+      const tbody = $('lvTable');
+      const leaves = st.leaves || [];
+      if(!leaves.length){ tbody.innerHTML = '<tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr>'; }
+      else {
+        tbody.innerHTML = leaves.map(l=>'<tr><td>'+l.id+'</td><td>'+l.type+'</td><td>'+l.from+'</td><td>'+l.to+'</td><td>'+(l.note||'')+'</td></tr>').join('');
+      }
+      $('kLeaves').textContent = leaves.length;
+    }
+    function addLeave(){
+      const id = ($('lvEmpId').value||'').trim();
+      const type = $('lvType').value;
+      const from = $('lvFrom').value;
+      const to = $('lvTo').value || from;
+      const note = ($('lvNote').value||'').trim();
+      if(!id || !from){ alert('الرقم الوظيفي وتاريخ البداية مطلوبان.'); return; }
+      const st = readAdmin();
+      st.leaves = st.leaves || [];
+      st.leaves.push({ id, type, from, to, note });
+      saveAdmin(st);
+      renderLeaves();
+      alert('تم تسجيل الإجازة.');
+    }
+
+    // ===== CSV helpers =====
+    function downloadCSV(rows, filename){
+      const csv = rows.map(r=>r.map(x=>{
+        const v = (x+''); return v.includes(',') ? '"'+v.replace(/"/g,'""')+'"' : v;
+      }).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+    function exportEmployees(){
+      const st = readAdmin(); const rows=[['EmpID','Name','PIN','Active']];
+      Object.keys(st.employees||{}).forEach(id=>{
+        const e=st.employees[id]; rows.push([id, e.name, e.pin, e.active?'1':'0']);
+      });
+      downloadCSV(rows, 'employees.csv');
+    }
+    function exportLeaves(){
+      const st = readAdmin(); const rows=[['EmpID','Type','From','To','Note']];
+      (st.leaves||[]).forEach(l=>rows.push([l.id,l.type,l.from,l.to,l.note||'']));
+      downloadCSV(rows, 'leaves.csv');
+    }
+
+    // ===== KPIs =====
+    function refreshKPIs(){
+      const db = readEmpDB();
+      const today = ymd(new Date());
+      let activeToday = 0;
+      Object.values(db).forEach(emp=>{
+        if(emp && emp.punches && (emp.punches[today]||[]).length>0) activeToday++;
+      });
+      $('kActiveToday').textContent = activeToday;
+    }
+
+    function refreshAll(){
+      refreshAuth();
+      const logged = localStorage.getItem(LS_ADMIN)==='1';
+      if(!logged) return;
+      loadSettings();
+      renderEmployees();
+      renderLeaves();
+      refreshKPIs();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initGate();
+      $('btnAddEmp').onclick = addOrUpdateEmp;
+      $('btnDelEmp').onclick = deleteEmp;
+      $('btnSaveSettings').onclick = saveSettings;
+      $('btnAddLeave').onclick = addLeave;
+      $('btnExportEmployees').onclick = exportEmployees;
+      $('btnExportLeaves').onclick = exportLeaves;
+      refreshAll();
+      setInterval(()=>{ if(localStorage.getItem(LS_ADMIN)==='1'){ refreshKPIs(); } }, 60000);
+    });
+  </script>
+</body>
+</html>
