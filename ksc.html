@@ -569,34 +569,36 @@
       return total;
     }
 
-    // ---- Export helper ----
-    function downloadCSV(rows, filename) {
-      const csv = rows.map(r => 
-        r.map(x => (',' in (x+'') ? '"'+(x+'').replace(/"/g,'""')+'"' : x)
-         .join(',')
-      ).join('\n');
-      
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob); 
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = filename; 
-      a.click(); 
-      URL.revokeObjectURL(url);
-    }
+function downloadCSV(rows, filename) {
+  const csv = rows
+    .map(r =>
+      r
+        .map(x => {
+          const val = x + '';
+          return val.includes(',') ? `"${val.replace(/"/g, '""')}"` : val;
+        })
+        .join(',')
+    )
+    .join('\n');
 
-    // ---- Tab Navigation ----
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
     function initTabs() {
       const tabLinks = document.querySelectorAll('.tab-link');
       const actionButtons = document.querySelectorAll('.action-btn[data-tab]');
       
-      // Set active tab based on URL hash or default to dashboard
       let activeTab = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
       if (!document.getElementById(activeTab)) activeTab = 'dashboard';
       
       showTab(activeTab);
       
-      // Add event listeners to tab links
       tabLinks.forEach(link => {
         link.addEventListener('click', function(e) {
           e.preventDefault();
@@ -606,7 +608,6 @@
         });
       });
       
-      // Add event listeners to action buttons
       actionButtons.forEach(button => {
         button.addEventListener('click', function() {
           const tabId = this.getAttribute('data-tab');
