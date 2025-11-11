@@ -1,0 +1,54 @@
+<html lang="ar" dir="rtl">
+
+<div class="card">
+<h2>⚙️ الإعدادات و الربط</h2>
+<div class="grid">
+<div class="col"><label>ساعات العمل (الأحد–الخميس)</label><input id="confWDDuration" type="number" min="0" step="0.5" value="7" /></div>
+<div class="col"><label>ساعات السبت (اختياري)</label><input id="confSatDuration" type="number" min="0" step="0.5" value="3" /></div>
+<div class="col"><label>رابط Google Apps Script</label><input id="confScriptUrl" placeholder="https://script.google.com/..." /></div>
+<div class="col"><label>كلمة مرور الإدارة (تغيير)</label><input id="confAdminPass" type="password" placeholder="كلمة مرور جديدة" /></div>
+</div>
+<div class="toolbar" style="margin-top:10px">
+<button id="btnSaveSettings" class="btn-ok">💾 حفظ</button>
+<button id="btnSyncEmployees" class="secondary">⤴️ مزامنة الموظفين</button>
+<button id="btnAskReport" class="secondary">📊 طلب تقرير أسبوعي</button>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h2>🏖️ الإجازات</h2>
+<div class="grid">
+<div class="col"><label>الرقم الوظيفي</label><input id="lvEmpId" class="mono" /></div>
+<div class="col"><label>النوع</label><select id="lvType"><option value="Sick">مرضية</option><option value="Annual">سنوية</option><option value="Unpaid">بدون راتب</option><option value="Other">أخرى</option></select></div>
+<div class="col"><label>من</label><input id="lvFrom" type="date" /></div>
+<div class="col"><label>إلى</label><input id="lvTo" type="date" /></div>
+<div class="col"><label>ملاحظة</label><input id="lvNote" /></div>
+<div class="col"><label>مرفق (صورة/PDF)</label><input id="lvFile" type="file" accept=".png,.jpg,.jpeg,.pdf" /></div>
+</div>
+<div class="toolbar" style="margin-top:10px">
+<button id="btnAddLeave">➕ تسجيل إجازة</button>
+<button id="btnExportLeaves" class="secondary">📥 تنزيل الإجازات (CSV)</button>
+<button id="btnSyncLeaves" class="secondary">⤴️ مزامنة الإجازات</button>
+</div>
+<div class="table-wrap" style="margin-top:10px">
+<table class="table">
+<thead><tr><th>الرقم</th><th>النوع</th><th>من</th><th>إلى</th><th>ملاحظة</th></tr></thead>
+<tbody id="lvTable"><tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+</main>
+
+
+<div class="footer">© نادي كلباء الرياضي الثقافي</div>
+</div>
+
+
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+
+<script src="hr.js"></script>
+</body>
+</html>
