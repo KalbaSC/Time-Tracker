@@ -35,7 +35,7 @@
     .header-info{text-align:right} .title{margin:0; font-weight:800; font-size:18px}
     .subtitle{margin:0; font-size:14px; color:var(--accent)}
     main{flex:1; width:90%; margin:20px auto; display:grid; gap:16px}
-    @media (min-width:1100px){ main{grid-template-columns:1.15fr 2fr} }
+    @media (min-width:1100px){ main{grid-template-columns:1fr} }
     .panel{
       background:var(--panel); border:2px solid var(--border); border-radius:var(--radius);
       padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25);
@@ -80,8 +80,12 @@
     .hint{font-size:12px; color:#fffde0}
     @media (max-width:768px){ .header-right img.logo{height:40px} .header-right .divider{display:none} }
     @media (max-width:600px){.controls{flex-direction:column;align-items:stretch} .control{width:100%} }
-   .btn.flash {animation: flash 0.4s ease}
-    @keyframes flash {0%{background:var(--accent)} 100%{background:#1b1b1b}}
+    .section-title{margin:0 0 16px 0; font-size:20px; font-weight:800; color:var(--accent)}
+    .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin:16px 0}
+    .stat-card{background:#0f0f0f; border:1px solid #333; border-radius:12px; padding:16px; text-align:center}
+    .stat-value{font-size:24px; font-weight:800; margin:8px 0}
+    .stat-label{font-size:12px; color:var(--muted)}
+    .highlight{color:var(--accent)}
   </style>
 </head>
 <body>
@@ -98,112 +102,27 @@
   </header>
 
   <main>
-<section class="panel" id="punchPanel">
-  <div class="controls-header" style="margin-bottom:12px">
-    <h2 class="controls-title">تسجيل الدخول والبصمة</h2>
-  </div>
-
-  <div id="authBox" class="controls" style="margin-bottom:12px">
-    <div class="control">
-      <label>الرقم الوظيفي</label>
-      <input id="empIdLogin" type="text" placeholder="مثال: 12034" />
-    </div>
-    <div class="control">
-      <label>الرمز السري (PIN)</label>
-      <input id="empPinLogin" type="password" inputmode="numeric" placeholder="4–6 أرقام" />
-    </div>
-    <div class="control">
-      <label>الاسم (للتسجيل أول مرة فقط)</label>
-      <input id="empNameRegister" type="text" placeholder="الاسم الثلاثي" />
-    </div>
-    <div class="flex">
-      <button id="btnLogin" class="btn">تسجيل الدخول</button>
-      <button id="btnRegister" class="btn secondary">تسجيل موظف جديد</button>
-    </div>
-    <p class="note" id="authNote" style="margin-top:6px"></p>
-  </div>
-
-  <div id="punchBox" style="display:none">
-    <div class="flex" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div class="note">
-        <span class="status-indicator status-ok"></span>
-        المستخدم: <b id="activeEmpName"></b> (<span class="mono" id="activeEmpId"></span>)
-      </div>
-      <div class="flex">
-        <button id="btnLogout" class="btn secondary">تسجيل الخروج</button>
-      </div>
-    </div>
-
-    <div class="section-divider"></div>
-
-    <div class="flex" style="gap:10px;flex-wrap:wrap">
-      <button id="btnPunchIn" class="btn">⬆️ بصمة دخول</button>
-      <button id="btnPunchOut" class="btn secondary">⬇️ بصمة خروج</button>
-      <button id="btnExportMyCSV" class="btn secondary">📥 تنزيل سجلاتي (CSV)</button>
-      <span class="note" id="punchStatus"></span>
-    </div>
-
-    <div class="kpi-container">
-      <h3 class="controls-title">ملخصي</h3>
-      <div class="grid-4">
-        <div class="kpi">
-          <div class="label">اليوم — عملت</div>
-          <div class="value" id="me_today_worked">00:00</div>
+    <section class="panel">
+      <h2 class="section-title">إحصائيات عامة</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">إجمالي الموظفين</div>
+          <div class="stat-value" id="totalEmployees">0</div>
         </div>
-        <div class="kpi">
-          <div class="label">اليوم — المتوقّع</div>
-          <div class="value" id="me_today_expected">00:00</div>
+        <div class="stat-card">
+          <div class="stat-label">متوسط ساعات العمل اليومية</div>
+          <div class="stat-value" id="avgDailyHours">00:00</div>
         </div>
-        <div class="kpi ok">
-          <div class="label">اليوم — المتبقي</div>
-          <div class="value" id="me_today_left">00:00</div>
+        <div class="stat-card">
+          <div class="stat-label">أعلى ساعات عمل</div>
+          <div class="stat-value" id="maxHours">00:00</div>
         </div>
-        <div class="kpi">
-          <div class="label">آخر حركة</div>
-          <div class="value" id="me_last_action">—</div>
+        <div class="stat-card">
+          <div class="stat-label">أقل ساعات عمل</div>
+          <div class="stat-value" id="minHours">00:00</div>
         </div>
       </div>
-
-      <div class="grid-4" style="margin-top:12px">
-        <div class="kpi">
-          <div class="label">هذا الأسبوع — عملت</div>
-          <div class="value" id="me_week_worked">00:00</div>
-        </div>
-        <div class="kpi">
-          <div class="label">هذا الأسبوع — المتوقّع</div>
-          <div class="value" id="me_week_expected">00:00</div>
-        </div>
-        <div class="kpi ok">
-          <div class="label">هذا الأسبوع — المتبقي</div>
-          <div class="value" id="me_week_left">00:00</div>
-        </div>
-        <div class="kpi">
-          <div class="label">هذا الشهر — عملت</div>
-          <div class="value" id="me_month_worked">00:00</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="table-container">
-      <div class="table-header">
-        <h2 class="table-title">بصماتي اليوم</h2>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>الوقت</th>
-              <th class="left">النوع</th>
-            </tr>
-          </thead>
-          <tbody id="me_today_table">
-            <tr><td colspan="2" class="note" style="text-align:center;padding:20px">لا يوجد سجلات اليوم بعد.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <section class="panel">
       <div class="controls">
@@ -373,6 +292,9 @@
 
   const modalBackdrop = $('modalBackdrop'), closeModalBtn = $('closeModal'), modalTitle = $('modalTitle'), modalMeta = $('modalMeta'), detailsBody = $('detailsBody');
 
+  // إحصائيات عامة
+  const totalEmployees = $('totalEmployees'), avgDailyHours = $('avgDailyHours'), maxHours = $('maxHours'), minHours = $('minHours');
+
   let rawRows = []; 
   let groupedDetails = new Map(); 
   let lastSummaryCSV = '', lastDetailedCSV = '';
@@ -445,6 +367,7 @@
       tbody.innerHTML = `<tr><td colspan="8" class="note">حمّلي الملف لعرض النتائج.</td></tr>`;
       lastSummaryCSV = lastDetailedCSV = '';
       updateKPIs(0,0,0,0);
+      updateGeneralStats(0,0,0,0);
       hintPolicy.textContent = '';
       return;
     }
@@ -460,6 +383,8 @@
     const expectedMode = expectedModeSel.value;
 
     const map = new Map();
+    const employeeStats = new Map(); // لتخزين إحصائيات الموظفين
+    
     for (const row of rawRows){
       if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
       if (fromDate && row.date < fromDate) continue;
@@ -477,6 +402,14 @@
       const obj = map.get(key);
       obj.workedSec += row.workedSec;
       obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
+      
+      // تحديث إحصائيات الموظف
+      if (!employeeStats.has(row.empId)) {
+        employeeStats.set(row.empId, {name: row.name, totalWorked: 0, daysWorked: 0});
+      }
+      const empStat = employeeStats.get(row.empId);
+      empStat.totalWorked += row.workedSec;
+      empStat.daysWorked += 1;
     }
 
     const rows = [];
@@ -535,6 +468,7 @@
     [...tbody.querySelectorAll('button[data-key]')].forEach(btn => btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key'))));
 
     updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
+    updateGeneralStats(employeeStats, totalWorked, rows.length);
 
     const modeText = expectedMode==='calendar' ? 'أيام العمل التقويمية' : 'الأيام التي بها بصمة';
     const satText = satPolicy==='punch' ? 'السبت يُحتسب فقط عند وجود بصمة'
@@ -544,6 +478,34 @@
 
     lastSummaryCSV = buildSummaryCSV(rows);
     lastDetailedCSV = buildDetailedCSV();
+  }
+
+  function updateGeneralStats(employeeStats, totalWorked, totalRecords) {
+    // إحصائيات عامة
+    totalEmployees.textContent = employeeStats.size;
+    
+    if (employeeStats.size > 0) {
+      // حساب متوسط ساعات العمل اليومية
+      const avgHours = totalWorked / employeeStats.size / 3600;
+      avgDailyHours.textContent = `${Math.floor(avgHours)}:${String(Math.round((avgHours % 1) * 60)).padStart(2, '0')}`;
+      
+      // حساب أعلى وأقل ساعات عمل
+      let maxWorked = 0;
+      let minWorked = Infinity;
+      
+      for (const emp of employeeStats.values()) {
+        const hours = emp.totalWorked / 3600;
+        if (hours > maxWorked) maxWorked = hours;
+        if (hours < minWorked) minWorked = hours;
+      }
+      
+      maxHours.textContent = `${Math.floor(maxWorked)}:${String(Math.round((maxWorked % 1) * 60)).padStart(2, '0')}`;
+      minHours.textContent = `${Math.floor(minWorked)}:${String(Math.round((minWorked % 1) * 60)).padStart(2, '0')}`;
+    } else {
+      avgDailyHours.textContent = '00:00';
+      maxHours.textContent = '00:00';
+      minHours.textContent = '00:00';
+    }
   }
 
   function expectedForDayKey(dkey, dow, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch){
@@ -696,291 +658,6 @@
     const dur = p.out ? secToHHMM(diffSec(p.in,p.out)) : '00:00';
     return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
   }
-
-  const empIdLogin = $('empIdLogin');
-  const empPinLogin = $('empPinLogin');
-  const empNameRegister = $('empNameRegister');
-  const btnLogin = $('btnLogin');
-  const btnRegister = $('btnRegister');
-  const authNote = $('authNote');
-
-  const punchPanel = $('punchPanel');
-  const authBox = $('authBox');
-  const punchBox = $('punchBox');
-  const btnLogout = $('btnLogout');
-  const btnPunchIn = $('btnPunchIn');
-  const btnPunchOut = $('btnPunchOut');
-  const btnExportMyCSV = $('btnExportMyCSV');
-  const punchStatus = $('punchStatus');
-
-  const activeEmpName = $('activeEmpName');
-  const activeEmpId = $('activeEmpId');
-
-  const ME_today_worked = $('me_today_worked');
-  const ME_today_expected = $('me_today_expected');
-  const ME_today_left = $('me_today_left');
-  const ME_last_action = $('me_last_action');
-
-  const ME_week_worked = $('me_week_worked');
-  const ME_week_expected = $('me_week_expected');
-  const ME_week_left = $('me_week_left');
-  const ME_month_worked = $('me_month_worked');
-
-  const ME_today_table = $('me_today_table');
-
-  const EMP_DB_KEY = 'kscEmployees';
-  const ACTIVE_KEY = 'kscActiveEmp';
-
-  function readDB(){
-    try { return JSON.parse(localStorage.getItem(EMP_DB_KEY) || '{}'); }
-    catch { return {}; }
-  }
-  function writeDB(db){ localStorage.setItem(EMP_DB_KEY, JSON.stringify(db)); }
-
-  function getActive(){ 
-    try { return JSON.parse(localStorage.getItem(ACTIVE_KEY) || 'null'); }
-    catch { return null; }
-  }
-  function setActive(obj){ 
-    if (obj) localStorage.setItem(ACTIVE_KEY, JSON.stringify(obj));
-    else localStorage.removeItem(ACTIVE_KEY);
-  }
-
-  function nowHHMM(){
-    const d = new Date();
-    const h = String(d.getHours()).padStart(2,'0');
-    const m = String(d.getMinutes()).padStart(2,'0');
-    return `${h}:${m}`;
-  }
-
-  function ensureEmp(db, empId){
-    if (!db[empId]) db[empId] = { name:'', pin:'', punches:{} };
-    if (!db[empId].punches) db[empId].punches = {};
-  }
-
-  btnRegister.addEventListener('click', () => {
-    const empId = (empIdLogin.value||'').trim();
-    const pin = (empPinLogin.value||'').trim();
-    const name = (empNameRegister.value||'').trim();
-
-    if (!empId || !pin || !name){
-      authNote.textContent = 'أدخلي الرقم الوظيفي والرمز السري والاسم للتسجيل.';
-      return;
-    }
-    const db = readDB();
-    if (db[empId]){
-      authNote.textContent = 'الموظف موجود مسبقًا. استخدمي تسجيل الدخول.';
-      return;
-    }
-    db[empId] = { name, pin, punches:{} };
-    writeDB(db);
-    authNote.textContent = 'تم التسجيل بنجاح! الآن يمكنك تسجيل الدخول.';
-  });
-
-  btnLogin.addEventListener('click', () => {
-    const empId = (empIdLogin.value||'').trim();
-    const pin = (empPinLogin.value||'').trim();
-    if (!empId || !pin){ authNote.textContent='أدخلي الرقم الوظيفي والرمز السري.'; return; }
-
-    const db = readDB();
-    if (!db[empId]){ authNote.textContent='الموظف غير مسجل.'; return; }
-    if (db[empId].pin !== pin){ authNote.textContent='رمز سري غير صحيح.'; return; }
-
-    setActive({ empId });
-    authNote.textContent = '';
-    showPunchUI();
-    refreshMyStats();
-  });
-
-  btnLogout.addEventListener('click', () => {
-    setActive(null);
-    authBox.style.display = '';
-    punchBox.style.display = 'none';
-  });
-
-  function showPunchUI(){
-    const active = getActive();
-    if (!active){ authBox.style.display=''; punchBox.style.display='none'; return; }
-    const db = readDB();
-    const emp = db[active.empId];
-    if (!emp){ setActive(null); authBox.style.display=''; punchBox.style.display='none'; return; }
-
-    activeEmpName.textContent = emp.name;
-    activeEmpId.textContent = active.empId;
-    authBox.style.display = 'none';
-    punchBox.style.display = '';
-  }
-  btnPunchIn.classList.add('flash');
-  setTimeout(()=>btnPunchIn.classList.remove('flash'),400);
- 
-  btnPunchIn.addEventListener('click', () => {
-    const active = getActive(); if (!active) return;
-    const db = readDB(); ensureEmp(db, active.empId);
-    const emp = db[active.empId];
-
-    const today = ymd(new Date());
-    if (!emp.punches[today]) emp.punches[today] = [];
-
-    const pairs = emp.punches[today];
-    if (pairs.length && !pairs[pairs.length-1].out){
-      punchStatus.textContent = 'عندك دخول لم يُغلق بعد. أغلقيه بخروج أولًا.';
-      return;
-    }
-    pairs.push({ in: nowHHMM(), out: '' });
-    writeDB(db);
-    punchStatus.textContent = 'تم تسجيل دخول.';
-    ME_last_action.textContent = `دخول ${pairs[pairs.length-1].in}`;
-    refreshMyStats();
-  });
-
-  btnPunchOut.addEventListener('click', () => {
-    const active = getActive(); if (!active) return;
-    const db = readDB(); ensureEmp(db, active.empId);
-    const emp = db[active.empId];
-
-    const today = ymd(new Date());
-    if (!emp.punches[today] || !emp.punches[today].length){
-      punchStatus.textContent = 'لا يوجد دخول اليوم لإغلاقه.';
-      return;
-    }
-    const pairs = emp.punches[today];
-    const last = pairs[pairs.length-1];
-    if (last.out){
-      punchStatus.textContent = 'آخر زوج مغلق بالفعل.';
-      return;
-    }
-    last.out = nowHHMM();
-    writeDB(db);
-    punchStatus.textContent = 'تم تسجيل خروج.';
-    ME_last_action.textContent = `خروج ${last.out}`;
-    refreshMyStats();
-  });
-
-  btnExportMyCSV.addEventListener('click', () => {
-    const active = getActive(); if (!active) return;
-    const db = readDB(); const emp = db[active.empId];
-    const rows = [['Date','Pairs (IN→OUT)','Worked (hh:mm)']];
-    const allDays = Object.keys(emp.punches||{}).sort();
-    for (const d of allDays){
-      const pairs = emp.punches[d]||[];
-      const pairsStr = pairs.map(p => `${p.in}→${p.out||''}`).join('; ');
-      const worked = secondsToHhMm(sumPairs(pairs, parseInt(roundingSel.value,10)||0));
-      rows.push([d, pairsStr, worked]);
-    }
-    const csv = rows.map(r => r.map(x => (`${x}`).includes(',')?`"${(`${x}`).replace(/"/g,'""')}"`:`${x}`).join(',')).join('\n');
-    downloadCSV(csv, `punches_${active.empId}.csv`);
-  });
-
-  function getWorkedFromPairs(pairs){
-    return sumPairs(pairs, parseInt(roundingSel.value,10)||0);
-  }
-
-  function computeWorked(emp, startDate, endDate){
-    let total = 0;
-    const current = new Date(startDate);
-    while (current <= endDate){
-      const key = ymd(current);
-      const pairs = (emp.punches[key]||[]);
-      total += getWorkedFromPairs(pairs);
-      current.setDate(current.getDate()+1);
-    }
-    return total;
-  }
-
-function computeExpectedRange(start, end) {
-  const expectedWD = (+expectedWDInp.value||0) * 3600;
-  const expectedSat = (+expectedSatInp.value||0) * 3600;
-  const satPolicy = satPolicySel.value;
-
-  let total = 0;
-  const current = new Date(start);
-  while (current <= end) {
-    const dow = current.getDay();
-    total += expectedForDayKey('', dow, expectedWD, expectedSat, satPolicy, 'calendar', true);
-    current.setDate(current.getDate()+1);
-  }
-  return total;
-}
-
-  function computeExpectedPunched(emp, start, end){
-    const expectedWD = (+expectedWDInp.value||0) * 3600;
-    const expectedSat = (+expectedSatInp.value||0) * 3600;
-    const satPolicy = satPolicySel.value;
-
-    let total = 0;
-    const current = new Date(start);
-    while (current <= end){
-      const key = ymd(current);
-      const pairs = (emp.punches[key]||[]);
-      const dow = current.getDay();
-      total += calculateExpectedForDay(dow, expectedWD, expectedSat, 'punch', 'punched', pairs.length>0);
-      current.setDate(current.getDate()+1);
-    }
-    return total;
-  }
-
-  function refreshMyStats(){
-    const active = getActive(); if (!active) return;
-    const db = readDB(); const emp = db[active.empId]; if (!emp) return;
-
-    const today = new Date();
-    const todayKey = ymd(today);
-    const todayPairs = emp.punches[todayKey] || [];
-    const workedToday = getWorkedFromPairs(todayPairs);
-
-    const expectedWD = (+expectedWDInp.value||0) * 3600;
-    const expectedSat = (+expectedSatInp.value||0) * 3600;
-    const satPolicy = satPolicySel.value;
-    const expectedMode = expectedModeSel.value;
-    const expectedToday = calculateExpectedForDay(
-      today.getDay(), expectedWD, expectedSat, satPolicy, expectedMode, todayPairs.length>0
-    );
-
-    ME_today_worked.textContent   = secondsToHhMm(workedToday);
-    ME_today_expected.textContent = secondsToHhMm(expectedToday);
-    ME_today_left.textContent     = secondsToHhMm(Math.max(0, expectedToday - workedToday));
-
-    if (todayPairs.length){
-      const last = todayPairs[todayPairs.length-1];
-      ME_last_action.textContent = last.out ? `خروج ${last.out}` : `دخول ${last.in}`;
-    } else {
-      ME_last_action.textContent = '—';
-    }
-
-    if (!todayPairs.length){
-      ME_today_table.innerHTML = `<tr><td colspan="2" class="note" style="text-align:center;padding:20px">لا يوجد سجلات اليوم بعد.</td></tr>`;
-    } else {
-      ME_today_table.innerHTML = todayPairs.map(p => `
-        <tr>
-          <td class="mono">${p.in}${p.out?` → ${p.out}`:''}</td>
-          <td class="left">${p.out? 'زوج مكتمل':'دخول مفتوح'}</td>
-        </tr>
-      `).join('');
-    }
-
-    const ws = getWeekStart(today, parseInt(weekStartSel.value,10));
-    const we = new Date(ws); we.setDate(ws.getDate()+6);
-    const workedWeek = computeWorked(emp, ws, we);
-
-    let expectedWeek = 0;
-    if (expectedMode === 'calendar') expectedWeek = computeExpectedRange(ws, we);
-    else expectedWeek = computeExpectedPunched(emp, ws, we);
-
-    ME_week_worked.textContent   = secondsToHhMm(workedWeek);
-    ME_week_expected.textContent = secondsToHhMm(expectedWeek);
-    ME_week_left.textContent     = secondsToHhMm(Math.max(0, expectedWeek - workedWeek));
-
-    const ms = new Date(today.getFullYear(), today.getMonth(), 1);
-    const me = new Date(today.getFullYear(), today.getMonth()+1, 0);
-    const workedMonth = computeWorked(emp, ms, me);
-    ME_month_worked.textContent = secondsToHhMm(workedMonth);
-  }
-
-  [expectedWDInp, expectedSatInp, satPolicySel, expectedModeSel, roundingSel, weekStartSel]
-    .forEach(el => el.addEventListener('change', refreshMyStats));
-
-  showPunchUI();
-  refreshMyStats(); 
 })();
 </script>
 </body>
