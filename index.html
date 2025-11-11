@@ -5,6 +5,7 @@
   <title>ملخّص البصمة — نادي كلباء الرياضي الثقافي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#222222; --accent:#f4e733; --text:#ffffff; --muted:#cfcfcf;
@@ -78,6 +79,9 @@
     .muted{color:var(--muted)} .mono{font-family:ui-monospace,Menlo,Consolas,"Courier New",monospace}
     .hint{font-size:12px; color:#fffde0}
     @media (max-width:768px){ .header-right img.logo{height:40px} .header-right .divider{display:none} }
+    @media (max-width:600px){.controls{flex-direction:column;align-items:stretch} .control{width:100%} }
+   .btn.flash {animation: flash 0.4s ease}
+    @keyframes flash {0%{background:var(--accent)} 100%{background:#1b1b1b}}
   </style>
 </head>
 <body>
@@ -99,7 +103,6 @@
     <h2 class="controls-title">تسجيل الدخول والبصمة</h2>
   </div>
 
-  <!-- Login / Register -->
   <div id="authBox" class="controls" style="margin-bottom:12px">
     <div class="control">
       <label>الرقم الوظيفي</label>
@@ -120,7 +123,6 @@
     <p class="note" id="authNote" style="margin-top:6px"></p>
   </div>
 
-  <!-- After login -->
   <div id="punchBox" style="display:none">
     <div class="flex" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="note">
@@ -298,7 +300,6 @@
         الأعمدة المتوقعة: <b>Employee ID</b>، <b>First Name</b>، <b>Date</b>، <b>Time</b> (أوقات مفصولة بفواصل: IN, OUT, IN, OUT…). يُتجاهل آخر دخول بلا خروج.
       </p>
 
-      <!-- KPIs -->
       <div class="grid-4" style="margin-top:10px" id="kpis">
         <div class="kpi"><div class="label">إجمالي العمل</div><div class="value" id="kpiWorked">00:00</div></div>
         <div class="kpi"><div class="label">إجمالي المتوقّع</div><div class="value" id="kpiExpected">00:00</div></div>
@@ -307,7 +308,6 @@
       </div>
     </section>
 
-    <!-- النتائج -->
     <section class="panel" style="min-height:480px">
       <div class="flex" style="justify-content:space-between; margin-bottom:6px">
         <div class="note"><span id="meta">لا يوجد ملف محمّل.</span></div>
@@ -336,7 +336,6 @@
     </section>
   </main>
 
-  <!-- نافذة التفاصيل -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <header>
@@ -374,8 +373,8 @@
 
   const modalBackdrop = $('modalBackdrop'), closeModalBtn = $('closeModal'), modalTitle = $('modalTitle'), modalMeta = $('modalMeta'), detailsBody = $('detailsBody');
 
-  let rawRows = []; // {empId, name, date: Date, pairs:[{in,out}], workedSec:number}
-  let groupedDetails = new Map(); // key -> {empId,name,period, workedSec, expectedSec, over, short, days: Map(ymd -> {pairs, workedSec})}
+  let rawRows = []; 
+  let groupedDetails = new Map(); 
   let lastSummaryCSV = '', lastDetailedCSV = '';
 
   fileInput.addEventListener('change', handleFile);
@@ -402,7 +401,6 @@
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
 
-        // locate header
         let headerIdx = rows.findIndex(r => String(r[0]).trim().toLowerCase() === 'employee id');
         if (headerIdx === -1) headerIdx = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === 'employee id'));
         if (headerIdx === -1) { alert('تعذّر العثور على صف العناوين الذي يحتوي "Employee ID".'); return; }
@@ -451,7 +449,6 @@
       return;
     }
 
-    // filters
     const empFilter = (empFilterInp.value||'').trim().toLowerCase();
     const fromDate = fromDateInp.value ? new Date(fromDateInp.value) : null;
     const toDate = toDateInp.value ? new Date(toDateInp.value) : null;
@@ -459,11 +456,10 @@
     const weekStart = parseInt(weekStartSel.value,10);
     const expectedWD = (+expectedWDInp.value||0) * 3600;
     const expectedSat = (+expectedSatInp.value||0) * 3600;
-    const satPolicy = satPolicySel.value; // 'punch'|'calendar'|'off'
-    const expectedMode = expectedModeSel.value; // 'calendar'|'punched'
+    const satPolicy = satPolicySel.value;
+    const expectedMode = expectedModeSel.value;
 
-    // group
-    const map = new Map(); // key -> obj
+    const map = new Map();
     for (const row of rawRows){
       if (empFilter && !(row.empId.toLowerCase().includes(empFilter) || row.name.toLowerCase().includes(empFilter))) continue;
       if (fromDate && row.date < fromDate) continue;
@@ -483,27 +479,21 @@
       obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
     }
 
-    // compute expected per group
     const rows = [];
     let totalWorked=0, totalExpected=0, totalOver=0, totalShort=0;
     for (const obj of map.values()){
       let expectedSec = 0;
 
       if (view === 'daily'){
-        // one date only
         const dkey = [...obj.days.keys()][0];
         const info = obj.days.get(dkey);
         expectedSec = expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, expectedMode, !!info.pairs?.length);
       } else {
-        // compute range
         const range = periodRange(obj.period, weekStart);
         if (expectedMode === 'calendar'){
-          // calendar working days in full period
           expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); // Sun..Thu
           if (satPolicy === 'calendar') expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); // Saturday
-          // Friday always off
         } else {
-          // only days with punches
           for (const [dkey, info] of obj.days){
             expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
           }
@@ -523,7 +513,6 @@
         worked: obj.workedSec, expected: expectedSec, overtime: over, short
       });
 
-      // store details for modal + CSV
       groupedDetails.set(`${obj.empId}||${obj.name}||${obj.period}`, {
         ...obj, expectedSec, over, short
       });
@@ -543,28 +532,21 @@
       </tr>
     `).join('');
 
-    // details buttons
     [...tbody.querySelectorAll('button[data-key]')].forEach(btn => btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key'))));
 
-    // KPIs
     updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
 
-    // policy hint
     const modeText = expectedMode==='calendar' ? 'أيام العمل التقويمية' : 'الأيام التي بها بصمة';
     const satText = satPolicy==='punch' ? 'السبت يُحتسب فقط عند وجود بصمة'
                  : satPolicy==='calendar' ? 'السبت يُحتسب تقويمياً دائماً'
                  : 'السبت لا يُحتسب';
     hintPolicy.textContent = `سياسة الحساب: ${modeText} — ${satText}. الجمعة مستبعدة دائماً.`;
 
-    // CSVs
     lastSummaryCSV = buildSummaryCSV(rows);
     lastDetailedCSV = buildDetailedCSV();
   }
 
-  /* === Helpers & business rules === */
-
   function expectedForDayKey(dkey, dow, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch){
-    // JS dow: 0=الأحد,1=الاثنين,...,5=الجمعة,6=السبت
     if (dow >= 0 && dow <= 4) return expectedWD; // Sun..Thu
     if (dow === 5) return 0; // Friday off
     if (dow === 6){
@@ -828,7 +810,9 @@
     authBox.style.display = 'none';
     punchBox.style.display = '';
   }
-
+  btnPunchIn.classList.add('flash');
+  setTimeout(()=>btnPunchIn.classList.remove('flash'),400);
+ 
   btnPunchIn.addEventListener('click', () => {
     const active = getActive(); if (!active) return;
     const db = readDB(); ensureEmp(db, active.empId);
@@ -903,22 +887,20 @@
     return total;
   }
 
-  function computeExpectedRange(start, end){
-    const expectedWD = (+expectedWDInp.value||0) * 3600;
-    const expectedSat = (+expectedSatInp.value||0) * 3600;
-    const satPolicy = satPolicySel.value;
-    const expectedMode = expectedModeSel.value;
+function computeExpectedRange(start, end) {
+  const expectedWD = (+expectedWDInp.value||0) * 3600;
+  const expectedSat = (+expectedSatInp.value||0) * 3600;
+  const satPolicy = satPolicySel.value;
 
-    let total = 0;
-    const current = new Date(start);
-    while (current <= end){
-      const dow = current.getDay(); 
-      const hasPunch = true; 
-      total += calculateExpectedForDay(dow, expectedWD, expectedSat, satPolicy, expectedMode, hasPunch);
-      current.setDate(current.getDate()+1);
-    }
-    return (expectedMode==='calendar') ? total : 0; 
+  let total = 0;
+  const current = new Date(start);
+  while (current <= end) {
+    const dow = current.getDay();
+    total += expectedForDayKey('', dow, expectedWD, expectedSat, satPolicy, 'calendar', true);
+    current.setDate(current.getDate()+1);
   }
+  return total;
+}
 
   function computeExpectedPunched(emp, start, end){
     const expectedWD = (+expectedWDInp.value||0) * 3600;
