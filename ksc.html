@@ -569,12 +569,13 @@
       return total;
     }
 
+    // ---- Export helper ----
     function downloadCSV(rows, filename) {
       const csv = rows.map(r => 
         r.map(x => (',' in (x+'') ? '"'+(x+'').replace(/"/g,'""')+'"' : x)
          .join(',')
       ).join('\n');
-      )
+      
       const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob); 
       const a = document.createElement('a'); 
@@ -584,15 +585,18 @@
       URL.revokeObjectURL(url);
     }
 
+    // ---- Tab Navigation ----
     function initTabs() {
       const tabLinks = document.querySelectorAll('.tab-link');
       const actionButtons = document.querySelectorAll('.action-btn[data-tab]');
       
+      // Set active tab based on URL hash or default to dashboard
       let activeTab = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
       if (!document.getElementById(activeTab)) activeTab = 'dashboard';
       
       showTab(activeTab);
       
+      // Add event listeners to tab links
       tabLinks.forEach(link => {
         link.addEventListener('click', function(e) {
           e.preventDefault();
@@ -602,6 +606,7 @@
         });
       });
       
+      // Add event listeners to action buttons
       actionButtons.forEach(button => {
         button.addEventListener('click', function() {
           const tabId = this.getAttribute('data-tab');
@@ -612,15 +617,18 @@
     }
     
     function showTab(tabId) {
+      // Hide all tabs
       document.querySelectorAll('.tab-container').forEach(tab => {
         tab.classList.remove('active');
       });
       
+      // Show selected tab
       const activeTab = document.getElementById(tabId);
       if (activeTab) {
         activeTab.classList.add('active');
       }
       
+      // Update active nav link
       document.querySelectorAll('.nav a').forEach(link => {
         link.classList.remove('active');
       });
@@ -630,6 +638,7 @@
         activeNavLink.classList.add('active');
       }
       
+      // Refresh data for the active tab
       refreshTabData(tabId);
     }
     
@@ -653,8 +662,10 @@
       }
     }
     
+    // ---- Dashboard Functions ----
     function refreshDashboard(active, db) {
       if (!active) {
+        // Show login prompt if not logged in
         $('dash-today').textContent = '00:00';
         $('dash-left').textContent = '00:00';
         $('dash-week').textContent = '00:00';
@@ -668,13 +679,16 @@
       const key = ymd(today);
       const pairs = emp.punches[key] || [];
       
+      // Today's worked hours
       const workedSec = sumPairs(pairs);
       $('dash-today').textContent = secToHHMM(workedSec);
       
+      // Today's remaining hours
       const expectedSec = expectedSecondsForDate(today, pairs.length > 0);
       const leftSec = Math.max(0, expectedSec - workedSec);
       $('dash-left').textContent = secToHHMM(leftSec);
       
+      // Week's worked hours
       const ws = new Date(today); 
       ws.setDate(today.getDate() - today.getDay());
       const we = new Date(ws); 
@@ -682,6 +696,7 @@
       const wWorked = computeRangeWorked(emp, ws, we);
       $('dash-week').textContent = secToHHMM(wWorked);
       
+      // Last action
       if (!pairs.length) {
         $('dash-last').textContent = '—';
       } else {
@@ -689,6 +704,7 @@
         $('dash-last').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
       }
       
+      // Today's punches table
       if (!pairs.length) {
         $('dash-todayTable').innerHTML = '<tr><td colspan="2" class="small note">لا يوجد سجلات.</td></tr>';
       } else {
@@ -698,8 +714,10 @@
       }
     }
     
+    // ---- Punch Functions ----
     function refreshPunch(active, db) {
       if (!active) {
+        // Redirect to auth if not logged in
         showTab('auth');
         return;
       }
@@ -744,6 +762,7 @@
       }
     }
     
+    // ---- Summary Functions ----
     function refreshSummary(active, db) {
       const authState = $('authState');
       if (!active) { 
@@ -777,6 +796,7 @@
         $('lastAction').textContent = last.out ? ('خروج ' + last.out) : ('دخول ' + last.in);
       }
       
+      // Week (start Sunday)
       const ws = new Date(today); 
       ws.setDate(today.getDate() - today.getDay());
       const we = new Date(ws); 
@@ -788,13 +808,16 @@
       $('wExpected').textContent = secToHHMM(wExpected);
       $('wLeft').textContent = secToHHMM(Math.max(0, wExpected - wWorked));
       
+      // Month
       const ms = new Date(today.getFullYear(), today.getMonth(), 1);
       const me = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       const mWorked = computeRangeWorked(emp, ms, me);
       $('mWorked').textContent = secToHHMM(mWorked);
     }
     
+    // ---- Admin Functions ----
     function refreshAdmin() {
+      // Auto open if already logged as admin
       if (localStorage.getItem(LS_ADMIN) === '1') {
         $('gateBox').style.display = 'none'; 
         $('adminBox').style.display = '';
@@ -805,6 +828,7 @@
       }
     }
     
+    // ---- Authentication Functions ----
     function initAuth() {
       const empId = $('empId'), empPin = $('empPin'), msg = $('msg');
       const regBox = $('registerBox'), toRegister = $('toRegister'), cancelReg = $('cancelReg');
@@ -871,12 +895,14 @@
         regMsg.textContent = 'تم التسجيل! بإمكانك الآن تسجيل الدخول.';
       };
       
+      // Auto-redirect if already logged
       const active = getActive();
       if (active && active.empId) { 
         showTab('dashboard');
       }
     }
     
+    // ---- Punch Functions ----
     const allowedZones = [
       { name: 'النادي الرئيسي', lat: 25.05962, lng: 56.348197, radius: 150 },
       { name: 'الملعب الفرعي', lat: 25.045830, lng: 56.358105, radius: 150 },
@@ -979,6 +1005,7 @@
       $('btnOut').onclick = () => handlePunch('out');
     }
     
+    // ---- Summary Functions ----
     function initSummary() {
       $('download').onclick = () => {
         const active = getActive();
@@ -1000,6 +1027,7 @@
       };
     }
     
+    // ---- Admin Functions ----
     const state = {
       employees: {},
       leaves: [],
@@ -1073,8 +1101,11 @@
     }
     
     async function postToScript(action, payload) {
+      // This is a placeholder for the actual implementation
+      // In a real implementation, you would make a fetch request to your server
       console.log(`Would send ${action} with payload:`, payload);
       
+      // Simulate API call
       return new Promise(resolve => {
         setTimeout(() => {
           resolve({ ok: true, message: 'تمت العملية بنجاح (محاكاة)' });
@@ -1083,6 +1114,7 @@
     }
     
     function initAdmin() {
+      // --- Gate ---
       $('btnAdminLogin').onclick = () => {
         const pass = $('adminPass').value.trim();
         const ok = pass && pass === state.settings.adminPass;
@@ -1103,6 +1135,7 @@
         showTab('auth');
       };
       
+      // --- Employees actions ---
       $('btnAddEmp').onclick = () => {
         const name = $('empNameIn').value.trim();
         const id = $('empIdIn').value.trim();
@@ -1118,6 +1151,7 @@
         saveAdminState(); 
         renderEmployees();
         
+        // also store to user DB (used by punch pages)
         const db = readDB(); 
         db[id] = db[id] || { name: '', pin: '', punches: {} };
         db[id].name = name; 
@@ -1149,6 +1183,7 @@
         writeDB(db);
       };
       
+      // --- Settings ---
       $('btnSaveSettings').onclick = () => {
         state.settings.wdHours = +$('confWDDuration').value || 7;
         state.settings.satHours = +$('confSatDuration').value || 3;
@@ -1157,6 +1192,7 @@
         alert('تم حفظ الإعدادات.');
       };
       
+      // --- Leaves ---
       $('btnAddLeave').onclick = async () => {
         const id = $('lvEmpId').value.trim();
         const type = $('lvType').value;
@@ -1215,6 +1251,7 @@
       };
     }
     
+    // ---- Initialize Everything ----
     document.addEventListener('DOMContentLoaded', function() {
       initTabs();
       initAuth();
@@ -1222,6 +1259,7 @@
       initSummary();
       initAdmin();
       
+      // Auto-refresh dashboard every minute
       setInterval(() => {
         if (document.getElementById('dashboard').classList.contains('active')) {
           const active = getActive();
