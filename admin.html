@@ -126,7 +126,6 @@
             </div>
           </div>
 
-          <!-- Settings -->
           <div class="card">
             <h2>الإعدادات</h2>
             <div class="row">
@@ -150,7 +149,6 @@
           </div>
         </div>
 
-        <!-- Leaves -->
         <div class="card">
           <h2>الإجازات</h2>
           <div class="row">
@@ -197,203 +195,200 @@
     <footer class="note" style="margin-top:auto;padding-top:10px;text-align:center">© نادي كلباء الرياضي الثقافي</footer>
   </div>
 
-  <script>
-    // ===== Keys & State =====
-    const EMP_DB_KEY = 'kscEmployees';
-    const ADMIN_STATE = 'kscAdminState'; // { settings:{wdHours,satHours,adminPass}, employees:{}, leaves:[] }
-    const LS_ADMIN = 'kscAdminLogged';   // "1" when logged in
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn_r3U3bIk5t-b77Pn1Jv4oJfU5YF1qKTOY-nTiRZOpUdtgQT/exec";
+  const EMP_DB_KEY = 'kscEmployees';
+  const ADMIN_STATE = 'kscAdminState';
+  const LS_ADMIN = 'kscAdminLogged';
+  const $ = id => document.getElementById(id);
 
-    // ===== Helpers =====
-    const $ = id => document.getElementById(id);
-    function readAdmin(){ try{return JSON.parse(localStorage.getItem(ADMIN_STATE)||'{}')}catch{return {}} }
-    function saveAdmin(s){ localStorage.setItem(ADMIN_STATE, JSON.stringify(s)); }
-    function readEmpDB(){ try{return JSON.parse(localStorage.getItem(EMP_DB_KEY)||'{}')}catch{return {}} }
-    function writeEmpDB(db){ localStorage.setItem(EMP_DB_KEY, JSON.stringify(db)); }
-    const ymd = d => d.toISOString().slice(0,10);
-    const pad = n => String(n).padStart(2,'0');
-    const timeToSec = hhmm => { if(!hhmm) return 0; const [h,m]=hhmm.split(':').map(Number); return h*3600+m*60; };
-    const secToHHMM = sec => { sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return pad(h)+':'+pad(m); };
-    const sumPairs = pairs => (pairs||[]).reduce((a,p)=>a+Math.max(0,timeToSec(p.out||p.in)-timeToSec(p.in||p.out)),0);
-
-    // ===== Auth =====
-    function refreshAuth(){
-      const logged = localStorage.getItem(LS_ADMIN)==='1';
-      $('authTag').textContent = logged ? 'إداري' : 'غير مسجل';
-      $('gateBox').style.display = '';
-      $('adminBox').style.display = logged ? '' : 'none';
+  // ==== Helper to send data to Apps Script ====
+  async function postToScript(action, payload) {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, payload }),
+      });
+      return await res.json();
+    } catch (err) {
+      console.error("Script error:", err);
+      alert("⚠️ لم يتم الاتصال بـ Google Sheet. تحقق من الإنترنت أو رابط السكربت.");
+      return { ok: false, error: err.message };
     }
+  }
 
-    function initGate(){
-      $('btnAdminLogin').onclick = () => {
-        const pass = ($('adminPass').value||'').trim();
-        const st = readAdmin();
-        const expected = (st.settings && st.settings.adminPass) || 'kalbaHR2025';
-        if(pass && pass===expected){
-          localStorage.setItem(LS_ADMIN,'1');
-          $('gateMsg').textContent = 'تم الدخول.';
-          refreshAll();
-        }else{
-          $('gateMsg').textContent = 'رمز الإدارة غير صحيح.';
-        }
-      };
-      $('btnLogout').onclick = () => {
-        localStorage.removeItem(LS_ADMIN);
-        refreshAuth();
-      };
-    }
+  function readAdmin(){ try{return JSON.parse(localStorage.getItem(ADMIN_STATE)||'{}')}catch{return {}} }
+  function saveAdmin(s){ localStorage.setItem(ADMIN_STATE, JSON.stringify(s)); }
+  function readEmpDB(){ try{return JSON.parse(localStorage.getItem(EMP_DB_KEY)||'{}')}catch{return {}} }
+  function writeEmpDB(db){ localStorage.setItem(EMP_DB_KEY, JSON.stringify(db)); }
+  const ymd = d => d.toISOString().slice(0,10);
+  const pad = n => String(n).padStart(2,'0');
+  const timeToSec = hhmm => { if(!hhmm) return 0; const [h,m]=hhmm.split(':').map(Number); return h*3600+m*60; };
+  const secToHHMM = sec => { sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return pad(h)+':'+pad(m); };
+  const sumPairs = pairs => (pairs||[]).reduce((a,p)=>a+Math.max(0,timeToSec(p.out||p.in)-timeToSec(p.in||p.out)),0);
 
-    // ===== Employees CRUD =====
-    function renderEmployees(){
+  // ===== Auth =====
+  function refreshAuth(){
+    const logged = localStorage.getItem(LS_ADMIN)==='1';
+    $('authTag').textContent = logged ? 'إداري' : 'غير مسجل';
+    $('gateBox').style.display = '';
+    $('adminBox').style.display = logged ? '' : 'none';
+  }
+
+  function initGate(){
+    $('btnAdminLogin').onclick = () => {
+      const pass = ($('adminPass').value||'').trim();
       const st = readAdmin();
-      const tbody = $('empTable');
-      const employees = st.employees || {};
-      const ids = Object.keys(employees);
-      if(!ids.length){ tbody.innerHTML = '<tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr>'; return; }
-      tbody.innerHTML = ids.map(id=>{
-        const e = employees[id];
-        return '<tr><td>'+e.name+'</td><td>'+id+'</td><td>'+(e.active?'نشط':'موقوف')+'</td></tr>';
-      }).join('');
-      $('kEmployees').textContent = ids.length;
-    }
-
-    function addOrUpdateEmp(){
-      const name = ($('empNameIn').value||'').trim();
-      const id = ($('empIdIn').value||'').trim();
-      const pin = ($('empPinIn').value||'').trim();
-      const active = $('empActiveIn').value==='1';
-      if(!name||!id||!pin){ alert('أدخلي الاسم والرقم الوظيفي والـ PIN.'); return; }
-
-      const st = readAdmin();
-      st.employees = st.employees || {};
-      st.employees[id] = { name, pin, active };
-      saveAdmin(st);
-
-      // sync to employee DB (punch storage)
-      const db = readEmpDB();
-      db[id] = db[id] || { name:'', pin:'', punches:{} };
-      db[id].name = name; db[id].pin = pin; db[id].punches = db[id].punches || {};
-      writeEmpDB(db);
-
-      renderEmployees();
-      alert('تم الحفظ.');
-    }
-
-    function deleteEmp(){
-      const id = ($('empIdIn').value||'').trim();
-      if(!id){ alert('أدخلي الرقم الوظيفي المراد حذفه.'); return; }
-      const st = readAdmin();
-      if(!st.employees || !st.employees[id]){ alert('الموظف غير موجود.'); return; }
-      if(!confirm('تأكيد حذف الموظف وجميع سجلاته المحلية؟')) return;
-
-      delete st.employees[id];
-      saveAdmin(st);
-
-      const db = readEmpDB();
-      delete db[id];
-      writeEmpDB(db);
-
-      renderEmployees();
-      alert('تم الحذف.');
-    }
-
-    // ===== Settings =====
-    function loadSettings(){
-      const st = readAdmin();
-      $('confWDDuration').value = (st.settings && st.settings.wdHours) || 7;
-      $('confSatDuration').value = (st.settings && st.settings.satHours) || 3;
-      $('confAdminPass').value = (st.settings && st.settings.adminPass) || 'kalbaHR2025';
-    }
-    function saveSettings(){
-      const st = readAdmin();
-      st.settings = st.settings || {};
-      st.settings.wdHours = +$('confWDDuration').value || 7;
-      st.settings.satHours = +$('confSatDuration').value || 3;
-      st.settings.adminPass = ($('confAdminPass').value||'kalbaHR2025');
-      saveAdmin(st);
-      alert('تم حفظ الإعدادات.');
-    }
-
-    // ===== Leaves =====
-    function renderLeaves(){
-      const st = readAdmin();
-      const tbody = $('lvTable');
-      const leaves = st.leaves || [];
-      if(!leaves.length){ tbody.innerHTML = '<tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr>'; }
-      else {
-        tbody.innerHTML = leaves.map(l=>'<tr><td>'+l.id+'</td><td>'+l.type+'</td><td>'+l.from+'</td><td>'+l.to+'</td><td>'+(l.note||'')+'</td></tr>').join('');
+      const expected = (st.settings && st.settings.adminPass) || 'kalbaHR2025';
+      if(pass && pass===expected){
+        localStorage.setItem(LS_ADMIN,'1');
+        $('gateMsg').textContent = 'تم الدخول.';
+        refreshAll();
+      }else{
+        $('gateMsg').textContent = 'رمز الإدارة غير صحيح.';
       }
-      $('kLeaves').textContent = leaves.length;
-    }
-    function addLeave(){
-      const id = ($('lvEmpId').value||'').trim();
-      const type = $('lvType').value;
-      const from = $('lvFrom').value;
-      const to = $('lvTo').value || from;
-      const note = ($('lvNote').value||'').trim();
-      if(!id || !from){ alert('الرقم الوظيفي وتاريخ البداية مطلوبان.'); return; }
-      const st = readAdmin();
-      st.leaves = st.leaves || [];
-      st.leaves.push({ id, type, from, to, note });
-      saveAdmin(st);
-      renderLeaves();
-      alert('تم تسجيل الإجازة.');
-    }
-
-    // ===== CSV helpers =====
-    function downloadCSV(rows, filename){
-      const csv = rows.map(r=>r.map(x=>{
-        const v = (x+''); return v.includes(',') ? '"'+v.replace(/"/g,'""')+'"' : v;
-      }).join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
-      URL.revokeObjectURL(url);
-    }
-    function exportEmployees(){
-      const st = readAdmin(); const rows=[['EmpID','Name','PIN','Active']];
-      Object.keys(st.employees||{}).forEach(id=>{
-        const e=st.employees[id]; rows.push([id, e.name, e.pin, e.active?'1':'0']);
-      });
-      downloadCSV(rows, 'employees.csv');
-    }
-    function exportLeaves(){
-      const st = readAdmin(); const rows=[['EmpID','Type','From','To','Note']];
-      (st.leaves||[]).forEach(l=>rows.push([l.id,l.type,l.from,l.to,l.note||'']));
-      downloadCSV(rows, 'leaves.csv');
-    }
-
-    // ===== KPIs =====
-    function refreshKPIs(){
-      const db = readEmpDB();
-      const today = ymd(new Date());
-      let activeToday = 0;
-      Object.values(db).forEach(emp=>{
-        if(emp && emp.punches && (emp.punches[today]||[]).length>0) activeToday++;
-      });
-      $('kActiveToday').textContent = activeToday;
-    }
-
-    function refreshAll(){
+    };
+    $('btnLogout').onclick = () => {
+      localStorage.removeItem(LS_ADMIN);
       refreshAuth();
-      const logged = localStorage.getItem(LS_ADMIN)==='1';
-      if(!logged) return;
-      loadSettings();
-      renderEmployees();
-      renderLeaves();
-      refreshKPIs();
-    }
+    };
+  }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      initGate();
-      $('btnAddEmp').onclick = addOrUpdateEmp;
-      $('btnDelEmp').onclick = deleteEmp;
-      $('btnSaveSettings').onclick = saveSettings;
-      $('btnAddLeave').onclick = addLeave;
-      $('btnExportEmployees').onclick = exportEmployees;
-      $('btnExportLeaves').onclick = exportLeaves;
-      refreshAll();
-      setInterval(()=>{ if(localStorage.getItem(LS_ADMIN)==='1'){ refreshKPIs(); } }, 60000);
+  // ===== Employees CRUD =====
+  async function addOrUpdateEmp(){
+    const name = ($('empNameIn').value||'').trim();
+    const id = ($('empIdIn').value||'').trim();
+    const pin = ($('empPinIn').value||'').trim();
+    const active = $('empActiveIn').value==='1';
+    if(!name||!id||!pin){ alert('أدخلي الاسم والرقم الوظيفي والـ PIN.'); return; }
+
+    const st = readAdmin();
+    st.employees = st.employees || {};
+    st.employees[id] = { name, pin, active };
+    saveAdmin(st);
+
+    // sync to local employee DB
+    const db = readEmpDB();
+    db[id] = db[id] || { name:'', pin:'', punches:{} };
+    db[id].name = name; db[id].pin = pin;
+    writeEmpDB(db);
+
+    // send to Google Sheet
+    const res = await postToScript("addEmployee", { id, name, pin, active });
+    if (res.ok) console.log("Synced to Google Sheet ✅");
+    else console.warn("Sync failed:", res.error);
+
+    renderEmployees();
+    alert('تم الحفظ.');
+  }
+
+  async function deleteEmp(){
+    const id = ($('empIdIn').value||'').trim();
+    if(!id){ alert('أدخلي الرقم الوظيفي المراد حذفه.'); return; }
+    const st = readAdmin();
+    if(!st.employees || !st.employees[id]){ alert('الموظف غير موجود.'); return; }
+    if(!confirm('تأكيد حذف الموظف وجميع سجلاته المحلية؟')) return;
+
+    delete st.employees[id];
+    saveAdmin(st);
+    const db = readEmpDB();
+    delete db[id];
+    writeEmpDB(db);
+    renderEmployees();
+
+    // Optional: if you want delete to also update Sheet, you can clear row manually there
+    alert('تم الحذف محليًا. (لحذف الصف من Google Sheet، احذف يدويًا من الجدول أو أضف وظيفة deleteEmployee في السكربت)');
+  }
+
+  function renderEmployees(){
+    const st = readAdmin();
+    const tbody = $('empTable');
+    const employees = st.employees || {};
+    const ids = Object.keys(employees);
+    if(!ids.length){ tbody.innerHTML = '<tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr>'; return; }
+    tbody.innerHTML = ids.map(id=>{
+      const e = employees[id];
+      return '<tr><td>'+e.name+'</td><td>'+id+'</td><td>'+(e.active?'نشط':'موقوف')+'</td></tr>';
+    }).join('');
+    $('kEmployees').textContent = ids.length;
+  }
+
+  // ===== Settings & Leaves & Others (same as before) =====
+  function loadSettings(){
+    const st = readAdmin();
+    $('confWDDuration').value = (st.settings && st.settings.wdHours) || 7;
+    $('confSatDuration').value = (st.settings && st.settings.satHours) || 3;
+    $('confAdminPass').value = (st.settings && st.settings.adminPass) || 'kalbaHR2025';
+  }
+  function saveSettings(){
+    const st = readAdmin();
+    st.settings = st.settings || {};
+    st.settings.wdHours = +$('confWDDuration').value || 7;
+    st.settings.satHours = +$('confSatDuration').value || 3;
+    st.settings.adminPass = ($('confAdminPass').value||'kalbaHR2025');
+    saveAdmin(st);
+    alert('تم حفظ الإعدادات.');
+  }
+
+  function renderLeaves(){
+    const st = readAdmin();
+    const tbody = $('lvTable');
+    const leaves = st.leaves || [];
+    if(!leaves.length){ tbody.innerHTML = '<tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr>'; }
+    else {
+      tbody.innerHTML = leaves.map(l=>'<tr><td>'+l.id+'</td><td>'+l.type+'</td><td>'+l.from+'</td><td>'+l.to+'</td><td>'+(l.note||'')+'</td></tr>').join('');
+    }
+    $('kLeaves').textContent = leaves.length;
+  }
+  function addLeave(){
+    const id = ($('lvEmpId').value||'').trim();
+    const type = $('lvType').value;
+    const from = $('lvFrom').value;
+    const to = $('lvTo').value || from;
+    const note = ($('lvNote').value||'').trim();
+    if(!id || !from){ alert('الرقم الوظيفي وتاريخ البداية مطلوبان.'); return; }
+    const st = readAdmin();
+    st.leaves = st.leaves || [];
+    st.leaves.push({ id, type, from, to, note });
+    saveAdmin(st);
+    renderLeaves();
+    postToScript("addLeave", { id, type, from, to, note });
+    alert('تم تسجيل الإجازة.');
+  }
+
+  function refreshKPIs(){
+    const db = readEmpDB();
+    const today = ymd(new Date());
+    let activeToday = 0;
+    Object.values(db).forEach(emp=>{
+      if(emp && emp.punches && (emp.punches[today]||[]).length>0) activeToday++;
     });
-  </script>
+    $('kActiveToday').textContent = activeToday;
+  }
+
+  function refreshAll(){
+    refreshAuth();
+    const logged = localStorage.getItem(LS_ADMIN)==='1';
+    if(!logged) return;
+    loadSettings();
+    renderEmployees();
+    renderLeaves();
+    refreshKPIs();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initGate();
+    $('btnAddEmp').onclick = addOrUpdateEmp;
+    $('btnDelEmp').onclick = deleteEmp;
+    $('btnSaveSettings').onclick = saveSettings;
+    $('btnAddLeave').onclick = addLeave;
+    $('btnExportEmployees').onclick = exportEmployees;
+    $('btnExportLeaves').onclick = exportLeaves;
+    refreshAll();
+    setInterval(()=>{ if(localStorage.getItem(LS_ADMIN)==='1'){ refreshKPIs(); } }, 60000);
+  });
+</script>
+
 </body>
 </html>
