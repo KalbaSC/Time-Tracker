@@ -639,7 +639,8 @@
         <td class="left">${secToHHMM(day.workedSec)}</td>
       </tr>`;
     }).join('');
-    modalBackdrop.style.display = 'flex'; modalBackdrop.setAttribute('aria-hidden','false');
+    modalBackdrop.style.display = 'flex';
+    modalBackdrop.removeAttribute('aria-hidden');
   }
 
   function dowBadge(dow){
