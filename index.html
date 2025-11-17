@@ -138,6 +138,7 @@
             <option value="daily">يومي</option>
             <option value="weekly">أسبوعي</option>
             <option value="monthly">شهري</option>
+            <option value="range">فترة محددة</option>
           </select>
         </div>
 
@@ -401,6 +402,9 @@
       else { 
         periodKey = 'M:'+ym(row.date); 
       }
+      else if (view === 'range') {
+        periodKey = 'RANGE';
+      }
 
       const key = `${row.empId}||${row.name}||${periodKey}`;
       if (!map.has(key)){
@@ -456,6 +460,21 @@
           debugText += `Weekly Punched: ${obj.days.size} days with punches<br>`;
         }
       }
+        else if (view === 'range') {
+    expectedSec = 0;
+    for (const [dkey, info] of obj.days) {
+      expectedSec += expectedForDayKey(
+        dkey,
+        info.dow,
+        expectedWD,
+        expectedSat,
+        satPolicy,
+        expectedMode,
+        !!info.pairs?.length
+      );
+    }
+    debugText += `Range View: days=${obj.days.size}<br>`;
+  }  
       else {
         if (expectedMode === 'calendar'){
           expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
@@ -679,21 +698,33 @@
     const date = normalizeDate(d); const dow = date.getDay(); const diff = (dow - startDow + 7) % 7;
     date.setDate(date.getDate() - diff); return date;
   }
-  function prettyPeriod(p, ws){
-    if (p.startsWith('W:')){ 
-      const d=new Date(p.slice(2)); 
-      const end=new Date(d); 
-      end.setDate(end.getDate()+6);
-      const names=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-      return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${names[ws]})`; 
-    }
-    if (p.startsWith('M:')) {
-      const [y,m] = p.slice(2).split('-').map(Number);
-      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-      return `${monthNames[m-1]} ${y}`;
-    }
-    return p;
+function prettyPeriod(p, ws){
+  if (p.startsWith('W:')){ 
+    const d = new Date(p.slice(2)); 
+    const end = new Date(d); 
+    end.setDate(end.getDate() + 6);
+    const names = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    return `أسبوع ${ymd(d)} → ${ymd(end)} (بداية ${names[ws]})`; 
   }
+
+  if (p.startsWith('M:')) {
+    const [y, m] = p.slice(2).split('-').map(Number);
+    const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    return `${monthNames[m-1]} ${y}`;
+  }
+
+  if (p === 'RANGE') {
+    const from = fromDateInp.value;
+    const to   = toDateInp.value;
+
+    if (!from || !to) return "الفترة المحددة";
+
+    return `من ${formatDate(from)} إلى ${formatDate(to)}`;
+  }
+
+  return p;
+}
+
   function countWeekdays(start,end,allowedDows){
     const set = new Set(allowedDows); let cnt=0;
     const d = new Date(start);
