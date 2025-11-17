@@ -725,6 +725,13 @@ function prettyPeriod(p, ws){
 
   return p;
 }
+function formatDate(v) {
+  const d = new Date(v);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
 
   function countWeekdays(start,end,allowedDows){
     const set = new Set(allowedDows); let cnt=0;
