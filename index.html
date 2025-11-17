@@ -399,11 +399,11 @@
       else if (view === 'weekly'){ 
         periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); 
       }
-      else { 
-        periodKey = 'M:'+ym(row.date); 
-      }
       else if (view === 'range') {
         periodKey = 'RANGE';
+      }  
+      else { 
+        periodKey = 'M:'+ym(row.date); 
       }
 
       const key = `${row.empId}||${row.name}||${periodKey}`;
