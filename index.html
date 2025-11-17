@@ -306,8 +306,8 @@
     .forEach(el => el.addEventListener('change', render));
   closeModalBtn.addEventListener('click', closeModal);
   modalBackdrop.addEventListener('click', e => { if(e.target===modalBackdrop) closeModal(); });
-  dlSumBtn.addEventListener('click', ()=> downloadCSV(lastSummaryCSV, 'timecard_summary.csv'));
-  dlDetBtn.addEventListener('click', ()=> downloadCSV(lastDetailedCSV, 'timecard_details.csv'));
+  dlSumBtn.addEventListener('click', downloadSummaryExcel);
+  dlDetBtn.addEventListener('click', downloadDetailsExcel);
 
   function downloadCSV(text, filename){
     if (!text){ alert('لا توجد بيانات للتنزيل بعد.'); return; }
@@ -622,6 +622,25 @@
     return lines.map(row => row.map(csvEsc).join(',')).join('\n');
     function csvEsc(s){ s=String(s); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
   }
+function downloadSummaryExcel() {
+  const rows = lastSummaryCSV.split('\n').map(r => r.split(','));
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Summary");
+
+  XLSX.writeFile(wb, "timecard_summary.xlsx");
+}
+
+function downloadDetailsExcel() {
+  const rows = lastDetailedCSV.split('\n').map(r => r.split(','));
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Details");
+
+  XLSX.writeFile(wb, "timecard_details.xlsx");
+}
 
   function openDetails(key){
     const obj = groupedDetails.get(key); if (!obj) return;
