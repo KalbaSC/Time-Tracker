@@ -55,22 +55,20 @@
 
 <div class="container">
 
-  <!-- LOGIN -->
   <div id="loginBox" class="card">
     <h2>تسجيل دخول الإدارة</h2>
 
     <label>اسم المستخدم</label>
-    <input id="loginUser" placeholder="eman">
+    <input id="loginUser" placeholder="Username">
 
     <label>كلمة المرور</label>
-    <input id="loginPass" type="password" placeholder="eman123">
+    <input id="loginPass" type="password" placeholder="password">
 
     <button id="btnLogin">دخول</button>
 
     <p id="loginMsg" style="color:#aaa;margin-top:8px"></p>
   </div>
 
-  <!-- DASHBOARD -->
   <div id="adminBox" class="card" style="display:none;">
     <h2>إدارة الموظفين</h2>
 
@@ -79,11 +77,11 @@
     <div class="flex">
       <div class="col">
         <label>الاسم</label>
-        <input id="empName" placeholder="الاسم الثلاثي">
+        <input id="empName" placeholder="الاسم ">
       </div>
       <div class="col">
         <label>الرقم الوظيفي</label>
-        <input id="empId" placeholder="مثال: 1234">
+        <input id="empId" placeholder="مثال: 1">
       </div>
       <div class="col">
         <label>الرمز السري PIN</label>
@@ -130,14 +128,17 @@ $("btnLogin").onclick = () => {
 };
 
 async function loadEmployees() {
-await fetch(SCRIPT_URL, {
-  method: "POST",
-  mode: "no-cors",
-  body: JSON.stringify({...})
-});
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      action: "getEmployees",
+      payload: {}
+    })
+  });
+
   loadEmployeesFromCSV();
 }
-
 
 $("btnAdd").onclick = async () => {
   let name = $("empName").value.trim();
@@ -171,7 +172,8 @@ await fetch(SCRIPT_URL, {
 };
 
 async function loadEmployeesFromCSV() {
-  const url = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn_r3U3bIk5t-b77Pn1Jv4oJfU5YF1qKTOY-nTiRZOpUdtgQT/exec";
+  const url =
+    "https://docs.google.com/spreadsheets/d/173e77lcZPSE4cRujWMBJfSlrO8fSZTk7BhFidZmdA/pub?output=csv";
 
   const res = await fetch(url);
   const text = await res.text();
