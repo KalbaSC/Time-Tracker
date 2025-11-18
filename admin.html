@@ -133,6 +133,17 @@ $("btnLogin").onclick = () => {
     $("loginMsg").textContent = "❌ بيانات الدخول غير صحيحة";
   }
 };
+document.getElementById("loginPass").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    $("btnLogin").click();
+  }
+});
+
+document.getElementById("loginUser").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    $("btnLogin").click();
+  }
+});
 
 async function loadEmployees() {
   await fetch(SCRIPT_URL, {
