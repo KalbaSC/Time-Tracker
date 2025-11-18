@@ -178,23 +178,26 @@ $("btnDelete").onclick = async () => {
 };
 
 async function loadEmployeesFromCSV() {
-  const url ="https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
+  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
 
   const res = await fetch(url);
   const text = await res.text();
-  const rows = text.split("\n").map(r => r.split(","));
+
+  const rows = text
+    .split("\n")
+    .map(r => r.split(","))
+    .filter(r => r[0] && r[0].trim() !== "ID"); 
 
   let html = "";
-  for (let i = 1; i < rows.length; i++) {
-    const [id, name, pin, active] = rows[i];
-    if (!id) continue;
+  rows.forEach(r => {
+    const [id, name, pin, active] = r;
     html += `<tr><td>${name}</td><td>${id}</td><td>${pin}</td></tr>`;
-  }
+  });
 
-  document.getElementById("empTable").innerHTML = html;
-  document.getElementById("userCount").textContent = rows.length - 1;
+  $("empTable").innerHTML = html;
+  $("userCount").textContent = rows.length;
 }
-  
+
 </script>
 
 </body>
