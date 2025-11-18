@@ -1,296 +1,194 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>الإدارة | نظام البصمة - نادي كلباء</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة إدارة الموارد البشرية</title>
+
+  <!-- Tajawal Font -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --bg:#0b0b0b; --card:#111213; --accent:#f6c21a; --accent-2:#1f1f1f;
-      --text:#f2f2f2; --muted:#aaaaaa; --ok:#14b86a; --bad:#ef4444;
+      --text:#f2f2f2; --muted:#aaaaaa;
       --radius:18px; --shadow:0 6px 20px rgba(0,0,0,.25);
-      font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Kufi Arabic",sans-serif;
+      font-family:"Tajawal",sans-serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;background:var(--bg);color:var(--text)}
-    a{color:var(--accent);text-decoration:none}
-    .container{max-width:1200px;margin:0 auto;padding:24px;min-height:100vh;display:flex;flex-direction:column}
-    .header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)}
-    .brand-title{font-weight:800;letter-spacing:.5px}
-    .card{background:linear-gradient(180deg,#141515,#0f0f0f);border:1px solid #1f1f1f;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
-    .card h2{margin:0 0 12px 0;font-size:20px;color:var(--accent)}
+    body{background:var(--bg);color:var(--text);padding:20px}
+    .container{max-width:900px;margin:auto}
+
+    .card{
+      background:linear-gradient(180deg,#141515,#0f0f0f);
+      border:1px solid #1f1f1f;
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+      margin-bottom:20px;
+    }
+
+    h2{margin-bottom:14px;color:var(--accent)}
     label{display:block;margin-bottom:6px;color:var(--muted);font-size:14px}
-    input,select,button{width:100%;padding:12px;border-radius:12px;border:1px solid #2a2a2a;background:#0f0f0f;color:var(--text);transition:all .25s ease}
-    input:focus,select:focus{outline:none;border-color:var(--accent)}
-    button{cursor:pointer;background:var(--accent);color:#111;border-color:#d4a412;font-weight:800}
-    button:hover{background:#ffda41;transform:translateY(-2px)}
-    button.secondary{background:#1c1c1c;color:var(--text);border-color:#2b2b2b}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1 1 260px}
-    .note{color:var(--muted);font-size:13px}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .table{width:100%;border-collapse:collapse}
-    .table th,.table td{border-bottom:1px solid #222;padding:10px;text-align:right}
-    .small{font-size:12px}
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#1f1f1f;border:1px solid #2a2a2a;color:#aaa;font-size:12px}
-    .kpi{background:#0f0f0f;border:1px solid #212121;border-radius:14px;padding:16px;text-align:center}
-    .kpi .v{font-size:22px;font-weight:900;margin-top:4px}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .btn-danger{background:#2a1212;border-color:#4a1e1e;color:#f4b4b4}
-    @media(max-width:900px){.two{grid-template-columns:1fr} .container{padding:16px}}
+    input,select,button{
+      width:100%;padding:12px;border-radius:12px;
+      border:1px solid #2a2a2a;background:#0f0f0f;color:var(--text);
+      margin-bottom:10px;font-size:15px;
+    }
+    button{cursor:pointer;background:var(--accent);color:#111;font-weight:800;border:none}
+    button:hover{background:#ffda41}
+
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;border-bottom:1px solid #222;text-align:right}
+
+    .badge{
+      display:inline-block;padding:4px 10px;
+      border-radius:999px;background:#1f1f1f;color:#aaa;
+      font-size:13px;margin-bottom:10px;
+    }
+
+    .flex{display:flex;gap:10px;flex-wrap:wrap}
+    .col{flex:1 1 220px}
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="brand">
-        <img src="logo.png" alt="Kalba SC Logo" />
-        <div class="brand-title">نظام البصمة — إدارة الموارد البشرية</div>
-      </div>
-      <span class="badge" id="authTag">غير مسجل</span>
-    </header>
 
-    <main>
-      <!-- HR Login -->
-      <section id="gateBox" class="card">
-        <h2>تسجيل دخول الإدارة</h2>
-        <div class="row">
-          <div class="col">
-            <label>رمز مدير الموارد البشرية (HR)</label>
-            <input id="adminPass" type="password" placeholder="مثال: kalbaHR2025">
-          </div>
-          <div class="col">
-            <button id="btnAdminLogin">دخول الإدارة</button>
-          </div>
-          <div class="col">
-            <button id="btnLogout" class="secondary">تسجيل الخروج</button>
-          </div>
-        </div>
-        <p id="gateMsg" class="note" style="margin-top:6px"></p>
-      </section>
+<div class="container">
 
-      <!-- HR Dashboard -->
-      <section id="adminBox" class="card" style="display:none">
-        <div class="toolbar" style="justify-content:space-between;margin-bottom:10px">
-          <h2>لوحة التحكم</h2>
-          <span class="badge">الاتصال: محلي</span>
-        </div>
+  <!-- LOGIN -->
+  <div id="loginBox" class="card">
+    <h2>تسجيل دخول الإدارة</h2>
 
-        <!-- KPIs -->
-        <div class="row" style="margin-bottom:12px">
-          <div class="col kpi"><div class="t">عدد الموظفين</div><div id="kEmployees" class="v">0</div></div>
-          <div class="col kpi"><div class="t">نشطون اليوم</div><div id="kActiveToday" class="v">0</div></div>
-          <div class="col kpi"><div class="t">طلبات إجازة</div><div id="kLeaves" class="v">0</div></div>
-        </div>
+    <label>اسم المستخدم</label>
+    <input id="loginUser" placeholder="eman">
 
-        <div class="two">
-          <!-- Employees Management -->
-          <div class="card">
-            <h2>إدارة الموظفين</h2>
-            <div class="row">
-              <div class="col">
-                <label>الاسم</label>
-                <input id="empNameIn" placeholder="الاسم الثلاثي">
-              </div>
-              <div class="col">
-                <label>الرقم الوظيفي</label>
-                <input id="empIdIn" placeholder="مثال: 12034">
-              </div>
-              <div class="col">
-                <label>الرمز السري (PIN)</label>
-                <input id="empPinIn" type="password" inputmode="numeric" placeholder="4–6 أرقام">
-              </div>
-              <div class="col">
-                <label>الحالة</label>
-                <select id="empActiveIn">
-                  <option value="1">نشط</option>
-                  <option value="0">موقوف</option>
-                </select>
-              </div>
-            </div>
-            <div class="toolbar" style="margin-top:8px">
-              <button id="btnAddEmp">➕ إضافة / تحديث</button>
-              <button id="btnDelEmp" class="btn-danger">🗑️ حذف</button>
-              <button id="btnExportEmployees" class="secondary">📥 تنزيل الموظفين (CSV)</button>
-            </div>
-            <div style="margin-top:10px;max-height:320px;overflow:auto;border:1px solid #222;border-radius:12px">
-              <table class="table">
-                <thead><tr><th>الاسم</th><th>الرقم</th><th>الحالة</th></tr></thead>
-                <tbody id="empTable"><tr><td colspan="3" class="small">لا يوجد موظفون بعد.</td></tr></tbody>
-              </table>
-            </div>
-          </div>
+    <label>كلمة المرور</label>
+    <input id="loginPass" type="password" placeholder="eman123">
 
-          <div class="card">
-            <h2>الإعدادات</h2>
-            <div class="row">
-              <div class="col">
-                <label>ساعات العمل (الأحد–الخميس)</label>
-                <input id="confWDDuration" value="7" type="number" min="0" step="0.5">
-                <div class="note small">افتراضيًا 7 ساعات.</div>
-              </div>
-              <div class="col">
-                <label>ساعات السبت (اختياري)</label>
-                <input id="confSatDuration" value="3" type="number" min="0" step="0.5">
-              </div>
-              <div class="col">
-                <label>كلمة مرور الإدارة</label>
-                <input id="confAdminPass" type="password" placeholder="kalbaHR2025">
-              </div>
-            </div>
-            <div class="toolbar" style="margin-top:8px">
-              <button id="btnSaveSettings">💾 حفظ الإعدادات</button>
-            </div>
-          </div>
-        </div>
+    <button id="btnLogin">دخول</button>
 
-        <div class="card">
-          <h2>الإجازات</h2>
-          <div class="row">
-            <div class="col">
-              <label>الموظف (الرقم الوظيفي)</label>
-              <input id="lvEmpId" placeholder="1234">
-            </div>
-            <div class="col">
-              <label>النوع</label>
-              <select id="lvType">
-                <option value="Sick">مرضية</option>
-                <option value="Annual">سنوية</option>
-                <option value="Unpaid">بدون راتب</option>
-                <option value="Other">أخرى</option>
-              </select>
-            </div>
-            <div class="col">
-              <label>من تاريخ</label>
-              <input id="lvFrom" type="date">
-            </div>
-            <div class="col">
-              <label>إلى تاريخ</label>
-              <input id="lvTo" type="date">
-            </div>
-            <div class="col">
-              <label>ملاحظة</label>
-              <input id="lvNote" placeholder="تفاصيل (اختياري)">
-            </div>
-          </div>
-          <div class="toolbar" style="margin-top:8px">
-            <button id="btnAddLeave">➕ تسجيل إجازة</button>
-            <button id="btnExportLeaves" class="secondary">📥 تنزيل الإجازات (CSV)</button>
-          </div>
-          <div style="margin-top:10px;max-height:320px;overflow:auto;border:1px solid #222;border-radius:12px">
-            <table class="table">
-              <thead><tr><th>الرقم</th><th>النوع</th><th>من</th><th>إلى</th><th>ملاحظة</th></tr></thead>
-              <tbody id="lvTable"><tr><td colspan="5" class="small">لا يوجد سجلات بعد.</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="note" style="margin-top:auto;padding-top:10px;text-align:center">© نادي كلباء الرياضي الثقافي</footer>
+    <p id="loginMsg" style="color:#aaa;margin-top:8px"></p>
   </div>
 
+  <!-- DASHBOARD -->
+  <div id="adminBox" class="card" style="display:none;">
+    <h2>إدارة الموظفين</h2>
+
+    <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
+
+    <div class="flex">
+      <div class="col">
+        <label>الاسم</label>
+        <input id="empName" placeholder="الاسم الثلاثي">
+      </div>
+      <div class="col">
+        <label>الرقم الوظيفي</label>
+        <input id="empId" placeholder="مثال: 1234">
+      </div>
+      <div class="col">
+        <label>الرمز السري PIN</label>
+        <input id="empPin" type="password" placeholder="4 أرقام">
+      </div>
+    </div>
+
+    <div class="flex">
+      <button id="btnAdd" style="flex:1">➕ إضافة موظف</button>
+      <button id="btnDelete" style="flex:1;background:#882222">🗑️ حذف موظف</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>الاسم</th><th>الرقم</th><th>PIN</th>
+        </tr>
+      </thead>
+      <tbody id="empTable">
+        <tr><td colspan="3" style="text-align:center;color:#777">لا يوجد بيانات بعد.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn_r3U3bIk5t-b77Pn1Jv4oJfU5YF1qKTOY-nTiRZOpUdtgQT/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn_r3U3bIk5t-b77Pn1Jv4oJfU5YF1qKTOY-nTiRZOpUdtgQT/exec"; 
+
 const $ = id => document.getElementById(id);
 
-// ==== Helper to send to Apps Script (no-cors mode) ====
-async function postToScript(action, payload = {}) {
-  try {
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors", // ✅ bypasses CORS
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, payload }),
-    });
-    console.log("✅ Request sent to Google Apps Script (no-cors)");
-    return { ok: true };
-  } catch (err) {
-    console.error("❌ Script connection error:", err);
-    alert("⚠️ لم يتم الاتصال بـ Google Sheet. تحقق من الإنترنت أو رابط السكربت.");
-    return { ok: false };
+// ---------------- LOGIN ----------------
+$("btnLogin").onclick = () => {
+  let u = $("loginUser").value.trim();
+  let p = $("loginPass").value.trim();
+
+  if (u === "eman" && p === "eman123") {
+    sessionStorage.setItem("adminLogged", "1");
+    loadEmployees();
+    $("loginBox").style.display = "none";
+    $("adminBox").style.display = "block";
+  } else {
+    $("loginMsg").textContent = "❌ بيانات الدخول غير صحيحة";
   }
+};
+
+// ---------------- LOAD EMPLOYEES (READ) ----------------
+async function loadEmployees() {
+  const res = await fetch(SCRIPT_URL + "?action=getEmployees");
+  const data = await res.json();
+
+  const list = data.employees || [];
+  $("userCount").textContent = list.length;
+
+  let html = "";
+  list.forEach(e => {
+    html += `<tr>
+              <td>${e.name}</td>
+              <td>${e.id}</td>
+              <td>${e.pin}</td>
+            </tr>`;
+  });
+
+  $("empTable").innerHTML = html || 
+    `<tr><td colspan="3" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>`;
 }
 
-// ===== Auth =====
-function refreshAuth() {
-  const logged = sessionStorage.getItem("kscAdminLogged") === "1";
-  $("authTag").textContent = logged ? "إداري" : "غير مسجل";
-  $("gateBox").style.display = "";
-  $("adminBox").style.display = logged ? "" : "none";
-}
+// ---------------- ADD EMPLOYEE ----------------
+$("btnAdd").onclick = async () => {
+  let name = $("empName").value.trim();
+  let id = $("empId").value.trim();
+  let pin = $("empPin").value.trim();
 
-function initGate() {
-  $("btnAdminLogin").onclick = () => {
-    const pass = ($("adminPass").value || "").trim();
-    if (pass === "kalbaHR2025") {
-      sessionStorage.setItem("kscAdminLogged", "1");
-      refreshAll();
-    } else alert("رمز الإدارة غير صحيح.");
-  };
-  $("btnLogout").onclick = () => {
-    sessionStorage.removeItem("kscAdminLogged");
-    refreshAuth();
-  };
-}
+  if (!name || !id || !pin) return alert("⚠️ جميع الحقول مطلوبة");
 
-// ===== Employees =====
-async function addOrUpdateEmp() {
-  const name = ($("empNameIn").value || "").trim();
-  const id = ($("empIdIn").value || "").trim();
-  const pin = ($("empPinIn").value || "").trim();
-  const active = $("empActiveIn").value === "1";
-  if (!name || !id || !pin) return alert("أدخلي الاسم والرقم الوظيفي والـ PIN.");
+  await fetch(SCRIPT_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"addEmployee",
+      payload:{ name,id,pin }
+    })
+  });
 
-  await postToScript("addEmployee", { id, name, pin, active });
-  alert("✅ تم حفظ الموظف في Google Sheet.");
-}
+  alert("✔ تمت الإضافة");
+  loadEmployees();
+};
 
-async function deleteEmp() {
-  const id = ($("empIdIn").value || "").trim();
-  if (!id) return alert("أدخلي الرقم الوظيفي.");
-  if (!confirm("تأكيد حذف الموظف من Google Sheet؟")) return;
-  await postToScript("deleteEmployee", { id });
-  alert("🗑️ تم حذف الموظف من Google Sheet.");
-}
+// ---------------- DELETE EMPLOYEE ----------------
+$("btnDelete").onclick = async () => {
+  let id = $("empId").value.trim();
+  if (!id) return alert("⚠️ أدخلي الرقم الوظيفي للحذف");
 
-// ===== Leaves =====
-async function addLeave() {
-  const id = ($("lvEmpId").value || "").trim();
-  const type = $("lvType").value;
-  const from = $("lvFrom").value;
-  const to = $("lvTo").value || from;
-  const note = ($("lvNote").value || "").trim();
-  if (!id || !from) return alert("الرقم الوظيفي وتاريخ البداية مطلوبان.");
-  await postToScript("addLeave", { id, type, from, to, note });
-  alert("✅ تم تسجيل الإجازة في Google Sheet.");
-}
+  await fetch(SCRIPT_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"deleteEmployee",
+      payload:{ id }
+    })
+  });
 
-// ===== Placeholder: KPIs and table refresh =====
-// Since we can’t read responses in no-cors mode,
-// you can just show static info or use Google Sheet dashboard.
-
-function refreshAll() {
-  refreshAuth();
-  const logged = sessionStorage.getItem("kscAdminLogged") === "1";
-  if (!logged) return;
-  $("kEmployees").textContent = "—";
-  $("kLeaves").textContent = "—";
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  initGate();
-  $("btnAddEmp").onclick = addOrUpdateEmp;
-  $("btnDelEmp").onclick = deleteEmp;
-  $("btnAddLeave").onclick = addLeave;
-  $("btnSaveSettings").onclick = () => alert("الإعدادات محفوظة (محلي فقط).");
-  refreshAll();
-});
+  alert("🗑️ تم حذف الموظف");
+  loadEmployees();
+};
 </script>
 
 </body>
