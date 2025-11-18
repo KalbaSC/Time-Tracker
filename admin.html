@@ -115,7 +115,6 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn
 
 const $ = id => document.getElementById(id);
 
-// ---------------- LOGIN ----------------
 $("btnLogin").onclick = () => {
   let u = $("loginUser").value.trim();
   let p = $("loginPass").value.trim();
@@ -130,28 +129,21 @@ $("btnLogin").onclick = () => {
   }
 };
 
-// ---------------- LOAD EMPLOYEES (READ) ----------------
 async function loadEmployees() {
-  const res = await fetch(SCRIPT_URL + "?action=getEmployees");
-  const data = await res.json();
-
-  const list = data.employees || [];
-  $("userCount").textContent = list.length;
-
-  let html = "";
-  list.forEach(e => {
-    html += `<tr>
-              <td>${e.name}</td>
-              <td>${e.id}</td>
-              <td>${e.pin}</td>
-            </tr>`;
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "getEmployees",
+      payload: {}
+    })
   });
 
-  $("empTable").innerHTML = html || 
-    `<tr><td colspan="3" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>`;
+  loadEmployeesFromCSV();
 }
 
-// ---------------- ADD EMPLOYEE ----------------
+
 $("btnAdd").onclick = async () => {
   let name = $("empName").value.trim();
   let id = $("empId").value.trim();
@@ -172,7 +164,6 @@ $("btnAdd").onclick = async () => {
   loadEmployees();
 };
 
-// ---------------- DELETE EMPLOYEE ----------------
 $("btnDelete").onclick = async () => {
   let id = $("empId").value.trim();
   if (!id) return alert("⚠️ أدخلي الرقم الوظيفي للحذف");
@@ -189,6 +180,25 @@ $("btnDelete").onclick = async () => {
   alert("🗑️ تم حذف الموظف");
   loadEmployees();
 };
+
+async function loadEmployeesFromCSV() {
+  const url = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn_r3U3bIk5t-b77Pn1Jv4oJfU5YF1qKTOY-nTiRZOpUdtgQT/exec";
+
+  const res = await fetch(url);
+  const text = await res.text();
+  const rows = text.split("\n").map(r => r.split(","));
+
+  let html = "";
+  for (let i = 1; i < rows.length; i++) {
+    const [id, name, pin, active] = rows[i];
+    if (!id) continue;
+    html += `<tr><td>${name}</td><td>${id}</td><td>${pin}</td></tr>`;
+  }
+
+  document.getElementById("empTable").innerHTML = html;
+  document.getElementById("userCount").textContent = rows.length - 1;
+}
+  
 </script>
 
 </body>
