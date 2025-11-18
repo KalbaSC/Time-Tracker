@@ -130,16 +130,11 @@ $("btnLogin").onclick = () => {
 };
 
 async function loadEmployees() {
-  await fetch(SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "getEmployees",
-      payload: {}
-    })
-  });
-
+await fetch(SCRIPT_URL, {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify({...})
+});
   loadEmployeesFromCSV();
 }
 
@@ -151,14 +146,11 @@ $("btnAdd").onclick = async () => {
 
   if (!name || !id || !pin) return alert("⚠️ جميع الحقول مطلوبة");
 
-  await fetch(SCRIPT_URL, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      action:"addEmployee",
-      payload:{ name,id,pin }
-    })
-  });
+await fetch(SCRIPT_URL, {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify({...})
+});
 
   alert("✔ تمت الإضافة");
   loadEmployees();
@@ -168,14 +160,11 @@ $("btnDelete").onclick = async () => {
   let id = $("empId").value.trim();
   if (!id) return alert("⚠️ أدخلي الرقم الوظيفي للحذف");
 
-  await fetch(SCRIPT_URL, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      action:"deleteEmployee",
-      payload:{ id }
-    })
-  });
+await fetch(SCRIPT_URL, {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify({...})
+});
 
   alert("🗑️ تم حذف الموظف");
   loadEmployees();
