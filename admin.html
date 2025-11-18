@@ -91,13 +91,12 @@
 
     <div class="flex">
       <button id="btnAdd" style="flex:1">➕ إضافة موظف</button>
-      <button id="btnDelete" style="flex:1;background:#882222">🗑️ حذف موظف</button>
     </div>
 
     <table>
       <thead>
         <tr>
-          <th>الاسم</th><th>الرقم</th><th>PIN</th>
+          <th>الاسم</th><th>الرقم</th><th>PIN</th><th>حذف</th>
         </tr>
       </thead>
       <tbody id="empTable">
@@ -178,24 +177,61 @@ $("btnDelete").onclick = async () => {
 };
 
 async function loadEmployeesFromCSV() {
-  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
+  const url ="https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
 
   const res = await fetch(url);
   const text = await res.text();
-
   const rows = text
     .split("\n")
     .map(r => r.split(","))
-    .filter(r => r[0] && r[0].trim() !== "ID"); 
+    .filter(r => r[0] && r[0].trim() !== "ID");
 
   let html = "";
   rows.forEach(r => {
-    const [id, name, pin, active] = r;
-    html += `<tr><td>${name}</td><td>${id}</td><td>${pin}</td></tr>`;
+    const [id, name, pin] = r;
+
+    html += `
+      <tr>
+        <td>${name}</td>
+        <td>${id}</td>
+        <td>${pin}</td>
+        <td>
+          <button class="delRowBtn" data-id="${id}" style="
+            background:#771a1a;
+            color:white;
+            padding:6px 10px;
+            border-radius:8px;
+            border:none;
+            cursor:pointer;
+          ">🗑️</button>
+        </td>
+      </tr>`;
   });
 
   $("empTable").innerHTML = html;
   $("userCount").textContent = rows.length;
+
+  document.querySelectorAll(".delRowBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-id");
+
+      if (!confirm("هل أنتِ متأكدة من حذف هذا الموظف؟")) return;
+
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          action: "deleteEmployee",
+          payload: { id }
+        })
+      });
+
+      btn.closest("tr").remove();
+
+      let count = document.querySelectorAll("#empTable tr").length;
+      $("userCount").textContent = count;
+    });
+  });
 }
 
 </script>
