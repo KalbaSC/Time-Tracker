@@ -164,11 +164,14 @@ $("btnDelete").onclick = async () => {
   let id = $("empId").value.trim();
   if (!id) return alert("⚠️ أدخلي الرقم الوظيفي للحذف");
 
-await fetch(SCRIPT_URL, {
-  method: "POST",
-  mode: "no-cors",
-  body: JSON.stringify({...})
-});
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      action: "deleteEmployee",
+      payload: { id }
+    })
+  });
 
   alert("🗑️ تم حذف الموظف");
   loadEmployees();
