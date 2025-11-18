@@ -213,28 +213,20 @@ async function loadEmployeesFromCSV() {
   $("empTable").innerHTML = html;
   $("userCount").textContent = rows.length;
 
-  // attach delete events
-  document.querySelectorAll(".delRowBtn").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.dataset.id;
+document.querySelectorAll(".delRowBtn").forEach(btn => {
+  btn.onclick = async () => {
+    const id = btn.dataset.id;
 
-      if (!confirm("هل أنتِ متأكدة من حذف هذا الموظف؟")) return;
+    if (!confirm("Are you sure you want to delete this employee?")) return;
 
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({
-          action: "deleteEmployee",
-          payload: { id }
-        })
-      });
+    await fetch(`${SCRIPT_URL}?action=delete&id=${id}`);
 
-      btn.closest("tr").remove();
+    btn.closest("tr").remove();
 
-      $("userCount").textContent =
-        document.querySelectorAll("#empTable tr").length;
-    };
-  });
+    $("userCount").textContent =
+      document.querySelectorAll("#empTable tr").length;
+  };
+});
 }
 
 </script>
