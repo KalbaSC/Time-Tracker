@@ -112,6 +112,14 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJt7_TgpIu6F9gN9-Vn
 
 const $ = id => document.getElementById(id);
 
+window.onload = () => {
+  if (sessionStorage.getItem("adminLogged") === "1") {
+    $("loginBox").style.display = "none";
+    $("adminBox").style.display = "block";
+    loadEmployees();
+  }
+};
+  
 $("btnLogin").onclick = () => {
   let u = $("loginUser").value.trim();
   let p = $("loginPass").value.trim();
