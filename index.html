@@ -789,10 +789,16 @@ function formatDate(v) {
     return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
   }
 
-async function fetchZKTecoLogs() {
-  const resp = await fetch("http://192.168.1.40:8081/iclock/api/transactions/?page_size=5000");
-  const json = await resp.json();
-  return json.data;
+async function fetchZKtecoLogs() {
+    try {
+        const resp = await fetch("https://script.google.com/macros/s/AKfycbwTwhDBg5N3ocxir2_LcwUMaI1eWCe8wNNJBCqYEZ3jR6dKw9jxv6tb00rQ__zKpPiK/exec");
+        const data = await resp.json();
+        console.log("ZKTeco Logs:", data);
+        return data.data || [];
+    } catch (err) {
+        console.error("Error fetching ZKTeco logs:", err);
+        return [];
+    }
 }
 
 function convertZKToCSV(logs) {
