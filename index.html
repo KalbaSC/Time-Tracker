@@ -857,62 +857,13 @@ function formatDate(v) {
   }
   
   function esc(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]); }
+  
   function pairHTML(p){
     const pin  = `<span class="pill" style="background:rgba(244,231,51,.16); color:#000; border:1px solid #f4e733;">دخول ${esc(p.in)}</span>`;
     const pout = p.out ? `<span class="pill" style="background:rgba(255,255,255,.08)">خروج ${esc(p.out)}</span>` : `<span class="pill warn">خروج غير مسجل</span>`;
     const dur = p.out ? secToHHMM(diffSec(p.in,p.out)) : '00:00';
     return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
   }
-
-async function fetchZKtecoLogs() {
-    try {
-        const resp = await fetch("https://script.google.com/macros/s/AKfycbwTwhDBg5N3ocxir2_LcwUMaI1eWCe8wNNJBCqYEZ3jR6dKw9jxv6tb00rQ__zKpPiK/exec");
-        const data = await resp.json();
-        console.log("ZKTeco Logs:", data);
-        return data.data || [];
-    } catch (err) {
-        console.error("Error fetching ZKTeco logs:", err);
-        return [];
-    }
-}
-
-function convertZKToCSV(logs) {
-  let lines = ["Employee ID,First Name,Date,Time"];
-
-  for (const log of logs) {
-    const empId = log.emp_code || "";
-    const name = log.first_name?.trim() || "";
-    const [date, time] = log.punch_time.split(" ");
-
-    lines.push(`${empId},${name},${date},${time}`);
-  }
-
-  return lines.join("\n");
-}
-
-async function loadZKTecoIntoDashboard() {
-  const logs = await fetchZKTecoLogs();
-  const csv = convertZKToCSV(logs);
-
-  rawRows = [];
-  const rows = csv.split("\n").slice(1);
-
-  for (const line of rows) {
-    const [empId, name, date, time] = line.split(",");
-    if (!empId || !name || !date || !time) continue;
-
-    const d = new Date(date);
-    const pairs = [{ in: time, out: null }];
-    const workedSec = 0;
-
-    rawRows.push({ empId, name, date: d, pairs, workedSec });
-  }
-
-  metaEl.textContent = `ZKTeco API — ${rawRows.length} records loaded`;
-  render();
-}
-
-setInterval(loadZKTecoIntoDashboard, 60000);
   
 })();  
 </script>
