@@ -301,6 +301,81 @@
   let groupedDetails = new Map(); 
   let lastSummaryCSV = '', lastDetailedCSV = '';
 
+    // =============== ZKTECO INTEGRATION (FROM BIO-TIME) ===================
+
+  async function fetchZKTecoLogs() {
+    const resp = await fetch("https://script.google.com/macros/s/AKfycbwTwhDBg5N3ocxir2_LcwUMaI1eWCe8wNNJBCqYEZ3jR6dKw9jxv6tb00rQ__zKpPiK/exec");
+    const json = await resp.json();
+    // BioTime returns {count, next, previous, data:[...]}
+    return json.data || [];
+  }
+
+  // Group logs by emp + date, build in/out pairs, and fill rawRows
+  async function loadZKTecoIntoDashboard() {
+    try {
+      const logs = await fetchZKTecoLogs();
+
+      const byKey = new Map(); // key = empId||name||date
+
+      for (const log of logs) {
+        const empId = (log.emp_code || "").trim();
+        const name  = (log.first_name || "").trim();
+        const punchTime = log.punch_time; // "YYYY-MM-DD HH:MM:SS"
+
+        if (!empId || !name || !punchTime) continue;
+
+        const [dateStr, timeStr] = punchTime.split(" ");
+        const key = empId + "||" + name + "||" + dateStr;
+
+        let bucket = byKey.get(key);
+        if (!bucket) {
+          bucket = { empId, name, dateStr, times: [] };
+          byKey.set(key, bucket);
+        }
+        bucket.times.push(timeStr);
+      }
+
+      rawRows = [];
+
+      for (const bucket of byKey.values()) {
+        // sort times during that day
+        bucket.times.sort();
+
+        const pairs = [];
+        for (let i = 0; i < bucket.times.length; i += 2) {
+          const tin  = bucket.times[i];
+          const tout = bucket.times[i + 1] || null; // last odd punch has no out
+          pairs.push({ in: tin, out: tout });
+        }
+
+        const d = new Date(bucket.dateStr + "T00:00:00");
+        const workedSec = sumPairs(pairs, parseInt(roundingSel.value,10) || 0);
+
+        rawRows.push({
+          empId: bucket.empId,
+          name: bucket.name,
+          date: d,
+          pairs,
+          workedSec
+        });
+      }
+
+      metaEl.textContent = `ZKTeco — تم تحميل ${rawRows.length} يوم حضور من النظام`;
+      render();
+    } catch (err) {
+      console.error("ZKTeco load error:", err);
+      alert("حدث خطأ أثناء جلب بيانات الجهاز.");
+    }
+  }
+
+  // حمّلي البيانات تلقائيًا عند فتح الصفحة
+  loadZKTecoIntoDashboard();
+
+  // وإذا حبيتي تحدثيها كل 10 دقائق:
+  // setInterval(loadZKTecoIntoDashboard, 10 * 60 * 1000);
+
+  // ======================================================================
+
   fileInput.addEventListener('change', handleFile);
   [recalcBtn, viewSel, weekStartSel, expectedWDInp, expectedSatInp, satPolicySel, expectedModeSel, roundingSel, empFilterInp, fromDateInp, toDateInp]
     .forEach(el => el.addEventListener('change', render));
