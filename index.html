@@ -775,6 +775,42 @@ function formatDate(v) {
     return `<span class="mono">${pin} → ${pout}</span> <span class="muted">(المدة: ${dur})</span>`;
   }
 })();
+
+async function fetchZKTecoLogs() {
+  const resp = await fetch("http://192.168.1.40:8081/iclock/api/transactions/?page_size=5000");
+  const json = await resp.json();
+  return json.data 
+}
+
+function convertZKToCSV(logs) {
+  let lines = ["emp_id,name,date,time,type"];
+
+  for (const log of logs) {
+
+    const empId = log.emp_code || "";
+    const name = log.first_name?.trim() || "";
+
+    const dt = log.punch_time.split(" ");
+    const date = dt[0];
+    const time = dt[1];
+
+    const type = "in";
+
+    lines.push(`${empId},${name},${date},${time},${type}`);
+  }
+
+  return lines.join("\n");
+}
+
+async function loadZKTecoIntoDashboard() {
+  const logs = await fetchZKTecoLogs();
+  const csv = convertZKToCSV(logs);
+
+  reader.onload({ target: { result: csv } }); 
+}
+
+setInterval(loadZKTecoIntoDashboard, 60000);
+  
 </script>
 </body>
 </html>
