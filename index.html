@@ -409,18 +409,20 @@
       }
 
       const key = `${row.empId}||${row.name}||${periodKey}`;
-      if (!map.has(key)){
-        map.set(key, {
-          empId: row.empId, 
-          name: row.name, 
-          period: periodKey, 
-          workedSec: 0, 
-          days: new Map(),
-          dateRange: view === 'monthly' ? getMonthRange(row.date) : 
-                    view === 'weekly' ? getWeekRange(getWeekStart(row.date, weekStart)) : 
-                    {start: row.date, end: row.date}
-        });
-      }
+if (!map.has(key)){
+  map.set(key, {
+    empId: row.empId, 
+    name: row.name, 
+    period: periodKey, 
+    workedSec: 0, 
+    days: new Map(),
+    dateRange:
+      view === 'monthly' ? getMonthRange(row.date) :
+      view === 'weekly' ? getWeekRange(getWeekStart(row.date, weekStart)) :
+      view === 'range'  ? { start: new Date(fromDateInp.value), end: new Date(toDateInp.value) } :
+                          { start: row.date, end: row.date }
+  });
+}
       const obj = map.get(key);
       obj.workedSec += row.workedSec;
       obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
@@ -530,8 +532,8 @@ for (const [dkey, info] of obj.days) {
   attendedDays++;
 }
 
-const calStart = range.start;
-const calEnd   = range.end;
+const calStart = new Date(fromDateInp.value);
+const calEnd   = new Date(toDateInp.value);
 
 calendarDays = countWeekdays(calStart, calEnd, [0,1,2,3,4]);
 
