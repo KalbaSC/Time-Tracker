@@ -444,61 +444,81 @@
       if (view === 'daily'){
         const dkey = [...obj.days.keys()][0];
         const info = obj.days.get(dkey);
-        expectedSec = expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, expectedMode, !!info.pairs?.length);
+        expectedSec = expectedForDayKey(
+          dkey, info.dow,
+          expectedWD, expectedSat,
+          satPolicy, expectedMode,
+          !!info.pairs?.length
+        );
         debugText += `Daily: ${dkey} - Worked: ${secToHHMM(obj.workedSec)}, Expected: ${secToHHMM(expectedSec)}<br>`;
       } 
       else if (view === 'weekly') {
         if (expectedMode === 'calendar'){
-          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
-          if (satPolicy === 'calendar') {
-            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]);
-          }
-          debugText += `Weekly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
+          const wdCount  = countWeekdays(range.start, range.end, [0,1,2,3,4]); 
+          const satCount = satPolicy === 'calendar' ? countWeekdays(range.start, range.end, [6]) : 0;
+          expectedSec = (wdCount * expectedWD) + (satCount * expectedSat);
+          debugText += `Weekly Calendar: WD days=${wdCount}, Sat days=${satCount}<br>`;
         } else {
+          expectedSec = 0;
           for (const [dkey, info] of obj.days){
-            expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
+            expectedSec += expectedForDayKey(
+              dkey, info.dow,
+              expectedWD, expectedSat,
+              satPolicy, 'punched',
+              !!info.pairs?.length
+            );
           }
           debugText += `Weekly Punched: ${obj.days.size} days with punches<br>`;
         }
       }
-else if (view === 'range') {
-  const rangeStart = fromDateInp.value ? new Date(fromDateInp.value) : null;
-  const rangeEnd   = toDateInp.value ? new Date(toDateInp.value) : null;
+      else if (view === 'range') {
+        const rangeStart = fromDateInp.value ? new Date(fromDateInp.value) : null;
+        const rangeEnd   = toDateInp.value ? new Date(toDateInp.value) : null;
 
-  if (!rangeStart || !rangeEnd) {
-    expectedSec = 0;
-    debugText += `Range: missing date range<br>`;
-  } else {
-
-    if (expectedMode === 'calendar') {
-      // Calendar mode → SAME expected for all employees
-      const wdCount  = countWeekdays(rangeStart, rangeEnd, [0,1,2,3,4]);   // Sunday–Thursday
-      const satCount = satPolicy === 'calendar' ? countWeekdays(rangeStart, rangeEnd, [6]) : 0;
-
-      expectedSec = (wdCount * expectedWD) + (satCount * expectedSat);
-
-      debugText += `Range Calendar: WD=${wdCount}, SAT=${satCount}<br>`;
-    }
-
-    else {
-      // Punched mode → based only on attendance days
-      expectedSec = 0;
-      for (const [dkey, info] of obj.days) {
-        expectedSec += expectedForDayKey(
-          dkey,
-          info.dow,
-          expectedWD,
-          expectedSat,
-          satPolicy,
-          expectedMode,
-          !!info.pairs?.length
-        );
+        if (!rangeStart || !rangeEnd) {
+          expectedSec = 0;
+          debugText += `Range: missing date range<br>`;
+        } else {
+          if (expectedMode === 'calendar') {
+            const wdCount  = countWeekdays(rangeStart, rangeEnd, [0,1,2,3,4]);
+            const satCount = satPolicy === 'calendar' ? countWeekdays(rangeStart, rangeEnd, [6]) : 0;
+            expectedSec = (wdCount * expectedWD) + (satCount * expectedSat);
+            debugText += `Range Calendar: WD=${wdCount}, SAT=${satCount}<br>`;
+          } else {
+            expectedSec = 0;
+            for (const [dkey, info] of obj.days) {
+              expectedSec += expectedForDayKey(
+                dkey, info.dow,
+                expectedWD, expectedSat,
+                satPolicy, expectedMode,
+                !!info.pairs?.length
+              );
+            }
+            debugText += `Range Punched: days=${obj.days.size}<br>`;
+          }
+        }
       }
-      debugText += `Range Punched: days=${obj.days.size}<br>`;
-    }
-  }
-}
-      const delta = obj.workedSec - expectedSec;
+      else { // monthly
+        if (expectedMode === 'calendar'){
+          const wdCount  = countWeekdays(range.start, range.end, [0,1,2,3,4]); 
+          const satCount = satPolicy === 'calendar' ? countWeekdays(range.start, range.end, [6]) : 0;
+          expectedSec = (wdCount * expectedWD) + (satCount * expectedSat);
+          debugText += `Monthly Calendar: WD days=${wdCount}, Sat days=${satCount}<br>`;
+        } else {
+          expectedSec = 0;
+          for (const [dkey, info] of obj.days){
+            expectedSec += expectedForDayKey(
+              dkey, info.dow,
+              expectedWD, expectedSat,
+              satPolicy, 'punched',
+              !!info.pairs?.length
+            );
+          }
+          debugText += `Monthly Punched: ${obj.days.size} days with punches<br>`;
+        }
+      }
+
+const delta = obj.workedSec - expectedSec;
       const over = Math.max(0, delta);
       const short = Math.max(0, -delta);
 
