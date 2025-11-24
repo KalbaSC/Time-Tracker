@@ -461,21 +461,40 @@
           debugText += `Weekly Punched: ${obj.days.size} days with punches<br>`;
         }
       }
-        else if (view === 'range') {
+else if (view === 'range') {
+  const from = fromDateInp.value ? new Date(fromDateInp.value) : null;
+  const to   = toDateInp.value ? new Date(toDateInp.value) : null;
+
+  if (!from || !to) {
     expectedSec = 0;
-    for (const [dkey, info] of obj.days) {
-      expectedSec += expectedForDayKey(
-        dkey,
-        info.dow,
-        expectedWD,
-        expectedSat,
-        satPolicy,
-        expectedMode,
-        !!info.pairs?.length
-      );
+  } else {
+    if (expectedMode === 'calendar') {
+      let wdCount = countWeekdays(from, to, [0,1,2,3,4]);
+      let satCount = satPolicy === 'calendar' ? countWeekdays(from, to, [6]) : 0;
+
+      expectedSec =
+        (wdCount * expectedWD) +
+        (satCount * expectedSat);
+
+      debugText += `Range Calendar: WD=${wdCount}, Sat=${satCount}<br>`;
+    } 
+    else {
+      expectedSec = 0;
+      for (const [dkey, info] of obj.days) {
+        expectedSec += expectedForDayKey(
+          dkey,
+          info.dow,
+          expectedWD,
+          expectedSat,
+          satPolicy,
+          expectedMode,
+          !!info.pairs?.length
+        );
+      }
+      debugText += `Range Punched: days=${obj.days.size}<br>`;
     }
-    debugText += `Range View: days=${obj.days.size}<br>`;
-  }  
+  }
+}
       else {
         if (expectedMode === 'calendar'){
           expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
