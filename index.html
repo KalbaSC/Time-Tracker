@@ -554,10 +554,6 @@ if (calStart && calEnd && !isNaN(calStart) && !isNaN(calEnd)) {
   calendarDays = attendedDays;
 }
 
-obj.attendedDays = attendedDays;
-obj.calendarDays = calendarDays;
-      
-
 let allSaturday = true;
 for (const info of obj.days.values()) {
   if (info.dow !== 6) { 
