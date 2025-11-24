@@ -262,14 +262,53 @@ const EMP_CSV =
 const PUNCH_CSV =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=817419268&single=true&output=csv";
 
+/*** GEOFENCE (Kalba Club) ***/
+const CLUB_LAT = 25.0599489;
+const CLUB_LNG = 56.3467097;
+const ALLOWED_RADIUS_M = 300;
+
+/*** HELPERS ***/
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => d.toISOString().slice(0,10);
+const nowHHMM = () => {
+  const d=new Date();
+  return pad(d.getHours())+":"+pad(d.getMinutes());
+};
+const timeToSec = hhmm => {
+  if(!hhmm) return 0;
+  const [h,m]=hhmm.split(":").map(Number);
+  return h*3600 + m*60;
+};
+const secToHHMM = sec => {
+  sec = Math.max(0, Math.floor(sec));
+  const h=Math.floor(sec/3600);
+  const m=Math.floor((sec%3600)/60);
+  return pad(h)+":"+pad(m);
+};
+
+/*** HAVERSINE (meters) ***/
+function distanceMeters(lat1,lng1,lat2,lng2){
+  const R = 6371000;
+  const toRad = v => v*Math.PI/180;
+  const dLat = toRad(lat2-lat1);
+  const dLng = toRad(lng2-lng1);
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function insideClub(lat,lng){
+  const d = distanceMeters(lat,lng,CLUB_LAT,CLUB_LNG);
+  return { ok:d <= ALLOWED_RADIUS_M, dist:d };
+}
 
 /*** LOGIN ***/
 async function login(){
-  const id = (document.getElementById("empId").value||"").trim();
-  const pin = (document.getElementById("empPin").value||"").trim();
-  const msg = document.getElementById("loginMsg");
-
-  msg.style.display="none";
+  const id = ($("empId").value||"").trim();
+  const pin = ($("empPin").value||"").trim();
+  const msg = $("loginMsg");
 
   if(!id || !pin){
     msg.className="msg err"; msg.style.display="block";
@@ -277,10 +316,10 @@ async function login(){
     return;
   }
 
-  // Validate CSV
   const csv = await (await fetch(EMP_CSV)).text();
-  const rows = csv.trim().split("\n").map(r=>r.split(","));
-  const found = rows.find(r => String(r[0]).trim()==id && String(r[2]).trim()==pin);
+  const rows = csv.split("\n").map(r=>r.split(","));
+
+  const found = rows.find(r => r[0]==id && r[2]==pin);
 
   if(!found){
     msg.className="msg err"; msg.style.display="block";
@@ -288,11 +327,10 @@ async function login(){
     return;
   }
 
-  // Save session
   window.currentID = id;
 
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("dash").style.display="block";
+  $("loginBox").style.display="none";
+  $("dash").style.display="block";
 
   refreshAll();
 }
@@ -300,22 +338,62 @@ async function login(){
 /*** LOGOUT ***/
 function logout(){
   window.currentID = null;
-
-  document.getElementById("dash").style.display="none";
-  document.getElementById("loginBox").style.display="block";
-
-  document.getElementById("empId").value = "";
-  document.getElementById("empPin").value = "";
+  $("dash").style.display="none";
+  $("loginBox").style.display="block";
+  $("empId").value="";
+  $("empPin").value="";
 }
 
-/*** PUNCH ***/
-async function punch(type){
-  if(!window.currentID) return;
+/*** GET TODAY CSV ROWS ***/
+async function getTodayRows(){
+  const csv = await (await fetch(PUNCH_CSV)).text();
+  const rows = csv.split("\n").map(r=>r.split(","));
+  const today = ymd(new Date());
+  return rows.filter(r => r[0]==window.currentID && r[2]==today);
+}
 
-  const msg = document.getElementById("punchMsg");
+/*** PREVENT DOUBLE IN/OUT ***/
+function canPunch(type, rows){
+  if(rows.length === 0){
+    if(type === "OUT") return { ok:false, error:"❌ لا يمكن تسجيل خروج قبل تسجيل دخول." };
+    return { ok:true };
+  }
+
+  const lastType = rows[rows.length-1][3];
+
+  if(lastType === type){
+    return { ok:false, error:`❌ لا يمكن تسجيل ${type==="IN"?"دخول":"خروج"} مرتين.` };
+  }
+
+  return { ok:true };
+}
+
+/*** PUNCH + LOCATION + NO DOUBLE LOGINS ***/
+async function punch(type){
+  const msg = $("punchMsg");
   msg.style.display="none";
 
+  const todayRows = await getTodayRows();
+  const seq = canPunch(type, todayRows);
+
+  if(!seq.ok){
+    msg.className="msg err"; msg.style.display="block";
+    msg.textContent = seq.error;
+    return;
+  }
+
   navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    const geo = insideClub(lat,lng);
+    if(!geo.ok){
+      msg.className="msg err"; msg.style.display="block";
+      msg.textContent="❌ يجب أن تكون داخل موقع النادي لإتمام البصمة.";
+      return;
+    }
+
+    // send punch
     fetch(SCRIPT_URL,{
       method:"POST",
       mode:"no-cors",
@@ -324,42 +402,59 @@ async function punch(type){
         payload:{
           id:window.currentID,
           type,
-          lat:pos.coords.latitude,
-          lng:pos.coords.longitude
+          lat, lng,
+          zone:"Kalba Club",
+          dist:Math.round(geo.dist)
         }
       })
     });
 
     msg.className="msg ok"; msg.style.display="block";
-    msg.textContent = `✔ تم تسجيل ${type==="IN"?"دخول":"خروج"}`;
+    msg.textContent=`✔ تم تسجيل ${type==="IN"?"دخول":"خروج"}`;
 
-    setTimeout(refreshAll, 800);
-  },
-  _=>{
+    setTimeout(refreshAll, 900);
+
+  }, _=>{
     msg.className="msg err"; msg.style.display="block";
-    msg.textContent="❌ لم يتم السماح بالموقع";
+    msg.textContent="❌ يرجى السماح بالموقع.";
   });
 }
 
-/*** LOAD TODAY ***/
+/*** REFRESH DASHBOARD ***/
 async function refreshAll(){
-  const csv = await (await fetch(PUNCH_CSV)).text();
-  const rows = csv.trim().split("\n").map(r=>r.split(","));
-  const today = new Date().toISOString().slice(0,10);
+  const todayRows = await getTodayRows();
 
-  const mineToday = rows.filter(r=>r[0]==window.currentID && r[2]==today);
-
-  // Render table
-  const table = document.getElementById("todayTable");
-  if(!mineToday.length){
-    table.innerHTML = `<tr><td colspan="2" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>`;
+  const table = $("todayTable");
+  if(!todayRows.length){
+    table.innerHTML = `<tr><td colspan="2" style="color:#777;text-align:center;">لا يوجد سجلات.</td></tr>`;
   } else {
-    table.innerHTML = mineToday.map(r=>{
+    table.innerHTML = todayRows.map(r=>{
       const t = (r[4]||"").slice(0,5);
-      const type = r[3]==="IN" ? "دخول" : "خروج";
-      return `<tr><td>${t}</td><td>${type}</td></tr>`;
+      const tp = r[3]==="IN" ? "دخول" : "خروج";
+      return `<tr><td>${t}</td><td>${tp}</td></tr>`;
     }).join("");
   }
+
+  // Calculate today's hours
+  let work = 0;
+  let lastIn = null;
+
+  todayRows.forEach(r=>{
+    const type = r[3];
+    const t = (r[4]||"").slice(0,5);
+    if(type==="IN") lastIn=t;
+    else if(type==="OUT" && lastIn){
+      work += timeToSec(t)-timeToSec(lastIn);
+      lastIn=null;
+    }
+  });
+
+  if(lastIn){
+    work += timeToSec(nowHHMM()) - timeToSec(lastIn);
+  }
+
+  $("sToday").textContent = secToHHMM(work);
+  $("sLeft").textContent  = secToHHMM(7*3600 - work);
 }
 </script>
 </body>
