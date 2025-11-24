@@ -532,14 +532,30 @@ for (const [dkey, info] of obj.days) {
   attendedDays++;
 }
 
-const calStart = new Date(fromDateInp.value);
-const calEnd   = new Date(toDateInp.value);
+let attendedDays = obj.days.size;
+let calendarDays = 0;
 
-calendarDays = countWeekdays(calStart, calEnd, [0,1,2,3,4]);
+let calStart, calEnd;
 
-if (satPolicy === 'calendar') {
-  calendarDays += countWeekdays(calStart, calEnd, [6]);
+if (view === 'range') {
+  calStart = fromDateInp.value ? new Date(fromDateInp.value) : null;
+  calEnd   = toDateInp.value   ? new Date(toDateInp.value)   : null;
+} else {
+  calStart = range.start;
+  calEnd   = range.end;
 }
+
+if (calStart && calEnd && !isNaN(calStart) && !isNaN(calEnd)) {
+  calendarDays = countWeekdays(calStart, calEnd, [0,1,2,3,4]);
+  if (satPolicy === 'calendar') {
+    calendarDays += countWeekdays(calStart, calEnd, [6]);
+  }
+} else {
+  calendarDays = attendedDays;
+}
+
+obj.attendedDays = attendedDays;
+obj.calendarDays = calendarDays;
 
 obj.attendedDays = attendedDays;
 obj.calendarDays = calendarDays;
