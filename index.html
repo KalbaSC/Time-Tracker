@@ -173,7 +173,7 @@
           <label>بداية الأسبوع</label>
           <select id="weekStart">
             <option value="0">الأحد</option>
-            <option value="1" selected>الاثنين</option>
+            <option value="0" selected>الأحد</option>
             <option value="6">السبت</option>
           </select>
         </div>
@@ -301,80 +301,7 @@
   let groupedDetails = new Map(); 
   let lastSummaryCSV = '', lastDetailedCSV = '';
 
-    // =============== ZKTECO INTEGRATION (FROM BIO-TIME) ===================
-
-  async function fetchZKTecoLogs() {
-    const resp = await fetch("https://script.google.com/macros/s/AKfycbwTwhDBg5N3ocxir2_LcwUMaI1eWCe8wNNJBCqYEZ3jR6dKw9jxv6tb00rQ__zKpPiK/exec");
-    const json = await resp.json();
-    // BioTime returns {count, next, previous, data:[...]}
-    return json.data || [];
-  }
-
-  // Group logs by emp + date, build in/out pairs, and fill rawRows
-  async function loadZKTecoIntoDashboard() {
-    try {
-      const logs = await fetchZKTecoLogs();
-
-      const byKey = new Map(); // key = empId||name||date
-
-      for (const log of logs) {
-        const empId = (log.emp_code || "").trim();
-        const name  = (log.first_name || "").trim();
-        const punchTime = log.punch_time; // "YYYY-MM-DD HH:MM:SS"
-
-        if (!empId || !name || !punchTime) continue;
-
-        const [dateStr, timeStr] = punchTime.split(" ");
-        const key = empId + "||" + name + "||" + dateStr;
-
-        let bucket = byKey.get(key);
-        if (!bucket) {
-          bucket = { empId, name, dateStr, times: [] };
-          byKey.set(key, bucket);
-        }
-        bucket.times.push(timeStr);
-      }
-
-      rawRows = [];
-
-      for (const bucket of byKey.values()) {
-        // sort times during that day
-        bucket.times.sort();
-
-        const pairs = [];
-        for (let i = 0; i < bucket.times.length; i += 2) {
-          const tin  = bucket.times[i];
-          const tout = bucket.times[i + 1] || null; // last odd punch has no out
-          pairs.push({ in: tin, out: tout });
-        }
-
-        const d = new Date(bucket.dateStr + "T00:00:00");
-        const workedSec = sumPairs(pairs, parseInt(roundingSel.value,10) || 0);
-
-        rawRows.push({
-          empId: bucket.empId,
-          name: bucket.name,
-          date: d,
-          pairs,
-          workedSec
-        });
-      }
-
-      metaEl.textContent = `ZKTeco — تم تحميل ${rawRows.length} يوم حضور من النظام`;
-      render();
-    } catch (err) {
-      console.error("ZKTeco load error:", err);
-      alert("حدث خطأ أثناء جلب بيانات الجهاز.");
-    }
-  }
-
-  // حمّلي البيانات تلقائيًا عند فتح الصفحة
-  loadZKTecoIntoDashboard();
-
-  // وإذا حبيتي تحدثيها كل 10 دقائق:
-  // setInterval(loadZKTecoIntoDashboard, 10 * 60 * 1000);
-
-  // ======================================================================
+    
 
   fileInput.addEventListener('change', handleFile);
   [recalcBtn, viewSel, weekStartSel, expectedWDInp, expectedSatInp, satPolicySel, expectedModeSel, roundingSel, empFilterInp, fromDateInp, toDateInp]
@@ -475,20 +402,154 @@
         periodKey = 'W:'+ymd(getWeekStart(row.date, weekStart)); 
       }
       else if (view === 'range') {
-        const start = fromDate || obj.dateRange.start;
-        const end = toDate || obj.dateRange.end;
-        if (expectedMode === 'calendar') {
-          expectedSec += expectedWD * countWeekdays(start, end, [0,1,2,3,4]);
+        periodKey = 'RANGE';
+      }  
+      else { 
+        periodKey = 'M:'+ym(row.date); 
+      }
+
+      const key = `${row.empId}||${row.name}||${periodKey}`;
+      if (!map.has(key)){
+        map.set(key, {
+          empId: row.empId, 
+          name: row.name, 
+          period: periodKey, 
+          workedSec: 0, 
+          days: new Map(),
+          dateRange: view === 'monthly' ? getMonthRange(row.date) : 
+                    view === 'weekly' ? getWeekRange(getWeekStart(row.date, weekStart)) : 
+                    {start: row.date, end: row.date}
+        });
+      }
+      const obj = map.get(key);
+      obj.workedSec += row.workedSec;
+      obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
+      
+      if (!employeeStats.has(row.empId)) {
+        employeeStats.set(row.empId, {name: row.name, totalWorked: 0, daysWorked: 0});
+      }
+      const empStat = employeeStats.get(row.empId);
+      empStat.totalWorked += row.workedSec;
+      empStat.daysWorked += 1;
+    }
+
+    const rows = [];
+    let totalWorked=0, totalExpected=0, totalOver=0, totalShort=0;
+    
+    let debugText = `View: ${view}, Expected Mode: ${expectedMode}, Sat Policy: ${satPolicy}<br>`;
+    
+    for (const obj of map.values()){
+      let expectedSec = 0;
+      const range = obj.dateRange;
+
+      if (view === 'daily'){
+        const dkey = [...obj.days.keys()][0];
+        const info = obj.days.get(dkey);
+        expectedSec = expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, expectedMode, !!info.pairs?.length);
+        debugText += `Daily: ${dkey} - Worked: ${secToHHMM(obj.workedSec)}, Expected: ${secToHHMM(expectedSec)}<br>`;
+      } 
+      else if (view === 'weekly') {
+        if (expectedMode === 'calendar'){
+          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
           if (satPolicy === 'calendar') {
-            expectedSec += expectedSat * countWeekdays(start, end, [6]);
+            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]);
           }
+          debugText += `Weekly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
         } else {
           for (const [dkey, info] of obj.days){
-            expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, expectedMode, !!info.pairs?.length);
+            expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
           }
+          debugText += `Weekly Punched: ${obj.days.size} days with punches<br>`;
         }
-        debugText += `Range: calendar mode=${expectedMode}<br>`;
-      };
+      }
+        else if (view === 'range') {
+    expectedSec = 0;
+    for (const [dkey, info] of obj.days) {
+      expectedSec += expectedForDayKey(
+        dkey,
+        info.dow,
+        expectedWD,
+        expectedSat,
+        satPolicy,
+        expectedMode,
+        !!info.pairs?.length
+      );
+    }
+    debugText += `Range View: days=${obj.days.size}<br>`;
+  }  
+      else {
+        if (expectedMode === 'calendar'){
+          expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
+          if (satPolicy === 'calendar') {
+            expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); 
+          }
+          debugText += `Monthly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
+        } else {
+          for (const [dkey, info] of obj.days){
+            expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
+          }
+          debugText += `Monthly Punched: ${obj.days.size} days with punches<br>`;
+        }
+      }
+
+      const delta = obj.workedSec - expectedSec;
+      const over = Math.max(0, delta);
+      const short = Math.max(0, -delta);
+
+      totalWorked += obj.workedSec; 
+      totalExpected += expectedSec; 
+      totalOver += over; 
+      totalShort += short;
+
+      rows.push({
+        key: `${obj.empId}||${obj.name}||${obj.period}`,
+        empId: obj.empId, 
+        name: obj.name,
+        period: prettyPeriod(obj.period, weekStart),
+        worked: obj.workedSec, 
+        expected: expectedSec, 
+        overtime: over, 
+        short
+      });
+
+      groupedDetails.set(`${obj.empId}||${obj.name}||${obj.period}`, {
+        ...obj, expectedSec, over, short
+      });
+    }
+
+    rows.sort((a,b)=> (a.empId.localeCompare(b.empId,'ar') || a.period.localeCompare(b.period,'ar')));
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${esc(r.empId)}</td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.period)}</td>
+        <td class="left">${secToHHMM(r.worked)}</td>
+        <td class="left">${secToHHMM(r.expected)}</td>
+        <td class="left">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
+        <td class="left">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
+        <td class="center"><button class="btn secondary" data-key="${esc(r.key)}">تفاصيل</button></td>
+      </tr>
+    `).join('');
+
+    [...tbody.querySelectorAll('button[data-key]')].forEach(btn => btn.addEventListener('click', ()=> openDetails(btn.getAttribute('data-key'))));
+
+    updateKPIs(totalWorked, totalExpected, totalOver, totalShort);
+    updateGeneralStats(employeeStats, totalWorked, rows.length);
+
+    const modeText = expectedMode==='calendar' ? 'أيام العمل التقويمية' : 'الأيام التي بها بصمة';
+    const satText = satPolicy==='punch' ? 'السبت يُحتسب فقط عند وجود بصمة'
+                 : satPolicy==='calendar' ? 'السبت يُحتسب تقويمياً دائماً'
+                 : 'السبت لا يُحتسب';
+    hintPolicy.textContent = `سياسة الحساب: ${modeText} — ${satText}. الجمعة مستبعدة دائماً.`;
+
+    lastSummaryCSV = buildSummaryCSV(rows);
+    lastDetailedCSV = buildDetailedCSV();
+  }
+
+  function getMonthRange(date) {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return {start, end};
   }
 
   function getWeekRange(weekStart) {
