@@ -14,20 +14,19 @@
     :root{
       --bg:#0a0a0a;
       --card:#121212;
-      --card-2:#0f0f0f;
-      --line:#202020;
       --accent:#f6c21a;
       --accent-soft:#ffd24a;
       --text:#f5f5f5;
       --muted:#b7b7b7;
+      --line:#202020;
       --ok:#22c55e;
       --bad:#ef4444;
       --radius:18px;
       --radius-lg:22px;
       --shadow:0 8px 25px rgba(0,0,0,.45);
-      font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:"Tajawal",sans-serif;
     }
-    *{box-sizing:border-box;margin:0;padding:0}
+    *{box-sizing:border-box;margin:0;padding:0;}
     body{
       background:var(--bg);
       color:var(--text);
@@ -36,266 +35,178 @@
     .wrap{
       max-width:1200px;
       margin:0 auto;
-      padding:18px 18px 30px;
+      padding:20px;
       display:flex;
       flex-direction:column;
       gap:16px;
     }
 
-    /* ===== Top Bar ===== */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:8px 6px;
-    }
-    .nav{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .nav a{
-      background:#151515;
-      border:1px solid #1f1f1f;
-      color:var(--text);
-      padding:8px 16px;
-      border-radius:12px;
-      text-decoration:none;
-      font-weight:700;
-      transition:.2s;
-    }
-    .nav a:hover{border-color:#2a2a2a; transform:translateY(-1px)}
-    .nav a.active{
-      background:#1b1b1b;
-      color:var(--accent);
-      border-color:#2a2a2a;
-      box-shadow:inset 0 0 0 1px #2a2a2a;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-      font-weight:800; font-size:18px;
-    }
-    .brand .dot{
-      width:36px;height:36px;border-radius:50%;
-      background:var(--accent);
-      display:grid;place-items:center;
-      color:#111;font-weight:900;
-    }
-
-    /* ===== Hero ===== */
-    .hero{
-      text-align:center;
-      padding:10px 0 0;
-    }
-    .hero h1{
-      font-size:34px;
-      color:var(--accent);
-      font-weight:900;
-      margin-bottom:6px;
-    }
-    .hero p{
-      color:var(--muted);
-      font-size:16px;
-    }
-
-    /* ===== Cards ===== */
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:14px;
-      margin-top:6px;
-    }
-    .card{
-      background:linear-gradient(180deg,#151515,#0f0f0f);
+    /* Login Card */
+    .login-card{
+      max-width:480px;
+      margin:40px auto;
+      background:var(--card);
       border:1px solid var(--line);
-      border-radius:var(--radius-lg);
+      border-radius:22px;
+      padding:22px;
       box-shadow:var(--shadow);
-      padding:18px;
-      min-height:120px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
       text-align:center;
-      gap:6px;
     }
-    .card .label{
-      color:#d7d7d7;
-      font-size:14px;
-      font-weight:700;
-    }
-    .card .value{
-      font-size:30px;
+    .login-card h2{
+      color:var(--accent);
       font-weight:900;
-      letter-spacing:.5px;
+      margin-bottom:20px;
+      font-size:22px;
     }
-    .value.ok{color:var(--ok)}
-    .value.bad{color:var(--bad)}
-
-    /* ===== Big Buttons ===== */
-    .btn{
+    label{color:var(--muted); display:block; text-align:right; margin-bottom:6px; font-weight:700;}
+    input{
       width:100%;
-      padding:18px 16px;
+      padding:14px;
+      border-radius:12px;
+      border:1px solid #2a2a2a;
+      background:#0e0e0e;
+      color:#fff;
+      margin-bottom:12px;
+    }
+    input:focus{outline:none;border-color:var(--accent);}
+
+    .btn-yellow{
+      width:100%;
+      padding:16px;
       border-radius:14px;
+      background:var(--accent);
+      color:#111;
       font-weight:900;
       font-size:17px;
       border:none;
       cursor:pointer;
       transition:.2s;
-      display:flex;align-items:center;justify-content:space-between;
+      display:flex; align-items:center; justify-content:center;
+      gap:8px;
       box-shadow:var(--shadow);
     }
-    .btn-yellow{
-      background:var(--accent);
-      color:#111;
+    .btn-yellow:hover{background:var(--accent-soft);}
+
+    .msg{
+      margin-top:10px;
+      font-size:14px;
+      font-weight:700;
+      padding:10px;
+      border-radius:10px;
+      display:none;
     }
-    .btn-yellow:hover{background:var(--accent-soft); transform:translateY(-1px)}
-    .btn-dark{
-      background:#161616;
-      color:#fff;
-      border:1px solid #232323;
+    .msg.ok{
+      display:block;
+      background:rgba(34,197,94,.12);
+      color:var(--ok);
+      border:1px solid rgba(34,197,94,.4);
     }
-    .btn-dark:hover{border-color:#333; transform:translateY(-1px)}
-    .btn .icon{
-      width:26px;height:26px;border-radius:7px;
-      display:grid;place-items:center;
-      font-size:16px;font-weight:900;
-      background:rgba(255,255,255,.2);
+    .msg.err{
+      display:block;
+      background:rgba(239,68,68,.12);
+      color:var(--bad);
+      border:1px solid rgba(239,68,68,.4);
     }
 
-    /* ===== Sections ===== */
+    /* Dashboard Hidden by Default */
+    #dash{display:none;}
+
+    /* Logout button */
+    .logout-btn{
+      background:var(--accent);
+      color:#111;
+      font-weight:900;
+      border:none;
+      padding:10px 18px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:14px;
+      position:absolute;
+      top:20px;
+      left:20px;
+      box-shadow:var(--shadow);
+      transition:.2s;
+    }
+    .logout-btn:hover{background:var(--accent-soft);}
+
+    .hero{
+      text-align:center;
+      margin:20px 0 10px;
+    }
+    .hero h1{
+      color:var(--accent);
+      font-weight:900;
+      font-size:30px;
+    }
+    .hero p{
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-top:15px;
+    }
+    .card{
+      background:linear-gradient(180deg,#151515,#0f0f0f);
+      border:1px solid var(--line);
+      border-radius:var(--radius-lg);
+      padding:18px;
+      text-align:center;
+      box-shadow:var(--shadow);
+    }
+    .label{color:#d7d7d7;font-size:14px;font-weight:700;}
+    .value{font-size:28px;font-weight:900;}
+
     .section{
       background:var(--card);
       border:1px solid var(--line);
       border-radius:var(--radius-lg);
       padding:16px;
-      box-shadow:var(--shadow);
+      margin-top:20px;
     }
-    .section-title{
-      font-size:20px;
-      font-weight:900;
-      color:var(--accent);
-      margin-bottom:10px;
-      display:flex;align-items:center;justify-content:space-between;
-    }
-
-    /* ===== Table ===== */
     table{
       width:100%;
       border-collapse:collapse;
-      font-size:15px;
-      overflow:hidden;
-      border-radius:14px;
+      margin-top:10px;
     }
-    thead th{
-      color:#dcdcdc;
-      font-weight:800;
+    th, td{
       padding:12px;
       border-bottom:1px solid var(--line);
       text-align:right;
-    }
-    tbody td{
-      padding:12px;
-      border-bottom:1px solid #1a1a1a;
-      color:#f1f1f1;
-      text-align:right;
-    }
-    tbody tr:hover{background:#101010}
-
-    /* ===== Login modal-style card ===== */
-    .login-card{
-      max-width:520px;
-      margin:0 auto;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:18px;
-      box-shadow:var(--shadow);
-    }
-    .login-card h2{
-      color:var(--accent);
-      font-size:20px;
-      font-weight:900;
-      margin-bottom:10px;
-      text-align:center;
-    }
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .col{flex:1 1 220px}
-    label{color:var(--muted);font-size:13px;font-weight:700;margin-bottom:6px;display:block}
-    input{
-      width:100%;padding:12px;border-radius:12px;border:1px solid #2a2a2a;
-      background:#0e0e0e;color:#fff;font-size:15px;
-    }
-    input:focus{outline:none;border-color:var(--accent)}
-
-    .msg{
-      margin-top:8px;font-size:14px;font-weight:700;text-align:center;
-      padding:8px;border-radius:10px;display:none;
-    }
-    .msg.ok{display:block;background:rgba(34,197,94,.12);color:var(--ok);border:1px solid rgba(34,197,94,.4)}
-    .msg.err{display:block;background:rgba(239,68,68,.12);color:var(--bad);border:1px solid rgba(239,68,68,.4)}
-
-    .footer{
-      text-align:center;color:#8e8e8e;font-size:12px;margin-top:8px;
-    }
-
-    @media(max-width:1100px){
-      .grid{grid-template-columns:repeat(2,1fr)}
-    }
-    @media(max-width:640px){
-      .grid{grid-template-columns:1fr}
-      .hero h1{font-size:28px}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
 
-    <!-- Top Bar -->
-    <div class="topbar">
-      <div class="nav">
-        <a href="employee.html" class="active">تسجيل الدخول</a>
-        <a href="ksc-punch.html">البصمة</a>
-        <a href="ksc-summary.html">ملخص</a>
-        <a href="admin.html">الإدارة</a>
-      </div>
-
-      <div class="brand">
-        <div class="dot" id="avatarLetter">K</div>
-        <div>نظام البصمة - نادي كلباء</div>
-      </div>
-    </div>
-
-    <!-- Login -->
+    <!-- Login only -->
     <div id="loginBox" class="login-card">
       <h2>تسجيل الدخول</h2>
-      <div class="row">
-        <div class="col">
-          <label>الرقم الوظيفي</label>
-          <input id="empId" placeholder="مثال: 1" />
-        </div>
-        <div class="col">
-          <label>الرمز السري (PIN)</label>
-          <input id="empPin" type="password" inputmode="numeric" placeholder="4 أرقام" />
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <button class="btn btn-yellow" onclick="login()">
-          <span>دخول</span>
-          <span class="icon">↩</span>
-        </button>
-      </div>
+
+      <label>الرقم الوظيفي</label>
+      <input id="empId" placeholder="مثال: 1">
+
+      <label>الرمز السري (PIN)</label>
+      <input id="empPin" type="password" inputmode="numeric" placeholder="4 أرقام">
+
+      <button class="btn-yellow" onclick="login()">دخول</button>
+
       <div id="loginMsg" class="msg"></div>
-      <div class="footer">* يتم التحقق من بيانات الدخول عبر قاعدة البيانات.</div>
     </div>
 
     <!-- Dashboard -->
-    <div id="dash" style="display:none; display:flex; flex-direction:column; gap:14px;">
+    <div id="dash">
 
-      <!-- Hero -->
+      <!-- Logout -->
+      <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+
+      <!-- Header -->
       <div class="hero">
         <h1>مرحباً بك في نظام البصمة</h1>
-        <p>نظام متكامل لتسجيل الحضور والانصراف وإدارة ساعات العمل للموظفين</p>
+        <p>نظام لتسجيل الحضور والانصراف وإدارة ساعات العمل للموظفين</p>
       </div>
 
       <!-- Stats -->
@@ -304,110 +215,69 @@
           <div class="label">ساعات العمل اليوم</div>
           <div id="sToday" class="value">00:00</div>
         </div>
+
         <div class="card">
           <div class="label">المتبقي اليوم</div>
           <div id="sLeft" class="value">00:00</div>
         </div>
+
         <div class="card">
           <div class="label">ساعات الأسبوع</div>
           <div id="sWeek" class="value">00:00</div>
         </div>
+
         <div class="card">
           <div class="label">آخر حركة</div>
           <div id="sLast" class="value">—</div>
         </div>
       </div>
 
-      <!-- Punch Buttons -->
-      <button class="btn btn-yellow" onclick="punch('IN')">
-        <span>بصمة دخول</span>
-        <span class="icon">⬆️</span>
-      </button>
-
-      <button class="btn btn-yellow" onclick="punch('OUT')">
-        <span>بصمة خروج</span>
-        <span class="icon">⬇️</span>
-      </button>
+      <!-- Punch buttons -->
+      <button class="btn-yellow" onclick="punch('IN')">⬆️ بصمة دخول</button>
+      <button class="btn-yellow" onclick="punch('OUT')">⬇️ بصمة خروج</button>
 
       <div id="punchMsg" class="msg"></div>
 
-      <!-- Today punches -->
+      <!-- Today table -->
       <div class="section">
-        <div class="section-title">
-          <span>بصمات اليوم</span>
-        </div>
+        <h3 style="color:var(--accent);font-weight:900;">بصمات اليوم</h3>
         <table>
           <thead>
-            <tr>
-              <th style="width:50%">الوقت</th>
-              <th>النوع</th>
-            </tr>
+            <tr><th>الوقت</th><th>النوع</th></tr>
           </thead>
           <tbody id="todayTable">
             <tr><td colspan="2" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>
           </tbody>
         </table>
       </div>
-    </div>
 
+    </div>
   </div>
 
 <script>
-/*** YOUR FINAL URLS ***/
+/*** YOUR LINKS ***/
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzICdi_PWthlxiaZ7EA8NqZiUxUUK7XPgZNtyoTUO_ugPAZX-q9cTJ3LaIDEudlXPV0/exec";
 const EMP_CSV =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
 const PUNCH_CSV =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=817419268&single=true&output=csv";
 
-/*** SIMPLE HELPERS ***/
-const $ = (id)=>document.getElementById(id);
-const pad = n => String(n).padStart(2,'0');
-const ymd = d => d.toISOString().slice(0,10);
-const timeToSec = hhmm => {
-  if (!hhmm) return 0;
-  const [h,m]=String(hhmm).split(":").map(Number);
-  return h*3600+m*60;
-};
-const secToHHMM = sec => {
-  sec=Math.max(0,Math.floor(sec));
-  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60);
-  return pad(h)+':'+pad(m);
-};
-const nowHHMM = () => {
-  const d = new Date();
-  return pad(d.getHours())+':'+pad(d.getMinutes());
-};
 
-/*** Expected hours (you can change later) ***/
-const EXPECTED_DAY_SEC = 7*3600; // default 7 hours/day
-
-/*** STATE ***/
-window.currentID = null;
-window.currentName = null;
-
-/*** LOGIN (NO-CORS SEND + CSV VALIDATE) ***/
+/*** LOGIN ***/
 async function login(){
-  const id = ($("empId").value||"").trim();
-  const pin = ($("empPin").value||"").trim();
-  const msg = $("loginMsg");
+  const id = (document.getElementById("empId").value||"").trim();
+  const pin = (document.getElementById("empPin").value||"").trim();
+  const msg = document.getElementById("loginMsg");
 
-  msg.className="msg"; msg.style.display="none"; msg.textContent="";
+  msg.style.display="none";
 
   if(!id || !pin){
     msg.className="msg err"; msg.style.display="block";
-    msg.textContent="❌ يرجى إدخال الرقم والرمز";
+    msg.textContent="❌ يرجى إدخال البيانات";
     return;
   }
 
-  // Send login request to script (response blocked = normal)
-  fetch(SCRIPT_URL,{
-    method:"POST",
-    mode:"no-cors",
-    body:JSON.stringify({action:"login", payload:{id,pin}})
-  });
-
-  // Validate from Employees CSV
+  // Validate CSV
   const csv = await (await fetch(EMP_CSV)).text();
   const rows = csv.trim().split("\n").map(r=>r.split(","));
   const found = rows.find(r => String(r[0]).trim()==id && String(r[2]).trim()==pin);
@@ -418,29 +288,34 @@ async function login(){
     return;
   }
 
-  // Success
+  // Save session
   window.currentID = id;
-  window.currentName = found[1] || "";
-  $("avatarLetter").textContent = (window.currentName||"K").trim().charAt(0).toUpperCase();
 
-  $("loginBox").style.display="none";
-  $("dash").style.display="flex";
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("dash").style.display="block";
 
-  await refreshAll();
+  refreshAll();
 }
 
-/*** PUNCH (NO-CORS SEND) ***/
+/*** LOGOUT ***/
+function logout(){
+  window.currentID = null;
+
+  document.getElementById("dash").style.display="none";
+  document.getElementById("loginBox").style.display="block";
+
+  document.getElementById("empId").value = "";
+  document.getElementById("empPin").value = "";
+}
+
+/*** PUNCH ***/
 async function punch(type){
   if(!window.currentID) return;
 
-  const m = $("punchMsg");
-  m.className="msg"; m.style.display="none"; m.textContent="";
+  const msg = document.getElementById("punchMsg");
+  msg.style.display="none";
 
   navigator.geolocation.getCurrentPosition(async pos=>{
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-
     fetch(SCRIPT_URL,{
       method:"POST",
       mode:"no-cors",
@@ -449,112 +324,41 @@ async function punch(type){
         payload:{
           id:window.currentID,
           type,
-          lat,lng,
-          zone:"Kalba Club",
-          dist:"",
-          mapsLink
+          lat:pos.coords.latitude,
+          lng:pos.coords.longitude
         }
       })
     });
 
-    m.className="msg ok"; m.style.display="block";
-    m.textContent = `✔ تم تسجيل ${type==="IN"?"دخول":"خروج"} بنجاح`;
+    msg.className="msg ok"; msg.style.display="block";
+    msg.textContent = `✔ تم تسجيل ${type==="IN"?"دخول":"خروج"}`;
 
-    setTimeout(refreshAll, 900);
-  }, _=>{
-    m.className="msg err"; m.style.display="block";
-    m.textContent="❌ يرجى السماح بالموقع";
-  }, {enableHighAccuracy:true, timeout:10000});
+    setTimeout(refreshAll, 800);
+  },
+  _=>{
+    msg.className="msg err"; msg.style.display="block";
+    msg.textContent="❌ لم يتم السماح بالموقع";
+  });
 }
 
-/*** LOAD TODAY + STATS FROM CSV ***/
+/*** LOAD TODAY ***/
 async function refreshAll(){
   const csv = await (await fetch(PUNCH_CSV)).text();
   const rows = csv.trim().split("\n").map(r=>r.split(","));
-  const today = ymd(new Date());
+  const today = new Date().toISOString().slice(0,10);
 
-  // Filter this employee
-  const mine = rows.filter(r=>String(r[0]).trim()==window.currentID);
-
-  // Today punches only
-  const todayRows = mine.filter(r=>String(r[2]).trim()==today);
+  const mineToday = rows.filter(r=>r[0]==window.currentID && r[2]==today);
 
   // Render table
-  if(!todayRows.length){
-    $("todayTable").innerHTML = `<tr><td colspan="2" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>`;
+  const table = document.getElementById("todayTable");
+  if(!mineToday.length){
+    table.innerHTML = `<tr><td colspan="2" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>`;
   } else {
-    $("todayTable").innerHTML = todayRows.map(r=>{
+    table.innerHTML = mineToday.map(r=>{
       const t = (r[4]||"").slice(0,5);
-      const type = (r[3]||"").trim()==="IN" ? "دخول" : "خروج";
+      const type = r[3]==="IN" ? "دخول" : "خروج";
       return `<tr><td>${t}</td><td>${type}</td></tr>`;
     }).join("");
-  }
-
-  // Compute today's worked seconds (pair IN->OUT)
-  let workedToday = 0;
-  let lastIn = null;
-  const sortedToday = [...todayRows]
-    .sort((a,b)=>timeToSec((a[4]||"").slice(0,5)) - timeToSec((b[4]||"").slice(0,5)));
-
-  sortedToday.forEach(r=>{
-    const type = (r[3]||"").trim();
-    const t = (r[4]||"").slice(0,5);
-    if(type==="IN") lastIn = t;
-    if(type==="OUT" && lastIn){
-      workedToday += Math.max(0, timeToSec(t) - timeToSec(lastIn));
-      lastIn = null;
-    }
-  });
-
-  // If still IN and no OUT yet, count until now
-  if(lastIn){
-    workedToday += Math.max(0, timeToSec(nowHHMM()) - timeToSec(lastIn));
-  }
-
-  $("sToday").textContent = secToHHMM(workedToday);
-  $("sLeft").textContent  = secToHHMM(Math.max(0, EXPECTED_DAY_SEC - workedToday));
-
-  // Week worked (Sun->Sat)
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
-  const weekStartStr = ymd(weekStart);
-
-  let weekWorked = 0;
-  const byDate = {};
-  mine.forEach(r=>{
-    const d = String(r[2]).trim();
-    if(!byDate[d]) byDate[d]=[];
-    byDate[d].push(r);
-  });
-
-  Object.keys(byDate).forEach(d=>{
-    if(d < weekStartStr) return;
-    const dayRows = byDate[d].sort((a,b)=>timeToSec((a[4]||"").slice(0,5)) - timeToSec((b[4]||"").slice(0,5)));
-    let dayWorked=0; let inT=null;
-    dayRows.forEach(r=>{
-      const type=(r[3]||"").trim();
-      const t=(r[4]||"").slice(0,5);
-      if(type==="IN") inT=t;
-      if(type==="OUT" && inT){
-        dayWorked += Math.max(0, timeToSec(t)-timeToSec(inT));
-        inT=null;
-      }
-    });
-    weekWorked += dayWorked;
-  });
-
-  $("sWeek").textContent = secToHHMM(weekWorked);
-
-  // Last movement
-  if(mine.length){
-    const last = mine
-      .filter(r=>r[4])
-      .sort((a,b)=> (a[2]+a[4]).localeCompare(b[2]+b[4]))[mine.length-1];
-    const lastType = (last[3]||"").trim()==="IN" ? "دخول" : "خروج";
-    $("sLast").textContent = `${lastType} ${ (last[4]||"").slice(0,5) }`;
-  } else {
-    $("sLast").textContent = "—";
   }
 }
 </script>
