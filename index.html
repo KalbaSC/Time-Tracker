@@ -462,11 +462,12 @@
         }
       }
 else if (view === 'range') {
-  const from = fromDateInp.value ? new Date(fromDateInp.value) : null;
-  const to   = toDateInp.value ? new Date(toDateInp.value) : null;
+  const rangeStart = fromDateInp.value ? new Date(fromDateInp.value) : null;
+  const rangeEnd   = toDateInp.value ? new Date(toDateInp.value) : null;
 
-  if (!from || !to) {
+  if (!rangeStart || !rangeEnd) {
     expectedSec = 0;
+    debugText += `Range: missing date range<br>`;
   } else {
     if (expectedMode === 'calendar') {
       let wdCount = countWeekdays(from, to, [0,1,2,3,4]);
