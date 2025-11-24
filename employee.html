@@ -344,15 +344,25 @@ function logout(){
   $("empPin").value="";
 }
 
-/*** GET TODAY CSV ROWS ***/
-async function getTodayRows(){
-  const csv = await (await fetch(PUNCH_CSV)).text();
-  const rows = csv.split("\n").map(r=>r.split(","));
-  const today = ymd(new Date());
-  return rows.filter(r => r[0]==window.currentID && r[2]==today);
+async function getTodayRows() {
+  const url = SCRIPT_URL + "?emp=" + window.currentID + "&view=today&nocache=" + Math.random();
+  
+  let txt = "";
+  try {
+    const res = await fetch(url, { method:"GET" });
+    txt = await res.text();
+  } catch(e){
+    console.log("fallback to CSV");
+    const csv = await (await fetch(PUNCH_CSV)).text();
+    txt = csv;
+  }
+
+  const rows = txt.split("\n").map(r => r.split(","));
+  const today = new Date().toISOString().slice(0,10);
+
+  return rows.filter(r => r[0] == window.currentID && r[2] == today);
 }
 
-/*** PREVENT DOUBLE IN/OUT ***/
 function canPunch(type, rows){
   if(rows.length === 0){
     if(type === "OUT") return { ok:false, error:"❌ لا يمكن تسجيل خروج قبل تسجيل دخول." };
@@ -368,7 +378,6 @@ function canPunch(type, rows){
   return { ok:true };
 }
 
-/*** PUNCH + LOCATION + NO DOUBLE LOGINS ***/
 async function punch(type){
   const msg = $("punchMsg");
   msg.style.display="none";
@@ -393,7 +402,6 @@ async function punch(type){
       return;
     }
 
-    // send punch
     fetch(SCRIPT_URL,{
       method:"POST",
       mode:"no-cors",
@@ -420,7 +428,6 @@ async function punch(type){
   });
 }
 
-/*** REFRESH DASHBOARD ***/
 async function refreshAll(){
   const todayRows = await getTodayRows();
 
@@ -435,7 +442,6 @@ async function refreshAll(){
     }).join("");
   }
 
-  // Calculate today's hours
   let work = 0;
   let lastIn = null;
 
