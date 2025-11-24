@@ -57,12 +57,10 @@
 </div>
 
 <script>
-/*** URLs injected from your data ***/
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzICdi_PWthlxiaZ7EA8NqZiUxUUK7XPgZNtyoTUO_ugPAZX-q9cTJ3LaIDEudlXPV0/exec";
 const EMP_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?output=csv";
 const PUNCH_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=817419268&single=true&output=csv";
 
-/*** LOGIN (NO CORS) ***/
 async function login(){
   let id = document.getElementById("empId").value.trim();
   let pin = document.getElementById("empPin").value.trim();
@@ -73,7 +71,6 @@ async function login(){
     return;
   }
 
-  // 1) Send login request to Apps Script (we won't get response)
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
@@ -83,7 +80,6 @@ async function login(){
     })
   });
 
-  // 2) Validate using Employees CSV
   fetch(EMP_CSV)
     .then(res => res.text())
     .then(csv=>{
@@ -108,7 +104,6 @@ async function login(){
     });
 }
 
-/*** PUNCH (NO CORS) ***/
 async function punch(type){
   if(!window.currentID) return;
 
@@ -143,7 +138,6 @@ async function punch(type){
   });
 }
 
-/*** LOAD TODAY'S PUNCHES FROM CSV ***/
 function loadToday(){
   fetch(PUNCH_CSV)
     .then(res=>res.text())
