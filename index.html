@@ -409,20 +409,18 @@
       }
 
       const key = `${row.empId}||${row.name}||${periodKey}`;
-if (!map.has(key)){
-  map.set(key, {
-    empId: row.empId, 
-    name: row.name, 
-    period: periodKey, 
-    workedSec: 0, 
-    days: new Map(),
-    dateRange:
-      view === 'monthly' ? getMonthRange(row.date) :
-      view === 'weekly' ? getWeekRange(getWeekStart(row.date, weekStart)) :
-      view === 'range'  ? { start: new Date(fromDateInp.value), end: new Date(toDateInp.value) } :
-                          { start: row.date, end: row.date }
-  });
-}
+      if (!map.has(key)){
+        map.set(key, {
+          empId: row.empId, 
+          name: row.name, 
+          period: periodKey, 
+          workedSec: 0, 
+          days: new Map(),
+          dateRange: view === 'monthly' ? getMonthRange(row.date) : 
+                    view === 'weekly' ? getWeekRange(getWeekStart(row.date, weekStart)) : 
+                    {start: row.date, end: row.date}
+        });
+      }
       const obj = map.get(key);
       obj.workedSec += row.workedSec;
       obj.days.set(ymd(row.date), {pairs:row.pairs, workedSec:row.workedSec, dow:row.date.getDay()});
@@ -501,7 +499,7 @@ if (!map.has(key)){
           }
         }
       }
-      else { 
+      else { // monthly
         if (expectedMode === 'calendar'){
           const wdCount  = countWeekdays(range.start, range.end, [0,1,2,3,4]); 
           const satCount = satPolicy === 'calendar' ? countWeekdays(range.start, range.end, [6]) : 0;
@@ -532,27 +530,18 @@ for (const [dkey, info] of obj.days) {
   attendedDays++;
 }
 
-let attendedDays = obj.days.size;
-let calendarDays = 0;
+const calStart = range.start;
+const calEnd   = range.end;
 
-let calStart, calEnd;
+calendarDays = countWeekdays(calStart, calEnd, [0,1,2,3,4]);
 
-if (view === 'range') {
-  calStart = fromDateInp.value ? new Date(fromDateInp.value) : null;
-  calEnd   = toDateInp.value   ? new Date(toDateInp.value)   : null;
-} else {
-  calStart = range.start;
-  calEnd   = range.end;
+if (satPolicy === 'calendar') {
+  calendarDays += countWeekdays(calStart, calEnd, [6]);
 }
 
-if (calStart && calEnd && !isNaN(calStart) && !isNaN(calEnd)) {
-  calendarDays = countWeekdays(calStart, calEnd, [0,1,2,3,4]);
-  if (satPolicy === 'calendar') {
-    calendarDays += countWeekdays(calStart, calEnd, [6]);
-  }
-} else {
-  calendarDays = attendedDays;
-}
+obj.attendedDays = attendedDays;
+obj.calendarDays = calendarDays;
+      
 
 let allSaturday = true;
 for (const info of obj.days.values()) {
