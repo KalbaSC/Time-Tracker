@@ -245,6 +245,7 @@
               <th class="left">المتوقّع</th>
               <th class="left">الزيادة</th>
               <th class="left">النقص</th>
+              <th class="left">الأيام</th>
               <th class="center">التفاصيل</th>
             </tr>
           </thead>
@@ -522,6 +523,26 @@ const delta = obj.workedSec - expectedSec;
 let over = Math.max(0, delta);
 let short = Math.max(0, -delta);
 
+let attendedDays = 0;
+let calendarDays = 0;
+
+for (const [dkey, info] of obj.days) {
+  attendedDays++;
+}
+
+const calStart = range.start;
+const calEnd   = range.end;
+
+calendarDays = countWeekdays(calStart, calEnd, [0,1,2,3,4]);
+
+if (satPolicy === 'calendar') {
+  calendarDays += countWeekdays(calStart, calEnd, [6]);
+}
+
+obj.attendedDays = attendedDays;
+obj.calendarDays = calendarDays;
+      
+
 let allSaturday = true;
 for (const info of obj.days.values()) {
   if (info.dow !== 6) { 
@@ -540,16 +561,18 @@ if (allSaturday) {
       totalOver += over; 
       totalShort += short;
 
-      rows.push({
-        key: `${obj.empId}||${obj.name}||${obj.period}`,
-        empId: obj.empId, 
-        name: obj.name,
-        period: prettyPeriod(obj.period, weekStart),
-        worked: obj.workedSec, 
-        expected: expectedSec, 
-        overtime: over, 
-        short
-      });
+rows.push({
+  key: `${obj.empId}||${obj.name}||${obj.period}`,
+  empId: obj.empId,
+  name: obj.name,
+  period: prettyPeriod(obj.period, weekStart),
+  worked: obj.workedSec,
+  expected: expectedSec,
+  overtime: over,
+  short,
+  attendedDays: obj.attendedDays,
+  calendarDays: obj.calendarDays
+});
 
       groupedDetails.set(`${obj.empId}||${obj.name}||${obj.period}`, {
         ...obj, expectedSec, over, short
@@ -566,6 +589,7 @@ if (allSaturday) {
         <td class="left">${secToHHMM(r.expected)}</td>
         <td class="left">${r.overtime ? `<span class="pill ok">${secToHHMM(r.overtime)}</span>` : `<span class="pill">00:00</span>`}</td>
         <td class="left">${r.short ? `<span class="pill bad">-${secToHHMM(r.short)}</span>` : `<span class="pill ok">00:00</span>`}</td>
+        <td class="center">${r.attendedDays}/${r.calendarDays}</td>
         <td class="center"><button class="btn secondary" data-key="${esc(r.key)}">تفاصيل</button></td>
       </tr>
     `).join('');
