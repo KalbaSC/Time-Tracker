@@ -469,31 +469,18 @@ else if (view === 'range') {
     expectedSec = 0;
     debugText += `Range: missing date range<br>`;
   } else {
-    if (expectedMode === 'calendar') {
-      let wdCount = countWeekdays(from, to, [0,1,2,3,4]);
-      let satCount = satPolicy === 'calendar' ? countWeekdays(from, to, [6]) : 0;
-
-      expectedSec =
-        (wdCount * expectedWD) +
-        (satCount * expectedSat);
-
-      debugText += `Range Calendar: WD=${wdCount}, Sat=${satCount}<br>`;
-    } 
-    else {
-      expectedSec = 0;
-      for (const [dkey, info] of obj.days) {
-        expectedSec += expectedForDayKey(
-          dkey,
-          info.dow,
-          expectedWD,
-          expectedSat,
-          satPolicy,
-          expectedMode,
-          !!info.pairs?.length
-        );
-      }
-      debugText += `Range Punched: days=${obj.days.size}<br>`;
+else {
+  if (expectedMode === 'calendar'){
+    expectedSec += expectedWD * countWeekdays(range.start, range.end, [0,1,2,3,4]); 
+    if (satPolicy === 'calendar') {
+      expectedSec += expectedSat * countWeekdays(range.start, range.end, [6]); 
     }
+    debugText += `Monthly Calendar: WD days=${countWeekdays(range.start, range.end, [0,1,2,3,4])}, Sat days=${countWeekdays(range.start, range.end, [6])}<br>`;
+  } else {
+    for (const [dkey, info] of obj.days){
+      expectedSec += expectedForDayKey(dkey, info.dow, expectedWD, expectedSat, satPolicy, 'punch', !!info.pairs?.length);
+    }
+    debugText += `Monthly Punched: ${obj.days.size} days with punches<br>`;
   }
 }
       else {
