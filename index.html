@@ -501,7 +501,7 @@ if (!map.has(key)){
           }
         }
       }
-      else { // monthly
+      else { 
         if (expectedMode === 'calendar'){
           const wdCount  = countWeekdays(range.start, range.end, [0,1,2,3,4]); 
           const satCount = satPolicy === 'calendar' ? countWeekdays(range.start, range.end, [6]) : 0;
@@ -553,9 +553,6 @@ if (calStart && calEnd && !isNaN(calStart) && !isNaN(calEnd)) {
 } else {
   calendarDays = attendedDays;
 }
-
-obj.attendedDays = attendedDays;
-obj.calendarDays = calendarDays;
 
 obj.attendedDays = attendedDays;
 obj.calendarDays = calendarDays;
