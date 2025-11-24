@@ -519,8 +519,21 @@
       }
 
 const delta = obj.workedSec - expectedSec;
-      const over = Math.max(0, delta);
-      const short = Math.max(0, -delta);
+let over = Math.max(0, delta);
+let short = Math.max(0, -delta);
+
+let allSaturday = true;
+for (const info of obj.days.values()) {
+  if (info.dow !== 6) { 
+    allSaturday = false;
+    break;
+  }
+}
+
+if (allSaturday) {
+  over = 0;
+  short = 0;
+}
 
       totalWorked += obj.workedSec; 
       totalExpected += expectedSec; 
