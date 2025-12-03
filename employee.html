@@ -40,7 +40,6 @@
       gap:16px;
     }
 
-    /* Login Card */
     .login-card{
       max-width:480px;
       margin:40px auto;
@@ -196,19 +195,15 @@
       <div id="loginMsg" class="msg"></div>
     </div>
 
-    <!-- Dashboard -->
     <div id="dash">
 
-      <!-- Logout -->
       <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
 
-      <!-- Header -->
       <div class="hero">
         <h1>مرحباً بك في نظام البصمة</h1>
         <p>نظام لتسجيل الحضور والانصراف وإدارة ساعات العمل للموظفين</p>
       </div>
 
-      <!-- Stats -->
       <div class="grid">
         <div class="card">
           <div class="label">ساعات العمل اليوم</div>
@@ -231,13 +226,35 @@
         </div>
       </div>
 
-      <!-- Punch buttons -->
       <button class="btn-yellow" onclick="punch('IN')">⬆️ بصمة دخول</button>
       <button class="btn-yellow" onclick="punch('OUT')">⬇️ بصمة خروج</button>
+<div class="section">
+  <h3 style="color:var(--accent);font-weight:900;">طلب إجازة</h3>
+
+  <label>نوع الإجازة</label>
+  <select id="leaveType">
+    <option value="سنوية">سنوية</option>
+    <option value="مرضية">مرضية</option>
+    <option value="بدون راتب">بدون راتب</option>
+    <option value="أخرى">أخرى</option>
+  </select>
+
+  <label>من تاريخ</label>
+  <input id="leaveFrom" type="date">
+
+  <label>إلى تاريخ</label>
+  <input id="leaveTo" type="date">
+
+  <label>السبب</label>
+  <input id="leaveReason" placeholder="اكتب سبب الإجازة">
+
+  <button class="btn-yellow" onclick="sendLeave()">📄 إرسال طلب الإجازة</button>
+
+  <div id="leaveMsg" class="msg"></div>
+</div>
 
       <div id="punchMsg" class="msg"></div>
 
-      <!-- Today table -->
       <div class="section">
         <h3 style="color:var(--accent);font-weight:900;">بصمات اليوم</h3>
         <table>
@@ -511,6 +528,46 @@ async function refreshAll(){
     $("sLast").textContent="—";
   }
 }
+
+async function sendLeave(){
+  if (!window.currentID) return;
+  const type   = $("leaveType").value;
+  const from   = $("leaveFrom").value;
+  const to     = $("leaveTo").value;
+  const reason = $("leaveReason").value.trim();
+  const msg    = $("leaveMsg");
+  msg.style.display = "none";
+
+  if (!from || !to) {
+    msg.className = "msg err";
+    msg.style.display = "block";
+    msg.textContent = "❌ يرجى اختيار تاريخ البداية والنهاية";
+    return;
+  }
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      action: "requestLeave",
+      payload: {
+        id: window.currentID,
+        name: "",
+        type,
+        fromDate: from,
+        toDate: to,
+        reason
+      }
+    })
+  });
+
+  msg.className = "msg ok";
+  msg.style.display = "block";
+  msg.textContent = "✔ تم إرسال طلب الإجازة";
+
+  $("leaveReason").value = "";
+}
+  
 </script>
 </body>
 </html>
