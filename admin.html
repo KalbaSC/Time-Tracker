@@ -281,21 +281,29 @@ async function loadLeaves(){
   }
 
   let html = "";
-  leaves.forEach((lv, index) => {
-    html += `
-      <tr>
-        <td>${lv.name || "-"}</td>
-        <td>${lv.id}</td>
-        <td>${lv.type}</td>
-        <td>${lv.fromDate}</td>
-        <td>${lv.toDate}</td>
-        <td>${lv.status}</td>
-        <td>
-          <button onclick="setLeaveStatus(${index+2}, 'Approved')">✔ قبول</button>
-          <button onclick="setLeaveStatus(${index+2}, 'Rejected')">✖ رفض</button>
-        </td>
-      </tr>`;
-  });
+leaves.forEach((lv, index) => {
+
+  let actionsHtml = "";
+  if (lv.status === "Pending") {
+    actionsHtml = `
+      <button onclick="setLeaveStatus(${index+2}, 'Approved')">✔ قبول</button>
+      <button onclick="setLeaveStatus(${index+2}, 'Rejected')">✖ رفض</button>
+    `;
+  } else {
+    actionsHtml = `<span style="color:#888">—</span>`;
+  }
+
+  html += `
+    <tr>
+      <td>${lv.name || "-"}</td>
+      <td>${lv.id}</td>
+      <td>${lv.type}</td>
+      <td>${lv.fromDate}</td>
+      <td>${lv.toDate}</td>
+      <td>${lv.status}</td>
+      <td>${actionsHtml}</td>
+    </tr>`;
+});
 
   $("leaveTable").innerHTML = html;
 }
