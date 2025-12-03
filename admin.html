@@ -99,6 +99,7 @@
         <th>النوع</th>
         <th>من</th>
         <th>إلى</th>
+        <th>المرفق</th>
         <th>الحالة</th>
         <th>إجراء</th>
       </tr>
@@ -286,12 +287,16 @@ leaves.forEach((lv, index) => {
   let actionsHtml = "";
   if (lv.status === "Pending") {
     actionsHtml = `
-      <button onclick="setLeaveStatus(${index+2}, 'Approved')">✔ قبول</button>
-      <button onclick="setLeaveStatus(${index+2}, 'Rejected')">✖ رفض</button>
+      <button class="btn-yellow" onclick="setLeaveStatus(${index+2}, 'Approved')">✔ قبول</button>
+      <button class="btn-yellow" onclick="setLeaveStatus(${index+2}, 'Rejected')">✖ رفض</button>
     `;
   } else {
     actionsHtml = `<span style="color:#888">—</span>`;
   }
+
+  const attachHtml = lv.fileUrl
+    ? `<a href="${lv.fileUrl}" target="_blank" style="color:#ffd21f;text-decoration:underline;">عرض</a>`
+    : `<span style="color:#777">لا يوجد</span>`;
 
   html += `
     <tr>
@@ -300,6 +305,7 @@ leaves.forEach((lv, index) => {
       <td>${lv.type}</td>
       <td>${lv.fromDate}</td>
       <td>${lv.toDate}</td>
+      <td>${attachHtml}</td>
       <td>${lv.status}</td>
       <td>${actionsHtml}</td>
     </tr>`;
