@@ -410,7 +410,6 @@ async function punch(type){
     return;
   }
 
-  // 2) location check
   navigator.geolocation.getCurrentPosition(async pos=>{
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
@@ -424,7 +423,6 @@ async function punch(type){
 
     const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
 
-    // 3) send to Apps Script (no-cors)
     fetch(SCRIPT_URL,{
       method:"POST",
       mode:"no-cors",
@@ -452,11 +450,9 @@ async function punch(type){
   }, {enableHighAccuracy:true, timeout:10000});
 }
 
-/*** REFRESH DASHBOARD + TODAY TABLE ***/
 async function refreshAll(){
   const todayRows = await getTodayRows();
 
-  // table
   const table = $("todayTable");
   if(!todayRows.length){
     table.innerHTML = `<tr><td colspan="2" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>`;
@@ -532,7 +528,10 @@ async function refreshAll(){
 }
 
 async function sendLeave() {
-  if (!window.currentID) return;
+  if (!window.currentID) {
+    alert("يرجى تسجيل الدخول أولاً");
+    return;
+  }
 
   const type   = $("leaveType").value;
   const from   = $("leaveFrom").value;
@@ -550,18 +549,17 @@ async function sendLeave() {
     return;
   }
 
-  // ----- read file as base64 (if any) -----
   let fileData = null, fileName = null, fileType = null;
 
-  const file = fileIn.files[0];
-  if (file) {
+  if (fileIn.files && fileIn.files.length > 0) {
+    const file = fileIn.files[0];
     fileName = file.name;
-    fileType = file.type;
+    fileType = file.type || "application/octet-stream";
 
     fileData = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64 = reader.result.split(",")[1]; // remove "data:..."
+        const base64 = String(reader.result).split(",")[1];
         resolve(base64);
       };
       reader.onerror = () => reject(reader.error);
@@ -569,32 +567,42 @@ async function sendLeave() {
     });
   }
 
-  // ----- send request -----
-  fetch(SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      action: "requestLeave",
-      payload: {
-        id: window.currentID,
-        type,
-        fromDate: from,
-        toDate: to,
-        reason,
-        fileName,
-        fileType,
-        fileData
-      }
-    })
-  });
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "requestLeave",
+        payload: {
+          id: window.currentID,
+          type,
+          fromDate: from,
+          toDate: to,
+          reason,
+          fileName,
+          fileType,
+          fileData
+        }
+      })
+    });
 
-  msg.className = "msg ok";
-  msg.style.display = "block";
-  msg.textContent = "✔ تم إرسال طلب الإجازة";
+    const text = await res.text();
+    console.log("leave response:", text);
 
-  $("leaveReason").value = "";
-  $("leaveFile").value = "";
-} 
+    msg.className = "msg ok";
+    msg.style.display = "block";
+    msg.textContent = "✔ تم إرسال طلب الإجازة";
+
+    $("leaveReason").value = "";
+    $("leaveFile").value = "";
+  } catch (err) {
+    console.error("leave error:", err);
+    msg.className = "msg err";
+    msg.style.display = "block";
+    msg.textContent = "❌ حدث خطأ أثناء الإرسال، حاولي مرة أخرى";
+  }
+}
+
 </script>
 </body>
 </html>
