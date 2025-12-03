@@ -244,6 +244,8 @@
 
   <label>إلى تاريخ</label>
   <input id="leaveTo" type="date">
+<label>ملف الإجازة (صورة أو PDF)</label>
+<input id="leaveFile" type="file" accept="image/*,application/pdf">
 
   <label>السبب</label>
   <input id="leaveReason" placeholder="اكتب سبب الإجازة">
@@ -529,13 +531,16 @@ async function refreshAll(){
   }
 }
 
-async function sendLeave(){
+async function sendLeave() {
   if (!window.currentID) return;
+
   const type   = $("leaveType").value;
   const from   = $("leaveFrom").value;
   const to     = $("leaveTo").value;
   const reason = $("leaveReason").value.trim();
+  const fileIn = $("leaveFile");
   const msg    = $("leaveMsg");
+
   msg.style.display = "none";
 
   if (!from || !to) {
@@ -545,6 +550,26 @@ async function sendLeave(){
     return;
   }
 
+  // ----- read file as base64 (if any) -----
+  let fileData = null, fileName = null, fileType = null;
+
+  const file = fileIn.files[0];
+  if (file) {
+    fileName = file.name;
+    fileType = file.type;
+
+    fileData = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result.split(",")[1]; // remove "data:..."
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ----- send request -----
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
@@ -552,11 +577,13 @@ async function sendLeave(){
       action: "requestLeave",
       payload: {
         id: window.currentID,
-        name: "",
         type,
         fromDate: from,
         toDate: to,
-        reason
+        reason,
+        fileName,
+        fileType,
+        fileData
       }
     })
   });
@@ -566,8 +593,8 @@ async function sendLeave(){
   msg.textContent = "✔ تم إرسال طلب الإجازة";
 
   $("leaveReason").value = "";
-}
-  
+  $("leaveFile").value = "";
+} 
 </script>
 </body>
 </html>
