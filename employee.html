@@ -549,6 +549,7 @@ async function sendLeave() {
     return;
   }
 
+  // ---- read file as base64 (if any) ----
   let fileData = null, fileName = null, fileType = null;
 
   if (fileIn.files && fileIn.files.length > 0) {
@@ -559,7 +560,7 @@ async function sendLeave() {
     fileData = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64 = String(reader.result).split(",")[1];
+        const base64 = String(reader.result).split(",")[1]; // remove data:...
         resolve(base64);
       };
       reader.onerror = () => reject(reader.error);
@@ -567,40 +568,35 @@ async function sendLeave() {
     });
   }
 
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "requestLeave",
-        payload: {
-          id: window.currentID,
-          type,
-          fromDate: from,
-          toDate: to,
-          reason,
-          fileName,
-          fileType,
-          fileData
-        }
-      })
-    });
+  // ---- SEND TO APPS SCRIPT (no-cors preserved) ----
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: "requestLeave",
+      payload: {
+        id: window.currentID,
+        type,
+        fromDate: from,
+        toDate: to,
+        reason,
+        fileName,
+        fileType,
+        fileData
+      }
+    })
+  });
 
-    const text = await res.text();
-    console.log("leave response:", text);
+  // ---- UI success message ----
+  msg.className = "msg ok";
+  msg.style.display = "block";
+  msg.textContent = "✔ تم إرسال طلب الإجازة";
 
-    msg.className = "msg ok";
-    msg.style.display = "block";
-    msg.textContent = "✔ تم إرسال طلب الإجازة";
-
-    $("leaveReason").value = "";
-    $("leaveFile").value = "";
-  } catch (err) {
-    console.error("leave error:", err);
-    msg.className = "msg err";
-    msg.style.display = "block";
-    msg.textContent = "❌ حدث خطأ أثناء الإرسال، حاولي مرة أخرى";
-  }
+  $("leaveReason").value = "";
+  $("leaveFile").value = "";
 }
 
 </script>
