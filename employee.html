@@ -228,32 +228,33 @@
 
       <button class="btn-yellow" onclick="punch('IN')">⬆️ بصمة دخول</button>
       <button class="btn-yellow" onclick="punch('OUT')">⬇️ بصمة خروج</button>
-<div class="section">
-  <h3 style="color:var(--accent);font-weight:900;">طلب إجازة</h3>
-
+<!-- طلب الإجازة -->
+<form id="leaveForm" enctype="multipart/form-data" onsubmit="sendLeave(event)">
   <label>نوع الإجازة</label>
-  <select id="leaveType">
-    <option value="سنوية">سنوية</option>
+  <select id="leaveType" name="type">
     <option value="مرضية">مرضية</option>
+    <option value="سنوية">سنوية</option>
     <option value="بدون راتب">بدون راتب</option>
     <option value="أخرى">أخرى</option>
   </select>
 
   <label>من تاريخ</label>
-  <input id="leaveFrom" type="date">
+  <input id="leaveFrom" name="fromDate" type="date">
 
   <label>إلى تاريخ</label>
-  <input id="leaveTo" type="date">
-<label>ملف الإجازة (صورة أو PDF)</label>
-<input id="leaveFile" type="file" accept="image/*,application/pdf">
+  <input id="leaveTo" name="toDate" type="date">
+
+  <label>ملف الإجازة (صورة أو PDF)</label>
+  <input id="leaveFile" name="file" type="file" accept="image/*,application/pdf">
 
   <label>السبب</label>
-  <input id="leaveReason" placeholder="اكتب سبب الإجازة">
+  <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
 
-  <button class="btn-yellow" onclick="sendLeave()">📄 إرسال طلب الإجازة</button>
+  <button type="submit" class="btn-yellow">📄 إرسال طلب الإجازة</button>
+</form>
 
-  <div id="leaveMsg" class="msg"></div>
-</div>
+<div id="leaveMsg" class="msg"></div>
+
 
       <div id="punchMsg" class="msg"></div>
 
