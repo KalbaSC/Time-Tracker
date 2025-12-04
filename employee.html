@@ -528,10 +528,7 @@ async function refreshAll(){
   }
 }
 
-async function sendLeave(ev) {
-  // because we are using <form onsubmit="sendLeave(event)">
-  ev.preventDefault();
-
+async function sendLeave() {
   if (!window.currentID) {
     alert("يرجى تسجيل الدخول أولاً");
     return;
@@ -553,35 +550,62 @@ async function sendLeave(ev) {
     return;
   }
 
-  // Build FormData directly from the form → includes the file field with name="file"
-  const form = document.getElementById("leaveForm");
-  const fd   = new FormData(form);
+  // --- prepare optional file as base64 ---
+  let fileData = "";
+  let fileName = "";
+  let fileType = "";
 
-  // extra fields that are not in the HTML form
-  fd.append("action", "requestLeave");
-  fd.append("id", window.currentID);
+  if (fileIn.files && fileIn.files.length > 0) {
+    const file = fileIn.files[0];
+    fileName = file.name;
+    fileType = file.type || "application/octet-stream";
 
-  // optional: you can skip this check; FormData already has file if chosen
-  if (!fileIn.files || fileIn.files.length === 0) {
-    // no attachment is fine, just continue
+    // read file as base64
+    fileData = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        // e.g. "data:image/png;base64,AAAA..."
+        const result = String(e.target.result || "");
+        const base64 = result.split(",")[1] || "";
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
-  // Send to Apps Script (response is opaque; we don't need it)
+  // payload for requestLeave(p) in Code.gs
+  const payload = {
+    id: window.currentID,
+    type,
+    fromDate: from,
+    toDate: to,
+    reason
+  };
+
+  if (fileData) {
+    payload.fileData = fileData;
+    payload.fileName = fileName;
+    payload.fileType = fileType;
+  }
+
+  // send JSON (no-cors, so we don't care about the response body)
   await fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
-    body: fd
+    body: JSON.stringify({
+      action: "requestLeave",
+      payload
+    })
   });
 
   msg.className = "msg ok";
   msg.style.display = "block";
   msg.textContent = "✔ تم إرسال طلب الإجازة";
 
-  // clear fields (keep type / dates if you prefer)
   $("leaveReason").value = "";
   $("leaveFile").value = "";
-}
-  
+} 
 </script>
 </body>
 </html>
