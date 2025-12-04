@@ -228,33 +228,47 @@
 
       <button class="btn-yellow" onclick="punch('IN')">⬆️ بصمة دخول</button>
       <button class="btn-yellow" onclick="punch('OUT')">⬇️ بصمة خروج</button>
-<!-- طلب الإجازة -->
-<form id="leaveForm" enctype="multipart/form-data" onsubmit="sendLeave(event)">
-  <label>نوع الإجازة</label>
-  <select id="leaveType" name="type">
-    <option value="مرضية">مرضية</option>
-    <option value="سنوية">سنوية</option>
-    <option value="بدون راتب">بدون راتب</option>
-    <option value="أخرى">أخرى</option>
-  </select>
 
-  <label>من تاريخ</label>
-  <input id="leaveFrom" name="fromDate" type="date">
+      <!-- طلب الإجازة -->
 
-  <label>إلى تاريخ</label>
-  <input id="leaveTo" name="toDate" type="date">
+      <!-- hidden iframe so the page doesn't navigate away -->
+      <iframe name="hiddenFrame" style="display:none;"></iframe>
 
-  <label>ملف الإجازة (صورة أو PDF)</label>
-  <input id="leaveFile" name="file" type="file" accept="image/*,application/pdf">
+      <form id="leaveForm"
+            action="https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec"
+            method="POST"
+            enctype="multipart/form-data"
+            target="hiddenFrame"
+            onsubmit="return beforeLeaveSubmit();">
 
-  <label>السبب</label>
-  <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
+        <!-- hidden fields required by Code.gs -->
+        <input type="hidden" name="action" value="requestLeave">
+        <input type="hidden" name="id" id="leaveEmpId">
 
-  <button type="submit" class="btn-yellow">📄 إرسال طلب الإجازة</button>
-</form>
+        <label>نوع الإجازة</label>
+        <select id="leaveType" name="type">
+          <option value="مرضية">مرضية</option>
+          <option value="سنوية">سنوية</option>
+          <option value="بدون راتب">بدون راتب</option>
+          <option value="أخرى">أخرى</option>
+        </select>
 
-<div id="leaveMsg" class="msg"></div>
+        <label>من تاريخ</label>
+        <input id="leaveFrom" name="fromDate" type="date">
 
+        <label>إلى تاريخ</label>
+        <input id="leaveTo" name="toDate" type="date">
+
+        <label>ملف الإجازة (صورة أو PDF)</label>
+        <input id="leaveFile" name="file" type="file" accept="image/*,application/pdf">
+
+        <label>السبب</label>
+        <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
+
+        <button type="submit" class="btn-yellow">📄 إرسال طلب الإجازة</button>
+      </form>
+
+      <div id="leaveMsg" class="msg"></div>
 
       <div id="punchMsg" class="msg"></div>
 
@@ -528,84 +542,37 @@ async function refreshAll(){
   }
 }
 
-async function sendLeave() {
-  if (!window.currentID) {
-    alert("يرجى تسجيل الدخول أولاً");
-    return;
-  }
-
-  const type   = $("leaveType").value;
-  const from   = $("leaveFrom").value;
-  const to     = $("leaveTo").value;
-  const reason = $("leaveReason").value.trim();
-  const fileIn = $("leaveFile");
-  const msg    = $("leaveMsg");
+function beforeLeaveSubmit() {
+  const msg  = $("leaveMsg");
+  const from = $("leaveFrom").value;
+  const to   = $("leaveTo").value;
 
   msg.style.display = "none";
 
+  // must be logged in
+  if (!window.currentID) {
+    alert("يرجى تسجيل الدخول أولاً");
+    return false; // cancel form submit
+  }
+
+  // basic validation
   if (!from || !to) {
     msg.className = "msg err";
     msg.style.display = "block";
     msg.textContent = "❌ يرجى اختيار تاريخ البداية والنهاية";
-    return;
+    return false; // cancel form submit
   }
 
-  // --- prepare optional file as base64 ---
-  let fileData = "";
-  let fileName = "";
-  let fileType = "";
-
-  if (fileIn.files && fileIn.files.length > 0) {
-    const file = fileIn.files[0];
-    fileName = file.name;
-    fileType = file.type || "application/octet-stream";
-
-    // read file as base64
-    fileData = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        // e.g. "data:image/png;base64,AAAA..."
-        const result = String(e.target.result || "");
-        const base64 = result.split(",")[1] || "";
-        resolve(base64);
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // payload for requestLeave(p) in Code.gs
-  const payload = {
-    id: window.currentID,
-    type,
-    fromDate: from,
-    toDate: to,
-    reason
-  };
-
-  if (fileData) {
-    payload.fileData = fileData;
-    payload.fileName = fileName;
-    payload.fileType = fileType;
-  }
-
-  // send JSON (no-cors, so we don't care about the response body)
-  await fetch(SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      action: "requestLeave",
-      payload
-    })
-  });
+  // put employee ID into hidden field so Code.gs can read e.parameter.id
+  $("leaveEmpId").value = window.currentID;
 
   msg.className = "msg ok";
   msg.style.display = "block";
   msg.textContent = "✔ تم إرسال طلب الإجازة";
 
-  $("leaveReason").value = "";
-  $("leaveFile").value = "";
-} 
+  return true;
+}
+
 </script>
 </body>
 </html>
