@@ -528,7 +528,10 @@ async function refreshAll(){
   }
 }
 
-async function sendLeave() {
+async function sendLeave(ev) {
+  // because we are using <form onsubmit="sendLeave(event)">
+  ev.preventDefault();
+
   if (!window.currentID) {
     alert("يرجى تسجيل الدخول أولاً");
     return;
@@ -550,20 +553,21 @@ async function sendLeave() {
     return;
   }
 
-  // ✅ Build FormData (no-cors safe)
-  const fd = new FormData();
+  // Build FormData directly from the form → includes the file field with name="file"
+  const form = document.getElementById("leaveForm");
+  const fd   = new FormData(form);
+
+  // extra fields that are not in the HTML form
   fd.append("action", "requestLeave");
   fd.append("id", window.currentID);
-  fd.append("type", type);
-  fd.append("fromDate", from);
-  fd.append("toDate", to);
-  fd.append("reason", reason);
 
-  if (fileIn.files && fileIn.files.length > 0) {
-    fd.append("file", fileIn.files[0]);
+  // optional: you can skip this check; FormData already has file if chosen
+  if (!fileIn.files || fileIn.files.length === 0) {
+    // no attachment is fine, just continue
   }
 
-  fetch(SCRIPT_URL, {
+  // Send to Apps Script (response is opaque; we don't need it)
+  await fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
     body: fd
@@ -573,10 +577,11 @@ async function sendLeave() {
   msg.style.display = "block";
   msg.textContent = "✔ تم إرسال طلب الإجازة";
 
+  // clear fields (keep type / dates if you prefer)
   $("leaveReason").value = "";
-  $("leaveFile").value = "";
+  $("leaveFile")..value = "";
 }
-
+  
 </script>
 </body>
 </html>
