@@ -1,357 +1,823 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة إدارة الموارد البشرية</title>
+  <title>لوحة إدارة الموارد البشرية - الإمارات</title>
 
-  <!-- Tajawal Font -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#0b0b0b; --card:#111213; --accent:#f6c21a; --accent-2:#1f1f1f;
-      --text:#f2f2f2; --muted:#aaaaaa;
-      --radius:18px; --shadow:0 6px 20px rgba(0,0,0,.25);
-      font-family:"Tajawal",sans-serif;
+    :root {
+      --bg: #0b0b0b;
+      --card: #111213;
+      --accent: #f6c21a;
+      --accent-2: #1f1f1f;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #f2f2f2;
+      --muted: #aaaaaa;
+      --radius: 18px;
+      --shadow: 0 6px 20px rgba(0,0,0,.25);
+      font-family: "Tajawal", sans-serif;
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);padding:20px}
-    .container{max-width:900px;margin:auto}
-
-    .card{
-      background:linear-gradient(180deg,#141515,#0f0f0f);
-      border:1px solid #1f1f1f;
-      border-radius:var(--radius);
-      padding:20px;
-      box-shadow:var(--shadow);
-      margin-bottom:20px;
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-
-    h2{margin-bottom:14px;color:var(--accent)}
-    label{display:block;margin-bottom:6px;color:var(--muted);font-size:14px}
-    input,select,button{
-      width:100%;padding:12px;border-radius:12px;
-      border:1px solid #2a2a2a;background:#0f0f0f;color:var(--text);
-      margin-bottom:10px;font-size:15px;
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
     }
-    button{cursor:pointer;background:var(--accent);color:#111;font-weight:800;border:none}
-    button:hover{background:#ffda41}
-
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:10px;border-bottom:1px solid #222;text-align:right}
-
-    .badge{
-      display:inline-block;padding:4px 10px;
-      border-radius:999px;background:#1f1f1f;color:#aaa;
-      font-size:13px;margin-bottom:10px;
+    
+    .container {
+      max-width: 1200px;
+      margin: auto;
     }
 
-    .flex{display:flex;gap:10px;flex-wrap:wrap}
-    .col{flex:1 1 220px}
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid #1f1f1f;
+    }
+    
+    .header-info .time-location {
+      display: flex;
+      gap: 20px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    
+    .header-info .time-location span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #141515, #0f0f0f);
+      border: 1px solid #1f1f1f;
+      border-radius: var(--radius);
+      padding: 25px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      transition: transform 0.2s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #2a2a2a;
+      background: #0f0f0f;
+      color: var(--text);
+      margin-bottom: 10px;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(246, 194, 26, 0.1);
+    }
+    
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #111;
+      font-weight: 800;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    
+    button:hover {
+      background: #ffda41;
+      transform: translateY(-1px);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #222;
+      text-align: right;
+    }
+    
+    th {
+      background: #1a1a1a;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    
+    tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #1f1f1f;
+      color: #aaa;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+    
+    .status-approved {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    
+    .status-rejected {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .flex {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .col {
+      flex: 1 1 220px;
+    }
+
+    .search-box {
+      margin-bottom: 15px;
+    }
+    
+    .search-box input {
+      margin-bottom: 0;
+      background: #1a1a1a;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: var(--radius);
+      background: var(--card);
+      border-left: 4px solid var(--accent);
+      box-shadow: var(--shadow);
+      transform: translateX(150%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      max-width: 350px;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .toast.success {
+      border-left-color: var(--success);
+    }
+    
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+    
+    .toast.warning {
+      border-left-color: var(--warning);
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+    }
+    
+    .loader::after {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--muted);
+      border-radius: 50%;
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-yellow {
+      background: var(--accent);
+      color: #111;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      margin: 2px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-yellow:hover {
+      background: #ffda41;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      margin: 2px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      margin: 2px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .logout-btn {
+      background: var(--danger);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+    
+    .logout-btn:hover {
+      background: #dc2626;
+      color: white;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
+  
+  <div id="headerInfo" style="display: none;" class="header-info">
+    <h2 style="margin: 0;">👨‍💼 لوحة إدارة الموارد البشرية</h2>
+    <div class="time-location">
+      <span id="uaeTime">🕒 وقت الإمارات: --:--</span>
+      <span>📍 الإمارات العربية المتحدة</span>
+      <a href="#" onclick="logout()" class="logout-btn">🚪 تسجيل خروج</a>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
 
   <div id="loginBox" class="card">
-    <h2>تسجيل دخول الإدارة</h2>
+    <h2>🔐 تسجيل دخول الإدارة</h2>
+    
+    <div style="text-align: center; margin-bottom: 20px; color: var(--muted);">
+      <div>🕒 وقت الإمارات: <span id="loginTime"></span></div>
+      <div style="font-size: 12px; margin-top: 5px;">📍 الإمارات العربية المتحدة</div>
+    </div>
 
-    <label>اسم المستخدم</label>
-    <input id="loginUser" placeholder="Username">
+    <label>👤 اسم المستخدم</label>
+    <input id="loginUser" placeholder="أدخل اسم المستخدم">
 
-    <label>كلمة المرور</label>
-    <input id="loginPass" type="password" placeholder="password">
+    <label>🔒 كلمة المرور</label>
+    <input id="loginPass" type="password" placeholder="أدخل كلمة المرور">
 
     <button id="btnLogin">دخول</button>
-
-    <p id="loginMsg" style="color:#aaa;margin-top:8px"></p>
+    
+    <div class="loader" id="loginLoader"></div>
+    <p id="loginMsg" style="color:#aaa; margin-top:8px; text-align:center;"></p>
   </div>
 
   <div id="adminBox" class="card" style="display:none;">
-    <h2>إدارة الموظفين</h2>
-
-    <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
-
-    <div class="flex">
-      <div class="col">
-        <label>الاسم</label>
-        <input id="empName" placeholder="الاسم ">
+    
+    <div class="card">
+      <h2>👥 إدارة الموظفين</h2>
+      
+      <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
+        <div class="search-box" style="width: 300px;">
+          <input type="text" id="searchEmployee" placeholder="🔍 بحث عن موظف...">
+        </div>
       </div>
-      <div class="col">
-        <label>الرقم الوظيفي</label>
-        <input id="empId" placeholder="مثال: 1">
+
+      <div class="flex">
+        <div class="col">
+          <label>الاسم الكامل</label>
+          <input id="empName" placeholder="الاسم الكامل">
+        </div>
+        <div class="col">
+          <label>الرقم الوظيفي</label>
+          <input id="empId" placeholder="مثال: 1001">
+        </div>
+        <div class="col">
+          <label>الرمز السري PIN</label>
+          <input id="empPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
+        </div>
       </div>
-      <div class="col">
-        <label>الرمز السري PIN</label>
-        <input id="empPin" type="password" placeholder="4 أرقام">
+
+      <div class="flex">
+        <button id="btnAdd" style="flex:1">➕ إضافة موظف جديد</button>
+        <button id="btnClear" style="flex:0.3" onclick="clearEmployeeForm()">🗑️ مسح</button>
+      </div>
+
+      <div class="loader" id="empLoader"></div>
+      <table id="empTableContainer">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>الرقم</th>
+            <th>PIN</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="empTable">
+          <tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Leave Requests -->
+    <div id="leaveBox" class="card">
+      <h2>📋 طلبات الإجازة</h2>
+      
+      <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="flex" style="gap: 5px;">
+          <button class="btn-yellow" onclick="loadLeaves('all')">الكل</button>
+          <button class="btn-yellow" onclick="loadLeaves('pending')">قيد الانتظار</button>
+          <button class="btn-yellow" onclick="loadLeaves('approved')">المقبولة</button>
+          <button class="btn-yellow" onclick="loadLeaves('rejected')">المرفوضة</button>
+        </div>
+        <button class="btn-yellow" onclick="loadLeaves()">🔄 تحديث</button>
+      </div>
+
+      <div class="loader" id="leaveLoader"></div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>الموظف</th>
+              <th>الرقم</th>
+              <th>نوع الإجازة</th>
+              <th>من</th>
+              <th>إلى</th>
+              <th>المرفق</th>
+              <th>الحالة</th>
+              <th>الإجراء</th>
+            </tr>
+          </thead>
+          <tbody id="leaveTable">
+            <tr><td colspan="8" style="text-align:center; color:#777">لا يوجد طلبات.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-<div id="leaveBox" class="card">
-  <h2>طلبات الإجازة</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>الموظف</th>
-        <th>الرقم</th>
-        <th>النوع</th>
-        <th>من</th>
-        <th>إلى</th>
-        <th>المرفق</th>
-        <th>الحالة</th>
-        <th>إجراء</th>
-      </tr>
-    </thead>
-    <tbody id="leaveTable">
-      <tr><td colspan="7" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>
-    </tbody>
-  </table>
-</div>
-
-    <div class="flex">
-      <button id="btnAdd" style="flex:1">➕ إضافة موظف</button>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>الاسم</th><th>الرقم</th><th>PIN</th><th>حذف</th>
-        </tr>
-      </thead>
-      <tbody id="empTable">
-        <tr><td colspan="4" style="text-align:center;color:#777">لا يوجد بيانات بعد.</td></tr>
-      </tbody>
-    </table>
   </div>
 
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec";
+const ADMIN_CREDENTIALS = {
+  username: "eman",
+  password: "eman123"
+};
+
+const UAE_TIMEZONE = 'Asia/Dubai';
 
 const $ = id => document.getElementById(id);
 
-window.onload = () => {
-  if (sessionStorage.getItem("adminLogged") === "1") {
-    $("loginBox").style.display = "none";
-    $("adminBox").style.display = "block";
-    loadEmployees();
-  }
-};
+function showToast(message, type = 'success', duration = 3000) {
+  const toast = $('toast');
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.classList.add('show');
   
-$("btnLogin").onclick = () => {
-  let u = $("loginUser").value.trim();
-  let p = $("loginPass").value.trim();
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, duration);
+}
 
-  if (u === "eman" && p === "eman123") {
-    sessionStorage.setItem("adminLogged", "1");
-    loadEmployees();
-    $("loginBox").style.display = "none";
-    $("adminBox").style.display = "block";
-  } else {
-    $("loginMsg").textContent = "❌ بيانات الدخول غير صحيحة";
-  }
-};
-document.getElementById("loginPass").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    $("btnLogin").click();
-  }
-});
+function updateUAETime() {
+  const now = new Date();
+  const uaeTime = now.toLocaleTimeString('ar-AE', {
+    timeZone: UAE_TIMEZONE,
+    hour12: true,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  
+  const uaeDate = now.toLocaleDateString('ar-AE', {
+    timeZone: UAE_TIMEZONE,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  const timeElement = $('uaeTime');
+  const loginTimeElement = $('loginTime');
+  const fullTime = `${uaeDate} - ${uaeTime}`;
+  
+  if (timeElement) timeElement.innerHTML = `🕒 وقت الإمارات: ${fullTime}`;
+  if (loginTimeElement) loginTimeElement.textContent = fullTime;
+}
 
-document.getElementById("loginUser").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    $("btnLogin").click();
+updateUAETime();
+setInterval(updateUAETime, 1000);
+
+function showLoader(id) {
+  const loader = $(id);
+  if (loader) loader.style.display = 'block';
+}
+
+function hideLoader(id) {
+  const loader = $(id);
+  if (loader) loader.style.display = 'none';
+}
+
+function logout() {
+  if (confirm('هل تريد تسجيل الخروج؟')) {
+    sessionStorage.removeItem('adminLogged');
+    location.reload();
   }
-});
+}
+
+function clearEmployeeForm() {
+  $('empName').value = '';
+  $('empId').value = '';
+  $('empPin').value = '';
+  showToast('تم مسح النموذج', 'success');
+}
+
+function validatePIN(pin) {
+  return /^\d{4}$/.test(pin);
+}
 
 async function loadEmployees() {
-  await fetch(SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      action: "getEmployees",
-      payload: {}
-    })
-  });
-
-  loadEmployeesFromCSV();
-}
-
-$("btnAdd").onclick = async () => {
-  let name = $("empName").value.trim();
-  let id = $("empId").value.trim();
-  let pin = $("empPin").value.trim();
-
-  if (!name || !id || !pin) return alert("⚠️ جميع الحقول مطلوبة");
-
-  await fetch(SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      action: "addEmployee",
-      payload: { name, id, pin }
-    })
-  });
-
-  alert("✔ تمت الإضافة");
-  loadEmployees();
-};
-async function loadEmployeesFromCSV() {
-  const url ="https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
-
-  const res = await fetch(url);
-  const text = await res.text();
-
-  const rows = text
-    .split("\n")
-    .map(r => r.split(","))
-    .filter(r => r[0] && r[0] !== "ID");
-
-  let html = "";
-  rows.forEach(r => {
-    const id = r[0].trim();
-    const name = r[1].trim();
-    const pin = r[2].trim();
-
-    html += `
-      <tr>
-        <td>${name}</td>
-        <td>${id}</td>
-        <td>${pin}</td>
-        <td>
-          <button class="delRowBtn" data-id="${id}" style="
-            background:#771a1a;color:white;
-            padding:6px 10px;border-radius:8px;
-            border:none;cursor:pointer;
-          ">🗑️</button>
-        </td>
-      </tr>`;
-  });
-
-  $("empTable").innerHTML = html;
-  $("userCount").textContent = rows.length;
-
-  // attach delete handlers
-  document.querySelectorAll(".delRowBtn").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.dataset.id;
-      if (!confirm("Are you sure you want to delete this employee?")) return;
-
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({
-          action: "deleteEmployee",
-          payload: { id }
-        })
-      });
-
-      btn.closest("tr").remove();
-      $("userCount").textContent =
-        document.querySelectorAll("#empTable tr").length;
-    };
-  });
-}
-
-async function loadLeaves(){
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "getLeavesAll",
-      payload: {}
-    })
-  });
-
-  const text = await res.text();
-  let data;
+  showLoader('empLoader');
+  
   try {
-    data = JSON.parse(text);
-  } catch(e) {
-    console.log("Cannot parse leaves JSON", text);
+    $('empTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
+    
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
+    const res = await fetch(url);
+    const text = await res.text();
+
+    const rows = text
+      .split("\n")
+      .map(r => r.split(","))
+      .filter(r => r[0] && r[0].trim() !== "ID");
+
+    let html = "";
+    rows.forEach(r => {
+      const id = r[0].trim();
+      const name = r[1].trim();
+      const pin = r[2].trim();
+
+      html += `
+        <tr>
+          <td>${name}</td>
+          <td>${id}</td>
+          <td>${pin}</td>
+          <td class="actions-cell">
+            <button class="btn-danger delRowBtn" data-id="${id}">🗑️ حذف</button>
+          </td>
+        </tr>`;
+    });
+
+    $('empTable').innerHTML = html || '<tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات.</td></tr>';
+    $('userCount').textContent = rows.length;
+
+    document.querySelectorAll('.delRowBtn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.dataset.id;
+        if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) return;
+
+        showLoader('empLoader');
+        try {
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({
+              action: "deleteEmployee",
+              payload: { id }
+            })
+          });
+
+          btn.closest('tr').remove();
+          $('userCount').textContent = parseInt($('userCount').textContent) - 1;
+          showToast('تم حذف الموظف بنجاح', 'success');
+        } catch (error) {
+          showToast('خطأ في حذف الموظف', 'error');
+          console.error('Delete error:', error);
+        } finally {
+          hideLoader('empLoader');
+        }
+      };
+    });
+
+  } catch (error) {
+    console.error('Load employees error:', error);
+    $('empTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777">خطأ في تحميل البيانات</td></tr>';
+    showToast('خطأ في تحميل بيانات الموظفين', 'error');
+  } finally {
+    hideLoader('empLoader');
+  }
+}
+
+$('btnAdd').onclick = async () => {
+  const name = $('empName').value.trim();
+  const id = $('empId').value.trim();
+  const pin = $('empPin').value.trim();
+
+  if (!name || !id || !pin) {
+    showToast('جميع الحقول مطلوبة', 'warning');
     return;
   }
-  if (!data.ok) return;
 
-  const leaves = data.leaves;
-  if (!leaves.length){
-    $("leaveTable").innerHTML =
-      `<tr><td colspan="7" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>`;
+  if (!validatePIN(pin)) {
+    showToast('الرمز السري يجب أن يكون 4 أرقام فقط', 'warning');
     return;
   }
 
-  let html = "";
-leaves.forEach((lv, index) => {
+  showLoader('empLoader');
+  $('btnAdd').disabled = true;
 
-  let actionsHtml = "";
-  if (lv.status === "Pending") {
-    actionsHtml = `
-      <button class="btn-yellow" onclick="setLeaveStatus(${index+2}, 'Approved')">✔ قبول</button>
-      <button class="btn-yellow" onclick="setLeaveStatus(${index+2}, 'Rejected')">✖ رفض</button>
-    `;
-  } else {
-    actionsHtml = `<span style="color:#888">—</span>`;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "addEmployee",
+        payload: { name, id, pin }
+      })
+    });
+
+    showToast('تمت إضافة الموظف بنجاح', 'success');
+    clearEmployeeForm();
+    await loadEmployees();
+  } catch (error) {
+    console.error('Add employee error:', error);
+    showToast('خطأ في إضافة الموظف', 'error');
+  } finally {
+    hideLoader('empLoader');
+    $('btnAdd').disabled = false;
   }
+};
 
-  const attachHtml = lv.fileUrl
-    ? `<a href="${lv.fileUrl}" target="_blank" style="color:#ffd21f;text-decoration:underline;">عرض</a>`
-    : `<span style="color:#777">لا يوجد</span>`;
+async function loadLeaves(filter = 'all') {
+  showLoader('leaveLoader');
 
-  html += `
-    <tr>
-      <td>${lv.name || "-"}</td>
-      <td>${lv.id}</td>
-      <td>${lv.type}</td>
-      <td>${lv.fromDate}</td>
-      <td>${lv.toDate}</td>
-      <td>${attachHtml}</td>
-      <td>${lv.status}</td>
-      <td>${actionsHtml}</td>
-    </tr>`;
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getLeavesAll",
+        payload: {}
+      })
+    });
+
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
+      return;
+    }
+
+    if (!data.ok || !data.leaves) {
+      $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>';
+      return;
+    }
+
+    let leaves = data.leaves;
+    
+    if (filter !== 'all') {
+      leaves = leaves.filter(lv => lv.status.toLowerCase() === filter);
+    }
+
+    if (!leaves.length) {
+      $('leaveTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد طلبات ${filter === 'all' ? '' : `(${filter})`}</td></tr>`;
+      return;
+    }
+
+    let html = "";
+    leaves.forEach((lv, index) => {
+      let statusClass = '';
+      switch (lv.status) {
+        case 'Pending': statusClass = 'status-pending'; break;
+        case 'Approved': statusClass = 'status-approved'; break;
+        case 'Rejected': statusClass = 'status-rejected'; break;
+      }
+
+      let actionsHtml = "";
+      if (lv.status === "Pending") {
+        actionsHtml = `
+          <div class="actions-cell">
+            <button class="btn-success" onclick="setLeaveStatus(${index + 2}, 'Approved')">✔ قبول</button>
+            <button class="btn-danger" onclick="setLeaveStatus(${index + 2}, 'Rejected')">✖ رفض</button>
+          </div>
+        `;
+      } else {
+        actionsHtml = `<span style="color:#888">—</span>`;
+      }
+
+      const attachHtml = lv.fileUrl
+        ? `<a href="${lv.fileUrl}" target="_blank" style="color:#ffd21f;text-decoration:underline;">📎 عرض</a>`
+        : `<span style="color:#777">—</span>`;
+
+      html += `
+        <tr>
+          <td>${lv.name || "-"}</td>
+          <td>${lv.id}</td>
+          <td>${lv.type}</td>
+          <td>${lv.fromDate}</td>
+          <td>${lv.toDate}</td>
+          <td>${attachHtml}</td>
+          <td><span class="status-badge ${statusClass}">${lv.status}</span></td>
+          <td>${actionsHtml}</td>
+        </tr>`;
+    });
+
+    $('leaveTable').innerHTML = html;
+    showToast(`تم تحميل ${leaves.length} طلب`, 'success');
+
+  } catch (error) {
+    console.error('Load leaves error:', error);
+    $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
+    showToast('خطأ في تحميل طلبات الإجازة', 'error');
+  } finally {
+    hideLoader('leaveLoader');
+  }
+}
+
+async function setLeaveStatus(row, status) {
+  if (!confirm(`هل تريد ${status === 'Approved' ? 'قبول' : 'رفض'} هذا الطلب؟`)) return;
+
+  showLoader('leaveLoader');
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updateLeaveStatus",
+        payload: { row, status }
+      })
+    });
+
+    showToast(`تم ${status === 'Approved' ? 'قبول' : 'رفض'} الطلب`, 'success');
+    await loadLeaves();
+  } catch (error) {
+    console.error('Update leave status error:', error);
+    showToast('خطأ في تحديث حالة الطلب', 'error');
+  } finally {
+    hideLoader('leaveLoader');
+  }
+}
+
+$('searchEmployee')?.addEventListener('input', function(e) {
+  const searchTerm = e.target.value.toLowerCase();
+  const rows = $('empTable').querySelectorAll('tr');
+  
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? '' : 'none';
+  });
 });
 
-  $("leaveTable").innerHTML = html;
-}
-async function setLeaveStatus(row, status){
-  if (!confirm("تأكيد تغيير حالة الطلب؟")) return;
+function handleLogin() {
+  const u = $('loginUser').value.trim();
+  const p = $('loginPass').value.trim();
 
-  await fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "updateLeaveStatus",
-      payload: { row, status }
-    })
+  showLoader('loginLoader');
+
+  setTimeout(() => {
+    if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
+      sessionStorage.setItem('adminLogged', '1');
+      $('loginBox').style.display = 'none';
+      $('adminBox').style.display = 'block';
+      $('headerInfo').style.display = 'flex';
+      
+      loadEmployees();
+      loadLeaves();
+      showToast('تم تسجيل الدخول بنجاح', 'success');
+    } else {
+      $('loginMsg').textContent = '❌ بيانات الدخول غير صحيحة';
+      showToast('بيانات الدخول غير صحيحة', 'error');
+    }
+    hideLoader('loginLoader');
+  }, 1000);
+}
+
+$('btnLogin').onclick = handleLogin;
+
+['loginUser', 'loginPass'].forEach(id => {
+  $(id)?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
   });
-
-  alert("✔ تم التحديث");
-  loadLeaves();
-}
+});
 
 window.onload = () => {
-  if (sessionStorage.getItem("adminLogged") === "1") {
-    $("loginBox").style.display = "none";
-    $("adminBox").style.display = "block";
-    loadEmployees();
-    loadLeaves();
-  }
-};
-
-$("btnLogin").onclick = () => {
-  let u = $("loginUser").value.trim();
-  let p = $("loginPass").value.trim();
-
-  if (u === "eman" && p === "eman123") {
-    sessionStorage.setItem("adminLogged", "1");
-    $("loginBox").style.display = "none";
-    $("adminBox").style.display = "block";
-    loadEmployees();
-    loadLeaves();
-  } else {
-    $("loginMsg").textContent = "❌ بيانات الدخول غير صحيحة";
-  }
-};
+  updateUAETime();
   
+  if (sessionStorage.getItem('adminLogged') === '1') {
+    $('loginBox').style.display = 'none';
+    $('adminBox').style.display = 'block';
+    $('headerInfo').style.display = 'flex';
+    
+    loadEmployees();
+    loadLeaves();
+  }
+};
+
+setInterval(() => {
+  if (sessionStorage.getItem('adminLogged') === '1') {
+    loadLeaves();
+  }
+}, 30000);
 </script>
 
 </body>
