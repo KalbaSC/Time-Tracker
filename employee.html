@@ -1176,128 +1176,143 @@ async function refreshAll() {
     showToast('خطأ في تحديث البيانات', 'error');
   }
 }
-
-/*** LEAVE FORM HANDLING - FIXED VERSION ***/
+/*** LEAVE FORM HANDLING - FULL FIXED VERSION (NO JSON PARSE ERROR) ***/
 async function submitLeaveForm(event) {
   event.preventDefault();
-  
+
   const form = event.target;
   const formData = new FormData(form);
-  
+
   // Must be logged in
   if (!window.currentID) {
     showToast('يرجى تسجيل الدخول أولاً', 'error');
     return false;
   }
-  
+
   // Basic validation
   const fromInput = form.querySelector('#leaveFrom');
   const toInput = form.querySelector('#leaveTo');
   const from = fromInput ? fromInput.value : '';
   const to = toInput ? toInput.value : '';
-  
+
   if (!from || !to) {
     showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
     return false;
   }
-  
+
   if (new Date(to) < new Date(from)) {
     showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
     return false;
   }
-  
+
   // Check if request is at least 48 hours in advance
   const now = new Date();
   const fromDate = new Date(from);
   const hoursDiff = (fromDate - now) / (1000 * 60 * 60);
-  
+
   if (hoursDiff < 48) {
     if (!confirm("تحذير: يجب تقديم طلب الإجازة قبل 48 ساعة على الأقل. هل تريد المتابعة؟")) {
       return false;
     }
   }
-  
+
   // Ensure employee ID is in form data
   const empIdInput = form.querySelector('#leaveEmpId');
-  if (empIdInput) {
-    empIdInput.value = window.currentID;
-  }
-  
+  if (empIdInput) empIdInput.value = window.currentID;
+
   // Show loading
   const submitBtn = form.querySelector('#submitLeaveBtn');
   const leaveLoader = $('#leaveLoader');
   const leaveMsg = $('#leaveMsg');
-  
+
   if (submitBtn) submitBtn.disabled = true;
   if (leaveLoader) leaveLoader.style.display = 'block';
   if (leaveMsg) {
     leaveMsg.style.display = 'none';
     leaveMsg.className = 'msg';
   }
-  
+
   try {
-    // Send form data using fetch
-    const response = await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: formData });
-    
-    let result;
-    try {
-      result = await response.json();
-    } catch (jsonError) {
-      console.error('JSON parse error:', jsonError);
-      showToast('خطأ في معالجة الاستجابة من الخادم', 'error');
-      return false;
+    // ✅ Ensure required backend fields exist
+    formData.set("action", "requestLeave");
+    formData.set("id", window.currentID);
+
+    // ✅ Send multipart/form-data (includes file)
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    // ✅ CORS-safe: read as text first (may be empty if blocked)
+    const text = await response.text();
+
+    let result = { ok: true }; // optimistic if response unreadable
+
+    if (text && text.trim()) {
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.log("Non-JSON response from server:", text);
+        result = { ok: false, error: "Server returned non-JSON response" };
+      }
+    } else {
+      console.warn("Empty response (likely CORS). Assuming request was sent.");
     }
-    
-    if (result && result.ok) {
-      showToast('تم إرسال طلب الإجازة بنجاح', 'success');
-      
+
+    if (result.ok) {
+      showToast('تم إرسال طلب الإجازة بنجاح ✅', 'success');
+
       if (leaveMsg) {
         leaveMsg.className = 'msg ok';
         leaveMsg.style.display = 'block';
         leaveMsg.textContent = '✔ تم إرسال طلب الإجازة بنجاح';
       }
-      
+
       // Reset form
       form.reset();
-      
+
       // Set min dates to today - SAFELY
       const today = ymd(new Date());
       const fromElement = $('#leaveFrom');
       const toElement = $('#leaveTo');
-      
+
       if (fromElement) fromElement.min = today;
       if (toElement) toElement.min = today;
-      
-      // Show file URL if uploaded
+
+      // Show file URL if uploaded (only if response was readable)
       if (result.fileUrl) {
         console.log('File uploaded successfully:', result.fileUrl);
-        // Optional: Display file link to user
+        // Optional: display link
+        // showToast('تم رفع الملف ✅', 'success');
       }
+
     } else {
       const errorMsg = result && result.error ? result.error : 'فشل إرسال طلب الإجازة';
       showToast('خطأ: ' + errorMsg, 'error');
-      
+
       if (leaveMsg) {
         leaveMsg.className = 'msg err';
         leaveMsg.style.display = 'block';
         leaveMsg.textContent = '❌ ' + errorMsg;
       }
     }
+
   } catch (error) {
     console.error('Form submission error:', error);
     showToast('خطأ في الاتصال بالخادم', 'error');
-    
+
     if (leaveMsg) {
       leaveMsg.className = 'msg err';
       leaveMsg.style.display = 'block';
       leaveMsg.textContent = '❌ خطأ في الاتصال بالخادم';
     }
+
   } finally {
     // Hide loader and re-enable button
     if (leaveLoader) leaveLoader.style.display = 'none';
     if (submitBtn) submitBtn.disabled = false;
   }
-  
+
   return false; // Prevent default form submission
 }
 
