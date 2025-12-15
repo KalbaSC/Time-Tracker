@@ -618,7 +618,7 @@
           </div>
 
           <label><i class="fas fa-paperclip"></i> ملف الإجازة (صورة أو PDF - اختياري)</label>
-          <input id="leaveFile" name="file" type="file" accept="image/*,application/pdf">
+          <input type="file" id="leaveFile" name="leaveFile" accept=".pdf,.jpg,.jpeg,.png" />
 
           <label><i class="fas fa-comment-alt"></i> السبب</label>
           <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
@@ -1176,12 +1176,11 @@ async function refreshAll() {
     showToast('خطأ في تحديث البيانات', 'error');
   }
 }
-/*** LEAVE FORM HANDLING - FULL FIXED VERSION (NO JSON PARSE ERROR) ***/
+/*** LEAVE FORM HANDLING - JSON + BASE64 FILE UPLOAD (RELIABLE) ***/
 async function submitLeaveForm(event) {
   event.preventDefault();
 
   const form = event.target;
-  const formData = new FormData(form);
 
   // Must be logged in
   if (!window.currentID) {
@@ -1191,9 +1190,13 @@ async function submitLeaveForm(event) {
 
   // Basic validation
   const fromInput = form.querySelector('#leaveFrom');
-  const toInput = form.querySelector('#leaveTo');
+  const toInput   = form.querySelector('#leaveTo');
+  const typeInput = form.querySelector('#leaveType');
+  const reasonInp = form.querySelector('#leaveReason');
+  const fileInput = form.querySelector('#leaveFile'); // make sure your file input id is leaveFile
+
   const from = fromInput ? fromInput.value : '';
-  const to = toInput ? toInput.value : '';
+  const to   = toInput ? toInput.value : '';
 
   if (!from || !to) {
     showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
@@ -1205,25 +1208,20 @@ async function submitLeaveForm(event) {
     return false;
   }
 
-  // Check if request is at least 48 hours in advance
+  // 48h rule
   const now = new Date();
   const fromDate = new Date(from);
   const hoursDiff = (fromDate - now) / (1000 * 60 * 60);
-
   if (hoursDiff < 48) {
     if (!confirm("تحذير: يجب تقديم طلب الإجازة قبل 48 ساعة على الأقل. هل تريد المتابعة؟")) {
       return false;
     }
   }
 
-  // Ensure employee ID is in form data
-  const empIdInput = form.querySelector('#leaveEmpId');
-  if (empIdInput) empIdInput.value = window.currentID;
-
-  // Show loading
-  const submitBtn = form.querySelector('#submitLeaveBtn');
+  // UI elements
+  const submitBtn  = form.querySelector('#submitLeaveBtn');
   const leaveLoader = $('#leaveLoader');
-  const leaveMsg = $('#leaveMsg');
+  const leaveMsg    = $('#leaveMsg');
 
   if (submitBtn) submitBtn.disabled = true;
   if (leaveLoader) leaveLoader.style.display = 'block';
@@ -1233,69 +1231,60 @@ async function submitLeaveForm(event) {
   }
 
   try {
-    // ✅ Ensure required backend fields exist
-    formData.set("action", "requestLeave");
-    formData.set("id", window.currentID);
+    // Build payload (JSON)
+    const payload = {
+      id: String(window.currentID),
+      type: typeInput ? (typeInput.value || '') : '',
+      fromDate: from,
+      toDate: to,
+      reason: reasonInp ? (reasonInp.value || '') : ''
+    };
 
-    // ✅ Send multipart/form-data (includes file)
-    const response = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: formData
+    // Optional file -> base64
+    const file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+
+    if (file) {
+      // NOTE: keep files reasonable size (Apps Script has limits)
+      const base64 = await readFileAsBase64_(file); // no "data:...," prefix
+      payload.fileData = base64;
+      payload.fileName = file.name || ("leave_" + payload.id + "_" + Date.now());
+      payload.fileType = file.type || "application/octet-stream";
+    }
+
+    const body = JSON.stringify({
+      action: "requestLeave",
+      payload
     });
 
-    // ✅ CORS-safe: read as text first (may be empty if blocked)
-    const text = await response.text();
+    // Send request
+    // If your page is on GitHub Pages, browser will block reading response (CORS),
+    // but the request will still be received by Apps Script.
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body
+    });
 
-    let result = { ok: true }; // optimistic if response unreadable
+    // We cannot reliably read JSON response cross-domain (CORS), so show success and verify in sheet
+    showToast('تم إرسال طلب الإجازة بنجاح ✅', 'success');
 
-    if (text && text.trim()) {
-      try {
-        result = JSON.parse(text);
-      } catch (e) {
-        console.log("Non-JSON response from server:", text);
-        result = { ok: false, error: "Server returned non-JSON response" };
-      }
-    } else {
-      console.warn("Empty response (likely CORS). Assuming request was sent.");
+    if (leaveMsg) {
+      leaveMsg.className = 'msg ok';
+      leaveMsg.style.display = 'block';
+      leaveMsg.textContent = '✔ تم إرسال طلب الإجازة بنجاح';
     }
 
-    if (result.ok) {
-      showToast('تم إرسال طلب الإجازة بنجاح ✅', 'success');
+    form.reset();
 
-      if (leaveMsg) {
-        leaveMsg.className = 'msg ok';
-        leaveMsg.style.display = 'block';
-        leaveMsg.textContent = '✔ تم إرسال طلب الإجازة بنجاح';
-      }
+    // Reset min dates safely
+    const today = ymd(new Date());
+    const fromElement = $('#leaveFrom');
+    const toElement = $('#leaveTo');
+    if (fromElement) fromElement.min = today;
+    if (toElement) toElement.min = today;
 
-      // Reset form
-      form.reset();
-
-      // Set min dates to today - SAFELY
-      const today = ymd(new Date());
-      const fromElement = $('#leaveFrom');
-      const toElement = $('#leaveTo');
-
-      if (fromElement) fromElement.min = today;
-      if (toElement) toElement.min = today;
-
-      // Show file URL if uploaded (only if response was readable)
-      if (result.fileUrl) {
-        console.log('File uploaded successfully:', result.fileUrl);
-        // Optional: display link
-        // showToast('تم رفع الملف ✅', 'success');
-      }
-
-    } else {
-      const errorMsg = result && result.error ? result.error : 'فشل إرسال طلب الإجازة';
-      showToast('خطأ: ' + errorMsg, 'error');
-
-      if (leaveMsg) {
-        leaveMsg.className = 'msg err';
-        leaveMsg.style.display = 'block';
-        leaveMsg.textContent = '❌ ' + errorMsg;
-      }
-    }
+    // If you have loadLeaves(), call it (it will fetch leaves)
+    if (typeof loadLeaves === "function") loadLeaves();
 
   } catch (error) {
     console.error('Form submission error:', error);
@@ -1308,12 +1297,26 @@ async function submitLeaveForm(event) {
     }
 
   } finally {
-    // Hide loader and re-enable button
     if (leaveLoader) leaveLoader.style.display = 'none';
     if (submitBtn) submitBtn.disabled = false;
   }
 
-  return false; // Prevent default form submission
+  return false;
+}
+
+/*** Helper: convert File -> base64 string (without data prefix) ***/
+function readFileAsBase64_(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      // result looks like: "data:application/pdf;base64,AAA..."
+      const commaIndex = result.indexOf(",");
+      resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /*** INITIALIZATION ***/
