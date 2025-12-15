@@ -592,13 +592,11 @@
           </p>
         </div>
 
-        <!-- Hidden iframe so the page doesn't navigate away -->
-        <iframe name="hiddenFrame" style="display:none;"></iframe>
-
-  <form id="leaveForm" onsubmit="return submitLeaveForm(event);">
-  <!-- hidden fields -->
-  <input type="hidden" name="action" value="requestLeave">
-  <input type="hidden" name="id" id="leaveEmpId">
+        <!-- Remove hidden iframe since we're using AJAX -->
+        <form id="leaveForm" onsubmit="return submitLeaveForm(event);">
+          <!-- hidden fields -->
+          <input type="hidden" name="action" value="requestLeave">
+          <input type="hidden" name="id" id="leaveEmpId">
 
           <label><i class="fas fa-calendar-alt"></i> نوع الإجازة</label>
           <select id="leaveType" name="type">
@@ -625,9 +623,9 @@
           <label><i class="fas fa-comment-alt"></i> السبب</label>
           <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
 
-  <button type="submit" class="btn-yellow" id="submitLeaveBtn">
-    <i class="fas fa-paper-plane"></i> إرسال طلب الإجازة
-  </button>
+          <button type="submit" class="btn-yellow" id="submitLeaveBtn">
+            <i class="fas fa-paper-plane"></i> إرسال طلب الإجازة
+          </button>
         </form>
         <div class="loader" id="leaveLoader"></div>
         <div id="leaveMsg" class="msg"></div>
@@ -893,8 +891,10 @@ async function login() {
     
     // Set min date for leave form to today
     const today = ymd(new Date());
-    $('leaveFrom').min = today;
-    $('leaveTo').min = today;
+    const leaveFrom = $('#leaveFrom');
+    const leaveTo = $('#leaveTo');
+    if (leaveFrom) leaveFrom.min = today;
+    if (leaveTo) leaveTo.min = today;
 
   } catch (error) {
     console.error('Login error:', error);
@@ -1177,38 +1177,35 @@ async function refreshAll() {
   }
 }
 
-/*** LEAVE FORM HANDLING ***/
-function beforeLeaveSubmit() {
-  const msg = $("leaveMsg");
-  const from = $("leaveFrom").value;
-  const to = $("leaveTo").value;
-  const submitBtn = $("submitLeaveBtn");
-
-  msg.style.display = "none";
-
+/*** LEAVE FORM HANDLING - FIXED VERSION ***/
+async function submitLeaveForm(event) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  
   // Must be logged in
   if (!window.currentID) {
     showToast('يرجى تسجيل الدخول أولاً', 'error');
     return false;
   }
-
+  
   // Basic validation
+  const fromInput = form.querySelector('#leaveFrom');
+  const toInput = form.querySelector('#leaveTo');
+  const from = fromInput ? fromInput.value : '';
+  const to = toInput ? toInput.value : '';
+  
   if (!from || !to) {
-    msg.className = "msg err";
-    msg.style.display = "block";
-    msg.textContent = "❌ يرجى اختيار تاريخ البداية والنهاية";
-    showToast('يرجى اختيار التاريخ', 'error');
+    showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
     return false;
   }
-
+  
   if (new Date(to) < new Date(from)) {
-    msg.className = "msg err";
-    msg.style.display = "block";
-    msg.textContent = "❌ تاريخ النهاية يجب أن يكون بعد تاريخ البداية";
-    showToast('تاريخ النهاية يجب أن يكون بعد البداية', 'error');
+    showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
     return false;
   }
-
+  
   // Check if request is at least 48 hours in advance
   const now = new Date();
   const fromDate = new Date(from);
@@ -1219,35 +1216,92 @@ function beforeLeaveSubmit() {
       return false;
     }
   }
-
-  // Put employee ID into hidden field
-  $("leaveEmpId").value = window.currentID;
-
-  // Disable submit button and show loader
-  submitBtn.disabled = true;
-  showLoader('leaveLoader');
-
-  // Reset form after 3 seconds
-  setTimeout(() => {
-    msg.className = "msg ok";
-    msg.style.display = "block";
-    msg.textContent = "✔ تم إرسال طلب الإجازة بنجاح";
+  
+  // Ensure employee ID is in form data
+  const empIdInput = form.querySelector('#leaveEmpId');
+  if (empIdInput) {
+    empIdInput.value = window.currentID;
+  }
+  
+  // Show loading
+  const submitBtn = form.querySelector('#submitLeaveBtn');
+  const leaveLoader = $('#leaveLoader');
+  const leaveMsg = $('#leaveMsg');
+  
+  if (submitBtn) submitBtn.disabled = true;
+  if (leaveLoader) leaveLoader.style.display = 'block';
+  if (leaveMsg) {
+    leaveMsg.style.display = 'none';
+    leaveMsg.className = 'msg';
+  }
+  
+  try {
+    // Send form data using fetch
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: formData
+    });
     
-    hideLoader('leaveLoader');
-    submitBtn.disabled = false;
+    let result;
+    try {
+      result = await response.json();
+    } catch (jsonError) {
+      console.error('JSON parse error:', jsonError);
+      showToast('خطأ في معالجة الاستجابة من الخادم', 'error');
+      return false;
+    }
     
-    // Reset form
-    $("leaveForm").reset();
+    if (result && result.ok) {
+      showToast('تم إرسال طلب الإجازة بنجاح', 'success');
+      
+      if (leaveMsg) {
+        leaveMsg.className = 'msg ok';
+        leaveMsg.style.display = 'block';
+        leaveMsg.textContent = '✔ تم إرسال طلب الإجازة بنجاح';
+      }
+      
+      // Reset form
+      form.reset();
+      
+      // Set min dates to today - SAFELY
+      const today = ymd(new Date());
+      const fromElement = $('#leaveFrom');
+      const toElement = $('#leaveTo');
+      
+      if (fromElement) fromElement.min = today;
+      if (toElement) toElement.min = today;
+      
+      // Show file URL if uploaded
+      if (result.fileUrl) {
+        console.log('File uploaded successfully:', result.fileUrl);
+        // Optional: Display file link to user
+      }
+    } else {
+      const errorMsg = result && result.error ? result.error : 'فشل إرسال طلب الإجازة';
+      showToast('خطأ: ' + errorMsg, 'error');
+      
+      if (leaveMsg) {
+        leaveMsg.className = 'msg err';
+        leaveMsg.style.display = 'block';
+        leaveMsg.textContent = '❌ ' + errorMsg;
+      }
+    }
+  } catch (error) {
+    console.error('Form submission error:', error);
+    showToast('خطأ في الاتصال بالخادم', 'error');
     
-    // Set min dates to today
-    const today = ymd(new Date());
-    $('leaveFrom').min = today;
-    $('leaveTo').min = today;
-    
-    showToast('تم إرسال طلب الإجازة', 'success');
-  }, 3000);
-
-  return true;
+    if (leaveMsg) {
+      leaveMsg.className = 'msg err';
+      leaveMsg.style.display = 'block';
+      leaveMsg.textContent = '❌ خطأ في الاتصال بالخادم';
+    }
+  } finally {
+    // Hide loader and re-enable button
+    if (leaveLoader) leaveLoader.style.display = 'none';
+    if (submitBtn) submitBtn.disabled = false;
+  }
+  
+  return false; // Prevent default form submission
 }
 
 /*** INITIALIZATION ***/
@@ -1258,8 +1312,10 @@ function initialize() {
   
   // Set today's date as min for leave form
   const today = ymd(new Date());
-  $('leaveFrom').min = today;
-  $('leaveTo').min = today;
+  const leaveFrom = $('#leaveFrom');
+  const leaveTo = $('#leaveTo');
+  if (leaveFrom) leaveFrom.min = today;
+  if (leaveTo) leaveTo.min = today;
   
   // Check if already logged in
   if (window.currentID) {
@@ -1288,79 +1344,20 @@ function initialize() {
   });
   
   // Date change listeners for leave form
-  $('leaveFrom').addEventListener('change', function() {
-    $('leaveTo').min = this.value;
-  });
+  const leaveFromElement = $('#leaveFrom');
+  const leaveToElement = $('#leaveTo');
+  
+  if (leaveFromElement) {
+    leaveFromElement.addEventListener('change', function() {
+      if (leaveToElement) {
+        leaveToElement.min = this.value;
+      }
+    });
+  }
 }
 
 // Start initialization when page loads
 window.onload = initialize;
 </script>
-
-<script>  
- async function submitLeaveForm(event) {
-  event.preventDefault();
-  
-  const form = event.target;
-  const formData = new FormData(form);
-  
-  // Basic validation
-  const from = form.querySelector('#leaveFrom').value;
-  const to = form.querySelector('#leaveTo').value;
-  
-  if (!from || !to) {
-    showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
-    return false;
-  }
-  
-  if (new Date(to) < new Date(from)) {
-    showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
-    return false;
-  }
-  
-  // Show loading
-  const submitBtn = form.querySelector('#submitLeaveBtn');
-  submitBtn.disabled = true;
-  showLoader('leaveLoader');
-  
-  try {
-    // Send form data using fetch
-    const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const result = await response.json();
-    
-    if (result.ok) {
-      showToast('تم إرسال طلب الإجازة بنجاح', 'success');
-      
-      // Reset form
-      form.reset();
-      
-      // Set min dates to today
-      const today = ymd(new Date());
-      $('#leaveFrom').min = today;
-      $('#leaveTo').min = today;
-      
-      // Show file URL if uploaded
-      if (result.fileUrl) {
-        showToast('تم رفع الملف: ' + result.fileUrl, 'success');
-      }
-    } else {
-      showToast('خطأ: ' + (result.error || 'فشل الإرسال'), 'error');
-    }
-  } catch (error) {
-    console.error('Form submission error:', error);
-    showToast('خطأ في الاتصال بالخادم', 'error');
-  } finally {
-    hideLoader('leaveLoader');
-    submitBtn.disabled = false;
-  }
-  
-  return false; // Prevent default form submission
-} 
-</script>
-  
 </body>
 </html>
