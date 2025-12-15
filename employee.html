@@ -595,16 +595,16 @@
         <!-- Hidden iframe so the page doesn't navigate away -->
         <iframe name="hiddenFrame" style="display:none;"></iframe>
 
-        <form id="leaveForm"
-              action="https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec"
-              method="POST"
-              enctype="multipart/form-data"
-              target="hiddenFrame"
-              onsubmit="return beforeLeaveSubmit();">
+ <form id="leaveForm"
+      action="https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec"
+      method="POST"
+      enctype="multipart/form-data"
+      target="hiddenFrame"
+      onsubmit="return submitLeaveForm(this);">
 
-          <!-- Hidden fields required by Code.gs -->
-          <input type="hidden" name="action" value="requestLeave">
-          <input type="hidden" name="id" id="leaveEmpId">
+  <!-- hidden fields required by Code.gs -->
+  <input type="hidden" name="action" value="requestLeave">
+  <input type="hidden" name="id" id="leaveEmpId">
 
           <label><i class="fas fa-calendar-alt"></i> نوع الإجازة</label>
           <select id="leaveType" name="type">
@@ -1256,6 +1256,45 @@ function beforeLeaveSubmit() {
   return true;
 }
 
+async function submitLeaveForm(form) {
+  // Basic validation
+  const from = form.fromDate.value;
+  const to = form.toDate.value;
+  
+  if (!from || !to) {
+    showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
+    return false;
+  }
+  
+  if (new Date(to) < new Date(from)) {
+    showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
+    return false;
+  }
+  
+  // Show loading
+  showLoader('leaveLoader');
+  $('submitLeaveBtn').disabled = true;
+  
+  // Submit the form
+  form.submit();
+  
+  // Show success message after a delay
+  setTimeout(() => {
+    hideLoader('leaveLoader');
+    $('submitLeaveBtn').disabled = false;
+    showToast('تم إرسال طلب الإجازة بنجاح', 'success');
+    
+    // Reset form
+    form.reset();
+    
+    // Set min dates to today
+    const today = ymd(new Date());
+    $('leaveFrom').min = today;
+    $('leaveTo').min = today;
+  }, 3000);
+  
+  return true;
+}  
 /*** INITIALIZATION ***/
 function initialize() {
   // Update UAE time every second
