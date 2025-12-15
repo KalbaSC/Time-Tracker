@@ -595,14 +595,8 @@
         <!-- Hidden iframe so the page doesn't navigate away -->
         <iframe name="hiddenFrame" style="display:none;"></iframe>
 
- <form id="leaveForm"
-      action="https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec"
-      method="POST"
-      enctype="multipart/form-data"
-      target="hiddenFrame"
-      onsubmit="return submitLeaveForm(this);">
-
-  <!-- hidden fields required by Code.gs -->
+  <form id="leaveForm" onsubmit="return submitLeaveForm(event);">
+  <!-- hidden fields -->
   <input type="hidden" name="action" value="requestLeave">
   <input type="hidden" name="id" id="leaveEmpId">
 
@@ -631,9 +625,9 @@
           <label><i class="fas fa-comment-alt"></i> السبب</label>
           <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
 
-          <button type="submit" class="btn-yellow" id="submitLeaveBtn">
-            <i class="fas fa-paper-plane"></i> إرسال طلب الإجازة
-          </button>
+  <button type="submit" class="btn-yellow" id="submitLeaveBtn">
+    <i class="fas fa-paper-plane"></i> إرسال طلب الإجازة
+  </button>
         </form>
         <div class="loader" id="leaveLoader"></div>
         <div id="leaveMsg" class="msg"></div>
@@ -656,7 +650,7 @@
 
 <script>
 /*** CONFIGURATION ***/
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykiqXB3d-qAQuUEw2PUg2_95LoMwa-BdJ6Ote7PiNXXOh4PlfVdOmIZpL8K0BZ4wJr/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGSjc43X89ZJ2py8GndB-AfRrP38fI0mzHyr9rLLAcW_OZegive8D3u-eCOyroKElj/exec";
 const EMP_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
 const PUNCH_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=817419268&single=true&output=csv";
 
@@ -1256,45 +1250,6 @@ function beforeLeaveSubmit() {
   return true;
 }
 
-async function submitLeaveForm(form) {
-  // Basic validation
-  const from = form.fromDate.value;
-  const to = form.toDate.value;
-  
-  if (!from || !to) {
-    showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
-    return false;
-  }
-  
-  if (new Date(to) < new Date(from)) {
-    showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
-    return false;
-  }
-  
-  // Show loading
-  showLoader('leaveLoader');
-  $('submitLeaveBtn').disabled = true;
-  
-  // Submit the form
-  form.submit();
-  
-  // Show success message after a delay
-  setTimeout(() => {
-    hideLoader('leaveLoader');
-    $('submitLeaveBtn').disabled = false;
-    showToast('تم إرسال طلب الإجازة بنجاح', 'success');
-    
-    // Reset form
-    form.reset();
-    
-    // Set min dates to today
-    const today = ymd(new Date());
-    $('leaveFrom').min = today;
-    $('leaveTo').min = today;
-  }, 3000);
-  
-  return true;
-}  
 /*** INITIALIZATION ***/
 function initialize() {
   // Update UAE time every second
@@ -1341,5 +1296,71 @@ function initialize() {
 // Start initialization when page loads
 window.onload = initialize;
 </script>
+
+<script>  
+ async function submitLeaveForm(event) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  
+  // Basic validation
+  const from = form.querySelector('#leaveFrom').value;
+  const to = form.querySelector('#leaveTo').value;
+  
+  if (!from || !to) {
+    showToast('يرجى اختيار تاريخ البداية والنهاية', 'error');
+    return false;
+  }
+  
+  if (new Date(to) < new Date(from)) {
+    showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
+    return false;
+  }
+  
+  // Show loading
+  const submitBtn = form.querySelector('#submitLeaveBtn');
+  submitBtn.disabled = true;
+  showLoader('leaveLoader');
+  
+  try {
+    // Send form data using fetch
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (result.ok) {
+      showToast('تم إرسال طلب الإجازة بنجاح', 'success');
+      
+      // Reset form
+      form.reset();
+      
+      // Set min dates to today
+      const today = ymd(new Date());
+      $('#leaveFrom').min = today;
+      $('#leaveTo').min = today;
+      
+      // Show file URL if uploaded
+      if (result.fileUrl) {
+        showToast('تم رفع الملف: ' + result.fileUrl, 'success');
+      }
+    } else {
+      showToast('خطأ: ' + (result.error || 'فشل الإرسال'), 'error');
+    }
+  } catch (error) {
+    console.error('Form submission error:', error);
+    showToast('خطأ في الاتصال بالخادم', 'error');
+  } finally {
+    hideLoader('leaveLoader');
+    submitBtn.disabled = false;
+  }
+  
+  return false; // Prevent default form submission
+} 
+</script>
+  
 </body>
 </html>
