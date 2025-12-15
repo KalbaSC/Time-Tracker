@@ -770,62 +770,84 @@ function hideLoader(id) {
   if (loader) loader.style.display = 'none';
 }
 
-/*** CHECK LOCATION STATUS ***/
+function getPositionSmart() {
+  if (!navigator.geolocation) {
+    return Promise.reject({ code: -1, message: "Geolocation not supported" });
+  }
+
+  // 1) Try high accuracy first (GPS)
+  const optHigh = { enableHighAccuracy: true, timeout: 25000, maximumAge: 60000 };
+
+  // 2) Fallback: normal accuracy (often faster on desktop/Wi-Fi)
+  const optLow  = { enableHighAccuracy: false, timeout: 25000, maximumAge: 300000 };
+
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, err1 => {
+      // if timeout/position unavailable, try again with low accuracy
+      if (err1 && (err1.code === err1.TIMEOUT || err1.code === err1.POSITION_UNAVAILABLE)) {
+        navigator.geolocation.getCurrentPosition(resolve, reject, optLow);
+      } else {
+        reject(err1);
+      }
+    }, optHigh);
+  });
+}
+
+/*** CHECK LOCATION STATUS (REPLACE FULL FUNCTION) ***/
 function checkLocationStatus() {
   const statusElement = $('locationStatus');
+
   if (!navigator.geolocation) {
     statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>المتصفح لا يدعم خدمات الموقع</span>';
     statusElement.className = 'location-status out';
     statusElement.style.display = 'flex';
+    $('punchInBtn').disabled = true;
+    $('punchOutBtn').disabled = true;
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(
-    pos => {
+  // show "checking"
+  statusElement.innerHTML = '<i class="fas fa-location-arrow"></i> <span>جاري تحديد الموقع...</span>';
+  statusElement.className = 'location-status out';
+  statusElement.style.display = 'flex';
+  $('punchInBtn').disabled = true;
+  $('punchOutBtn').disabled = true;
+
+  getPositionSmart()
+    .then(pos => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       const geo = insideClub(lat, lng);
-      
+
       if (geo.ok) {
         statusElement.innerHTML = `<i class="fas fa-check-circle"></i> <span>داخل نادي كلباء (${Math.round(geo.dist)}م)</span>`;
         statusElement.className = 'location-status in';
-        statusElement.style.display = 'flex';
-        
-        // Enable punch buttons when inside club
         $('punchInBtn').disabled = false;
         $('punchOutBtn').disabled = false;
       } else {
         statusElement.innerHTML = `<i class="fas fa-times-circle"></i> <span>خارج نادي كلباء (${Math.round(geo.dist)}م)</span>`;
         statusElement.className = 'location-status out';
-        statusElement.style.display = 'flex';
-        
-        // Disable punch buttons when outside
         $('punchInBtn').disabled = true;
         $('punchOutBtn').disabled = true;
       }
-    },
-    error => {
+
+      statusElement.style.display = 'flex';
+    })
+    .catch(error => {
       let message = 'تعذر تحديد الموقع';
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          message = 'تم رفض إذن الموقع';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          message = 'معلومات الموقع غير متوفرة';
-          break;
-        case error.TIMEOUT:
-          message = 'انتهت مهلة طلب الموقع';
-          break;
+      if (error && typeof error.code !== "undefined") {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:     message = 'تم رفض إذن الموقع'; break;
+          case error.POSITION_UNAVAILABLE: message = 'معلومات الموقع غير متوفرة'; break;
+          case error.TIMEOUT:              message = 'انتهت مهلة طلب الموقع'; break;
+        }
       }
       statusElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>${message}</span>`;
       statusElement.className = 'location-status out';
       statusElement.style.display = 'flex';
-      
       $('punchInBtn').disabled = true;
       $('punchOutBtn').disabled = true;
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
+    });
 }
 
 /*** LOGIN SYSTEM ***/
@@ -981,80 +1003,34 @@ async function punch(type) {
       return;
     }
 
-    // Get location
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+// Get location (SMART)
+getPositionSmart().then(async pos => {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
 
-      const geo = insideClub(lat, lng);
-      if (!geo.ok) {
-        hideLoader('punchLoader');
-        msg.className = "msg err";
-        msg.style.display = "block";
-        msg.textContent = "❌ يجب أن تكون داخل موقع النادي لإتمام البصمة.";
-        showToast('يجب أن تكون داخل النادي', 'error');
-        checkLocationStatus();
-        return;
-      }
-
-      const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-      const currentTime = nowHHMM();
-
-      try {
-        await fetch(SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify({
-            action: "punch",
-            payload: {
-              id: window.currentID,
-              name: window.employeeName,
-              type,
-              lat,
-              lng,
-              zone: "Kalba Club",
-              dist: Math.round(geo.dist),
-              mapsLink
-            }
-          })
-        });
-
-        hideLoader('punchLoader');
-        msg.className = "msg ok";
-        msg.style.display = "block";
-        msg.textContent = `✔ تم تسجيل ${type === "IN" ? "دخول" : "خروج"} بنجاح الساعة ${currentTime}`;
-        
-        showToast(`تم تسجيل ${type === "IN" ? "الدخول" : "الخروج"} بنجاح`, 'success');
-
-        // Refresh dashboard
-        setTimeout(async () => {
-          await refreshAll();
-          checkLocationStatus();
-        }, 1000);
-
-      } catch (error) {
-        hideLoader('punchLoader');
-        msg.className = "msg err";
-        msg.style.display = "block";
-        msg.textContent = "❌ خطأ في إرسال البيانات";
-        showToast('خطأ في إرسال البيانات', 'error');
-      }
-    },
-    error => {
-      hideLoader('punchLoader');
-      msg.className = "msg err";
-      msg.style.display = "block";
-      msg.textContent = "❌ يرجى السماح بالموقع.";
-      showToast('يرجى السماح بالموقع', 'error');
-      checkLocationStatus();
-    },
-    { enableHighAccuracy: true, timeout: 10000 });
-  } catch (error) {
+  const geo = insideClub(lat, lng);
+  if (!geo.ok) {
     hideLoader('punchLoader');
-    console.error('Punch error:', error);
-    showToast('حدث خطأ غير متوقع', 'error');
+    msg.className = "msg err";
+    msg.style.display = "block";
+    msg.textContent = "❌ يجب أن تكون داخل موقع النادي لإتمام البصمة.";
+    showToast('يجب أن تكون داخل النادي', 'error');
+    checkLocationStatus();
+    return;
   }
-}
+
+  const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+  const currentTime = nowHHMM();
+
+  // ... keep your fetch() as-is ...
+}).catch(err => {
+  hideLoader('punchLoader');
+  msg.className = "msg err";
+  msg.style.display = "block";
+  msg.textContent = "❌ يرجى السماح بالموقع.";
+  showToast('يرجى السماح بالموقع', 'error');
+  checkLocationStatus();
+});
 
 /*** REFRESH DASHBOARD ***/
 async function refreshAll() {
