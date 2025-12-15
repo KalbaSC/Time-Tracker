@@ -978,7 +978,7 @@ function canPunch(type, todayRows) {
   return { ok: true };
 }
 
-/*** PUNCH FUNCTION ***/
+/*** PUNCH FUNCTION – FIXED & COMPLETE ***/
 async function punch(type) {
   if (!window.currentID) {
     showToast('يرجى تسجيل الدخول أولاً', 'error');
@@ -990,10 +990,10 @@ async function punch(type) {
   showLoader('punchLoader');
 
   try {
-    // Check sequence first
+    // Validate punch sequence
     const todayRows = await getTodayRows();
     const seq = canPunch(type, todayRows);
-    
+
     if (!seq.ok) {
       hideLoader('punchLoader');
       msg.className = "msg err";
@@ -1003,34 +1003,64 @@ async function punch(type) {
       return;
     }
 
-// Get location (SMART)
-getPositionSmart().then(async pos => {
-  const lat = pos.coords.latitude;
-  const lng = pos.coords.longitude;
+    // ✅ Get location (SMART)
+    const pos = await getPositionSmart();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
 
-  const geo = insideClub(lat, lng);
-  if (!geo.ok) {
+    const geo = insideClub(lat, lng);
+    if (!geo.ok) {
+      hideLoader('punchLoader');
+      msg.className = "msg err";
+      msg.style.display = "block";
+      msg.textContent = "❌ يجب أن تكون داخل موقع النادي لإتمام البصمة.";
+      showToast('يجب أن تكون داخل النادي', 'error');
+      checkLocationStatus();
+      return;
+    }
+
+    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+
+    // ✅ SEND PUNCH (no-cors, same as working leave logic)
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "punch",
+        payload: {
+          id: window.currentID,
+          name: window.employeeName,
+          type,
+          lat,
+          lng,
+          zone: "داخل نادي كلباء",
+          dist: Math.round(geo.dist),
+          mapsLink
+        }
+      })
+    });
+
+    hideLoader('punchLoader');
+
+    msg.className = "msg ok";
+    msg.style.display = "block";
+    msg.textContent = `✔ تم تسجيل ${type === "IN" ? "الدخول" : "الخروج"} بنجاح`;
+    showToast('تم تسجيل البصمة بنجاح', 'success');
+
+    await refreshAll();
+    checkLocationStatus();
+
+  } catch (err) {
+    console.error(err);
     hideLoader('punchLoader');
     msg.className = "msg err";
     msg.style.display = "block";
-    msg.textContent = "❌ يجب أن تكون داخل موقع النادي لإتمام البصمة.";
-    showToast('يجب أن تكون داخل النادي', 'error');
+    msg.textContent = "❌ فشل تحديد الموقع";
+    showToast('فشل تحديد الموقع', 'error');
     checkLocationStatus();
-    return;
   }
+}
 
-  const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-  const currentTime = nowHHMM();
-
-  // ... keep your fetch() as-is ...
-}).catch(err => {
-  hideLoader('punchLoader');
-  msg.className = "msg err";
-  msg.style.display = "block";
-  msg.textContent = "❌ يرجى السماح بالموقع.";
-  showToast('يرجى السماح بالموقع', 'error');
-  checkLocationStatus();
-});
 
 /*** REFRESH DASHBOARD ***/
 async function refreshAll() {
