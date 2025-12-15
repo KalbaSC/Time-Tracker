@@ -1255,17 +1255,12 @@ async function submitLeaveForm(event) {
       action: "requestLeave",
       payload
     });
+await fetch(SCRIPT_URL, {
+  method: "POST",
+  mode: "no-cors",
+  body: body
+});
 
-    // Send request
-    // If your page is on GitHub Pages, browser will block reading response (CORS),
-    // but the request will still be received by Apps Script.
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body
-    });
-
-    // We cannot reliably read JSON response cross-domain (CORS), so show success and verify in sheet
     showToast('تم إرسال طلب الإجازة بنجاح ✅', 'success');
 
     if (leaveMsg) {
