@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة إدارة الموارد البشرية - الإمارات</title>
 
@@ -22,17 +22,24 @@
       --shadow: 0 6px 20px rgba(0,0,0,.25);
       font-family: "Tajawal", sans-serif;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
       background: var(--bg);
       color: var(--text);
       padding: 20px;
       min-height: 100vh;
     }
-
-    .container { max-width: 1200px; margin: auto; }
+    
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
 
     .header-info {
       display: flex;
@@ -43,18 +50,15 @@
       background: var(--card);
       border-radius: var(--radius);
       border: 1px solid #1f1f1f;
-      gap: 10px;
-      flex-wrap: wrap;
     }
-
+    
     .header-info .time-location {
       display: flex;
       gap: 20px;
       font-size: 14px;
       color: var(--muted);
-      flex-wrap: wrap;
     }
-
+    
     .header-info .time-location span {
       display: flex;
       align-items: center;
@@ -70,8 +74,10 @@
       margin-bottom: 20px;
       transition: transform 0.2s ease;
     }
-
-    .card:hover { transform: translateY(-2px); }
+    
+    .card:hover {
+      transform: translateY(-2px);
+    }
 
     h2 {
       margin-bottom: 14px;
@@ -80,14 +86,14 @@
       align-items: center;
       gap: 10px;
     }
-
+    
     label {
       display: block;
       margin-bottom: 6px;
       color: var(--muted);
       font-size: 14px;
     }
-
+    
     input, select, button {
       width: 100%;
       padding: 12px;
@@ -99,38 +105,54 @@
       font-size: 15px;
       transition: all 0.2s ease;
     }
-
+    
     input:focus, select:focus {
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(246, 194, 26, 0.1);
     }
-
+    
     button {
       cursor: pointer;
       background: var(--accent);
       color: #111;
       font-weight: 800;
       border: none;
+      transition: all 0.2s ease;
+    }
+    
+    button:hover {
+      background: #ffda41;
+      transform: translateY(-1px);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
 
-    button:hover { background: #ffda41; transform: translateY(-1px); }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
     th, td {
       padding: 12px;
       border-bottom: 1px solid #222;
       text-align: right;
     }
-
+    
     th {
       background: #1a1a1a;
       color: var(--accent);
       font-weight: 700;
     }
-
-    tr:hover { background: rgba(255, 255, 255, 0.02); }
+    
+    tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
 
     .badge {
       display: inline-block;
@@ -141,24 +163,47 @@
       font-size: 13px;
       margin-bottom: 10px;
     }
-
+    
     .status-badge {
       padding: 4px 12px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
-      display: inline-block;
+    }
+    
+    .status-pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+    
+    .status-approved {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    
+    .status-rejected {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
     }
 
-    .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-    .status-approved { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-    .status-rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .flex {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .col {
+      flex: 1 1 220px;
+    }
 
-    .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
-    .col { flex: 1 1 220px; }
-
-    .search-box { margin-bottom: 15px; }
-    .search-box input { margin-bottom: 0; background: #1a1a1a; }
+    .search-box {
+      margin-bottom: 15px;
+    }
+    
+    .search-box input {
+      margin-bottom: 0;
+      background: #1a1a1a;
+    }
 
     .toast {
       position: fixed;
@@ -174,10 +219,22 @@
       z-index: 1000;
       max-width: 350px;
     }
-    .toast.show { transform: translateX(0); }
-    .toast.success { border-left-color: var(--success); }
-    .toast.error { border-left-color: var(--danger); }
-    .toast.warning { border-left-color: var(--warning); }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .toast.success {
+      border-left-color: var(--success);
+    }
+    
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+    
+    .toast.warning {
+      border-left-color: var(--warning);
+    }
 
     .loader {
       display: none;
@@ -185,6 +242,7 @@
       padding: 30px;
       color: var(--muted);
     }
+    
     .loader::after {
       content: "";
       display: inline-block;
@@ -196,68 +254,88 @@
       animation: spin 1s linear infinite;
       margin-right: 10px;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
     .btn-yellow {
       background: var(--accent);
       color: #111;
-      padding: 8px 12px;
-      border-radius: 10px;
+      padding: 6px 12px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       margin: 2px;
-      font-weight: 800;
-      width: auto;
+      font-weight: 600;
+      transition: all 0.2s ease;
     }
-
+    
+    .btn-yellow:hover {
+      background: #ffda41;
+    }
+    
     .btn-danger {
       background: var(--danger);
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 10px;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       margin: 2px;
-      font-weight: 800;
-      width: auto;
+      font-weight: 600;
+      transition: all 0.2s ease;
     }
-
+    
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    
     .btn-success {
       background: var(--success);
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 10px;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       margin: 2px;
-      font-weight: 800;
-      width: auto;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-success:hover {
+      background: #059669;
     }
 
-    .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+    .actions-cell {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
 
     .logout-btn {
       background: var(--danger);
       color: white;
       padding: 8px 16px;
-      border-radius: 10px;
+      border-radius: 8px;
       text-decoration: none;
-      font-weight: 800;
+      font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 5px;
+      transition: all 0.2s ease;
     }
-
-    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .tabbtn { width: auto; padding: 10px 14px; border-radius: 12px; background: #1a1a1a; color: #ddd; font-weight: 900; border: 1px solid #2a2a2a; }
-    .tabbtn.active { background: var(--accent); color: #111; border-color: transparent; }
-
+    
+    .logout-btn:hover {
+      background: #dc2626;
+      color: white;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-
+  
   <div id="headerInfo" style="display: none;" class="header-info">
     <h2 style="margin: 0;">👨‍💼 لوحة إدارة الموارد البشرية</h2>
     <div class="time-location">
@@ -271,7 +349,7 @@
 
   <div id="loginBox" class="card">
     <h2>🔐 تسجيل دخول الإدارة</h2>
-
+    
     <div style="text-align: center; margin-bottom: 20px; color: var(--muted);">
       <div>🕒 وقت الإمارات: <span id="loginTime"></span></div>
       <div style="font-size: 12px; margin-top: 5px;">📍 الإمارات العربية المتحدة</div>
@@ -284,169 +362,92 @@
     <input id="loginPass" type="password" placeholder="أدخل كلمة المرور">
 
     <button id="btnLogin">دخول</button>
-
+    
     <div class="loader" id="loginLoader"></div>
     <p id="loginMsg" style="color:#aaa; margin-top:8px; text-align:center;"></p>
   </div>
 
   <div id="adminBox" class="card" style="display:none;">
+    
+    <div class="card">
+      <h2>👥 إدارة الموظفين</h2>
+      
+      <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
+        <div class="search-box" style="width: 300px;">
+          <input type="text" id="searchEmployee" placeholder="🔍 بحث عن موظف...">
+        </div>
+      </div>
 
-    <div class="tabs">
-      <button class="tabbtn active" id="tabBtnEmployees" onclick="showTab('employees')">👥 الموظفين</button>
-      <button class="tabbtn" id="tabBtnLeaves" onclick="showTab('leaves')">📋 الإجازات</button>
-      <button class="tabbtn" id="tabBtnReports" onclick="showTab('reports')">📊 التقارير</button>
+      <div class="flex">
+        <div class="col">
+          <label>الاسم الكامل</label>
+          <input id="empName" placeholder="الاسم الكامل">
+        </div>
+        <div class="col">
+          <label>الرقم الوظيفي</label>
+          <input id="empId" placeholder="مثال: 1001">
+        </div>
+        <div class="col">
+          <label>الرمز السري PIN</label>
+          <input id="empPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
+        </div>
+      </div>
+
+      <div class="flex">
+        <button id="btnAdd" style="flex:1">➕ إضافة موظف جديد</button>
+        <button id="btnClear" style="flex:0.3" onclick="clearEmployeeForm()">🗑️ مسح</button>
+      </div>
+
+      <div class="loader" id="empLoader"></div>
+      <table id="empTableContainer">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>الرقم</th>
+            <th>PIN</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="empTable">
+          <tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <!-- EMPLOYEES TAB -->
-    <div id="tabEmployees" style="margin-top: 15px;">
-      <div class="card">
-        <h2>👥 إدارة الموظفين</h2>
-
-        <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
-          <div class="search-box" style="width: 300px;">
-            <input type="text" id="searchEmployee" placeholder="🔍 بحث عن موظف...">
-          </div>
+    <!-- Leave Requests -->
+    <div id="leaveBox" class="card">
+      <h2>📋 طلبات الإجازة</h2>
+      
+      <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="flex" style="gap: 5px;">
+          <button class="btn-yellow" onclick="loadLeaves('all')">الكل</button>
+          <button class="btn-yellow" onclick="loadLeaves('pending')">قيد الانتظار</button>
+          <button class="btn-yellow" onclick="loadLeaves('approved')">المقبولة</button>
+          <button class="btn-yellow" onclick="loadLeaves('rejected')">المرفوضة</button>
         </div>
+        <button class="btn-yellow" onclick="loadLeaves()">🔄 تحديث</button>
+      </div>
 
-        <div class="flex">
-          <div class="col">
-            <label>الاسم الكامل</label>
-            <input id="empName" placeholder="الاسم الكامل">
-          </div>
-          <div class="col">
-            <label>الرقم الوظيفي</label>
-            <input id="empId" placeholder="مثال: 1001">
-          </div>
-          <div class="col">
-            <label>الرمز السري PIN</label>
-            <input id="empPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
-          </div>
-        </div>
-
-        <div class="flex">
-          <button id="btnAdd" style="flex:1">➕ إضافة موظف جديد</button>
-          <button id="btnClear" style="flex:0.3" onclick="clearEmployeeForm()">🗑️ مسح</button>
-        </div>
-
-        <div class="loader" id="empLoader"></div>
-
-        <table id="empTableContainer">
+      <div class="loader" id="leaveLoader"></div>
+      <div style="overflow-x: auto;">
+        <table>
           <thead>
             <tr>
-              <th>الاسم</th>
+              <th>الموظف</th>
               <th>الرقم</th>
-              <th>PIN</th>
-              <th>الإجراءات</th>
+              <th>نوع الإجازة</th>
+              <th>من</th>
+              <th>إلى</th>
+              <th>المرفق</th>
+              <th>الحالة</th>
+              <th>الإجراء</th>
             </tr>
           </thead>
-          <tbody id="empTable">
-            <tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
+          <tbody id="leaveTable">
+            <tr><td colspan="8" style="text-align:center; color:#777">لا يوجد طلبات.</td></tr>
           </tbody>
         </table>
-      </div>
-    </div>
-
-    <!-- LEAVES TAB -->
-    <div id="tabLeaves" style="display:none; margin-top: 15px;">
-      <div id="leaveBox" class="card">
-        <h2>📋 طلبات الإجازة</h2>
-
-        <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <div class="flex" style="gap: 5px;">
-            <button class="btn-yellow" onclick="loadLeaves('all')">الكل</button>
-            <button class="btn-yellow" onclick="loadLeaves('pending')">قيد الانتظار</button>
-            <button class="btn-yellow" onclick="loadLeaves('approved')">المقبولة</button>
-            <button class="btn-yellow" onclick="loadLeaves('rejected')">المرفوضة</button>
-          </div>
-          <button class="btn-yellow" onclick="loadLeaves()">🔄 تحديث</button>
-        </div>
-
-        <div class="loader" id="leaveLoader"></div>
-        <div style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>الموظف</th>
-                <th>الرقم</th>
-                <th>نوع الإجازة</th>
-                <th>من</th>
-                <th>إلى</th>
-                <th>المرفق</th>
-                <th>الحالة</th>
-                <th>الإجراء</th>
-              </tr>
-            </thead>
-            <tbody id="leaveTable">
-              <tr><td colspan="8" style="text-align:center; color:#777">لا يوجد طلبات.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- REPORTS TAB -->
-    <div id="tabReports" style="display:none; margin-top: 15px;">
-      <div class="card">
-        <h2>📊 تقارير الحضور وساعات العمل</h2>
-
-        <div class="flex">
-          <div class="col">
-            <label>نوع التقرير</label>
-            <select id="repPeriod">
-              <option value="daily">يومي</option>
-              <option value="weekly">أسبوعي</option>
-              <option value="monthly">شهري</option>
-              <option value="range">مخصص (من/إلى)</option>
-            </select>
-          </div>
-
-          <div class="col">
-            <label>الموظف (اختياري)</label>
-            <input id="repEmpId" placeholder="مثال: 1001 (اتركه فارغ للكل)">
-          </div>
-
-          <div class="col">
-            <label>تاريخ (لليومي/الأسبوعي/الشهري)</label>
-            <input id="repDate" type="date">
-          </div>
-
-          <div class="col">
-            <label>من (للمخصص)</label>
-            <input id="repStart" type="date">
-          </div>
-
-          <div class="col">
-            <label>إلى (للمخصص)</label>
-            <input id="repEnd" type="date">
-          </div>
-        </div>
-
-        <div class="flex">
-          <button class="btn-yellow" onclick="loadReport()">⚙️ إنشاء التقرير</button>
-          <button class="btn-yellow" onclick="exportReportCSV()">⬇️ تصدير CSV</button>
-        </div>
-
-        <div class="badge">الفترة: <span id="repRangeLabel">—</span></div>
-
-        <div class="loader" id="repLoader"></div>
-
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>الرقم</th>
-                <th>الاسم</th>
-                <th>أيام الحضور</th>
-                <th>إجمالي الساعات</th>
-                <th>المتوسط/يوم</th>
-              </tr>
-            </thead>
-            <tbody id="repTable">
-              <tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
 
@@ -456,8 +457,12 @@
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGSjc43X89ZJ2py8GndB-AfRrP38fI0mzHyr9rLLAcW_OZegive8D3u-eCOyroKElj/exec";
-const ADMIN_CREDENTIALS = { username: "eman", password: "eman123" };
-const UAE_TIMEZONE = "Asia/Dubai";
+const ADMIN_CREDENTIALS = {
+  username: "eman",
+  password: "eman123"
+};
+
+const UAE_TIMEZONE = 'Asia/Dubai';
 
 const $ = id => document.getElementById(id);
 
@@ -466,162 +471,55 @@ function showToast(message, type = 'success', duration = 3000) {
   toast.textContent = message;
   toast.className = `toast ${type}`;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), duration);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, duration);
 }
-
-function showLoader(id) { const el = $(id); if (el) el.style.display = 'block'; }
-function hideLoader(id) { const el = $(id); if (el) el.style.display = 'none'; }
 
 function updateUAETime() {
   const now = new Date();
-  const opt = { timeZone: UAE_TIMEZONE, hour: '2-digit', minute:'2-digit', second:'2-digit' };
-  const t = new Intl.DateTimeFormat('en-GB', opt).format(now);
-  $('uaeTime').textContent = `🕒 وقت الإمارات: ${t}`;
-  $('loginTime').textContent = t;
+  const uaeTime = now.toLocaleTimeString('ar-AE', {
+    timeZone: UAE_TIMEZONE,
+    hour12: true,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  
+  const uaeDate = now.toLocaleDateString('ar-AE', {
+    timeZone: UAE_TIMEZONE,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  const timeElement = $('uaeTime');
+  const loginTimeElement = $('loginTime');
+  const fullTime = `${uaeDate} - ${uaeTime}`;
+  
+  if (timeElement) timeElement.innerHTML = `🕒 وقت الإمارات: ${fullTime}`;
+  if (loginTimeElement) loginTimeElement.textContent = fullTime;
+}
+
+updateUAETime();
+setInterval(updateUAETime, 1000);
+
+function showLoader(id) {
+  const loader = $(id);
+  if (loader) loader.style.display = 'block';
+}
+
+function hideLoader(id) {
+  const loader = $(id);
+  if (loader) loader.style.display = 'none';
 }
 
 function logout() {
-  sessionStorage.removeItem('adminLogged');
-  $('adminBox').style.display = 'none';
-  $('headerInfo').style.display = 'none';
-  $('loginBox').style.display = 'block';
-  showToast('تم تسجيل الخروج', 'success');
-}
-
-function handleLogin() {
-  const u = $('loginUser').value.trim();
-  const p = $('loginPass').value.trim();
-
-  showLoader('loginLoader');
-  $('loginMsg').textContent = '';
-
-  setTimeout(async () => {
-    try {
-      if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
-        sessionStorage.setItem('adminLogged', '1');
-        $('loginBox').style.display = 'none';
-        $('adminBox').style.display = 'block';
-        $('headerInfo').style.display = 'flex';
-
-        showTab('employees');
-        await loadEmployees();
-        await loadLeaves();
-        showToast('تم تسجيل الدخول بنجاح', 'success');
-      } else {
-        $('loginMsg').textContent = '❌ بيانات الدخول غير صحيحة';
-        showToast('بيانات الدخول غير صحيحة', 'error');
-      }
-    } finally {
-      hideLoader('loginLoader');
-    }
-  }, 600);
-}
-
-$('btnLogin').onclick = handleLogin;
-
-['loginUser', 'loginPass'].forEach(id => {
-  $(id)?.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleLogin();
-  });
-});
-
-function showTab(tab) {
-  const tabs = ['employees','leaves','reports'];
-  tabs.forEach(t => {
-    $('tabEmployees').style.display = (t === 'employees') ? 'block' : 'none';
-    $('tabLeaves').style.display = (t === 'leaves') ? 'block' : 'none';
-    $('tabReports').style.display = (t === 'reports') ? 'block' : 'none';
-
-    $('tabBtnEmployees').classList.toggle('active', tab === 'employees');
-    $('tabBtnLeaves').classList.toggle('active', tab === 'leaves');
-    $('tabBtnReports').classList.toggle('active', tab === 'reports');
-  });
-}
-
-/*************** EMPLOYEES UI ***************/
-async function loadEmployees() {
-  showLoader('empLoader');
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "getEmployees", payload: {} })
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Fetch failed');
-
-    const employees = data.employees || [];
-    $('userCount').textContent = employees.length;
-
-    if (!employees.length) {
-      $('empTable').innerHTML = `<tr><td colspan="4" style="text-align:center;color:#777">لا يوجد بيانات بعد.</td></tr>`;
-      return;
-    }
-
-    $('empTable').innerHTML = employees.map(emp => `
-      <tr>
-        <td>${emp.name || '-'}</td>
-        <td>${emp.id || '-'}</td>
-        <td>${emp.pin || '-'}</td>
-        <td class="actions-cell">
-          <button class="btn-danger" onclick="removeEmployee('${String(emp.id).replace(/'/g,"\\'")}')">🗑 حذف</button>
-        </td>
-      </tr>
-    `).join('');
-  } catch (e) {
-    console.error(e);
-    $('empTable').innerHTML = `<tr><td colspan="4" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>`;
-    showToast('خطأ في تحميل الموظفين', 'error');
-  } finally {
-    hideLoader('empLoader');
-  }
-}
-
-async function addEmployee() {
-  const name = $('empName').value.trim();
-  const id = $('empId').value.trim();
-  const pin = $('empPin').value.trim();
-
-  if (!name || !id || !pin) return showToast('يرجى إدخال كل البيانات', 'warning');
-  if (!/^\d{4}$/.test(pin)) return showToast('PIN يجب أن يكون 4 أرقام', 'warning');
-
-  showLoader('empLoader');
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "addEmployee", payload: { name, id, pin } })
-    });
-    const data = await res.json().catch(() => ({ ok: true })); // some webapps return empty for no-cors
-    if (data && data.ok === false) throw new Error(data.error || 'Failed');
-
-    clearEmployeeForm();
-    await loadEmployees();
-    showToast('تمت إضافة الموظف ✅', 'success');
-  } catch (e) {
-    console.error(e);
-    showToast('فشل إضافة الموظف', 'error');
-  } finally {
-    hideLoader('empLoader');
-  }
-}
-
-async function removeEmployee(id) {
-  if (!confirm('هل تريد حذف الموظف؟')) return;
-  showLoader('empLoader');
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "deleteEmployee", payload: { id } })
-    });
-    const data = await res.json().catch(() => ({ ok: true }));
-    if (data && data.ok === false) throw new Error(data.error || 'Failed');
-
-    await loadEmployees();
-    showToast('تم حذف الموظف ✅', 'success');
-  } catch (e) {
-    console.error(e);
-    showToast('فشل حذف الموظف', 'error');
-  } finally {
-    hideLoader('empLoader');
+  if (confirm('هل تريد تسجيل الخروج؟')) {
+    sessionStorage.removeItem('adminLogged');
+    location.reload();
   }
 }
 
@@ -629,84 +527,207 @@ function clearEmployeeForm() {
   $('empName').value = '';
   $('empId').value = '';
   $('empPin').value = '';
+  showToast('تم مسح النموذج', 'success');
 }
 
-$('btnAdd').onclick = addEmployee;
+function validatePIN(pin) {
+  return /^\d{4}$/.test(pin);
+}
 
-$('searchEmployee')?.addEventListener('input', function(e) {
-  const searchTerm = e.target.value.toLowerCase();
-  const rows = $('empTable').querySelectorAll('tr');
-  rows.forEach(row => {
-    const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(searchTerm) ? '' : 'none';
-  });
-});
+async function loadEmployees() {
+  showLoader('empLoader');
+  
+  try {
+    $('empTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
+    
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
+    const res = await fetch(url);
+    const text = await res.text();
 
-/*************** LEAVES UI ***************/
-let __allLeaves = [];
+    const rows = text
+      .split("\n")
+      .map(r => r.split(","))
+      .filter(r => r[0] && r[0].trim() !== "ID");
+
+    let html = "";
+    rows.forEach(r => {
+      const id = r[0].trim();
+      const name = r[1].trim();
+      const pin = r[2].trim();
+
+      html += `
+        <tr>
+          <td>${name}</td>
+          <td>${id}</td>
+          <td>${pin}</td>
+          <td class="actions-cell">
+            <button class="btn-danger delRowBtn" data-id="${id}">🗑️ حذف</button>
+          </td>
+        </tr>`;
+    });
+
+    $('empTable').innerHTML = html || '<tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات.</td></tr>';
+    $('userCount').textContent = rows.length;
+
+    document.querySelectorAll('.delRowBtn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.dataset.id;
+        if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) return;
+
+        showLoader('empLoader');
+        try {
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({
+              action: "deleteEmployee",
+              payload: { id }
+            })
+          });
+
+          btn.closest('tr').remove();
+          $('userCount').textContent = parseInt($('userCount').textContent) - 1;
+          showToast('تم حذف الموظف بنجاح', 'success');
+        } catch (error) {
+          showToast('خطأ في حذف الموظف', 'error');
+          console.error('Delete error:', error);
+        } finally {
+          hideLoader('empLoader');
+        }
+      };
+    });
+
+  } catch (error) {
+    console.error('Load employees error:', error);
+    $('empTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777">خطأ في تحميل البيانات</td></tr>';
+    showToast('خطأ في تحميل بيانات الموظفين', 'error');
+  } finally {
+    hideLoader('empLoader');
+  }
+}
+
+$('btnAdd').onclick = async () => {
+  const name = $('empName').value.trim();
+  const id = $('empId').value.trim();
+  const pin = $('empPin').value.trim();
+
+  if (!name || !id || !pin) {
+    showToast('جميع الحقول مطلوبة', 'warning');
+    return;
+  }
+
+  if (!validatePIN(pin)) {
+    showToast('الرمز السري يجب أن يكون 4 أرقام فقط', 'warning');
+    return;
+  }
+
+  showLoader('empLoader');
+  $('btnAdd').disabled = true;
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "addEmployee",
+        payload: { name, id, pin }
+      })
+    });
+
+    showToast('تمت إضافة الموظف بنجاح', 'success');
+    clearEmployeeForm();
+    await loadEmployees();
+  } catch (error) {
+    console.error('Add employee error:', error);
+    showToast('خطأ في إضافة الموظف', 'error');
+  } finally {
+    hideLoader('empLoader');
+    $('btnAdd').disabled = false;
+  }
+};
 
 async function loadLeaves(filter = 'all') {
   showLoader('leaveLoader');
+
   try {
     const res = await fetch(SCRIPT_URL, {
       method: "POST",
-      body: JSON.stringify({ action: "getLeavesAll", payload: {} })
+      body: JSON.stringify({
+        action: "getLeavesAll",
+        payload: {}
+      })
     });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Fetch failed');
 
-    __allLeaves = data.leaves || [];
-
-    let leaves = __allLeaves;
-    if (filter === 'pending') leaves = leaves.filter(x => x.status === 'Pending');
-    if (filter === 'approved') leaves = leaves.filter(x => x.status === 'Approved');
-    if (filter === 'rejected') leaves = leaves.filter(x => x.status === 'Rejected');
-
-    if (!leaves.length) {
-      $('leaveTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>`;
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
       return;
     }
 
-    let html = '';
-    leaves.forEach(lv => {
-      const st = (lv.status || 'Pending');
-      const statusClass =
-        st === 'Approved' ? 'status-approved' :
-        st === 'Rejected' ? 'status-rejected' : 'status-pending';
+    if (!data.ok || !data.leaves) {
+      $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>';
+      return;
+    }
+
+    let leaves = data.leaves;
+    
+    if (filter !== 'all') {
+      leaves = leaves.filter(lv => lv.status.toLowerCase() === filter);
+    }
+
+    if (!leaves.length) {
+      $('leaveTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد طلبات ${filter === 'all' ? '' : `(${filter})`}</td></tr>`;
+      return;
+    }
+
+    let html = "";
+    leaves.forEach((lv, index) => {
+      let statusClass = '';
+      switch (lv.status) {
+        case 'Pending': statusClass = 'status-pending'; break;
+        case 'Approved': statusClass = 'status-approved'; break;
+        case 'Rejected': statusClass = 'status-rejected'; break;
+      }
+
+      let actionsHtml = "";
+      if (lv.status === "Pending") {
+        actionsHtml = `
+          <div class="actions-cell">
+            <button class="btn-success" onclick="setLeaveStatus(${index + 2}, 'Approved')">✔ قبول</button>
+            <button class="btn-danger" onclick="setLeaveStatus(${index + 2}, 'Rejected')">✖ رفض</button>
+          </div>
+        `;
+      } else {
+        actionsHtml = `<span style="color:#888">—</span>`;
+      }
 
       const attachHtml = lv.fileUrl
         ? `<a href="${lv.fileUrl}" target="_blank" style="color:#ffd21f;text-decoration:underline;">📎 عرض</a>`
         : `<span style="color:#777">—</span>`;
 
-      let actionsHtml = '';
-      if (st === 'Pending') {
-        actionsHtml = `
-          <button class="btn-success" onclick="setLeaveStatus(${lv.row}, 'Approved')">✔ قبول</button>
-          <button class="btn-danger" onclick="setLeaveStatus(${lv.row}, 'Rejected')">✖ رفض</button>
-        `;
-      } else {
-        actionsHtml = `<span style="color:#777">—</span>`;
-      }
-
       html += `
         <tr>
           <td>${lv.name || "-"}</td>
-          <td>${lv.id || "-"}</td>
-          <td>${lv.type || "-"}</td>
-          <td>${lv.fromDate || "-"}</td>
-          <td>${lv.toDate || "-"}</td>
+          <td>${lv.id}</td>
+          <td>${lv.type}</td>
+          <td>${lv.fromDate}</td>
+          <td>${lv.toDate}</td>
           <td>${attachHtml}</td>
-          <td><span class="status-badge ${statusClass}">${st}</span></td>
-          <td class="actions-cell">${actionsHtml}</td>
-        </tr>
-      `;
+          <td><span class="status-badge ${statusClass}">${lv.status}</span></td>
+          <td>${actionsHtml}</td>
+        </tr>`;
     });
 
     $('leaveTable').innerHTML = html;
+    showToast(`تم تحميل ${leaves.length} طلب`, 'success');
 
-  } catch (e) {
-    console.error(e);
-    $('leaveTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>`;
+  } catch (error) {
+    console.error('Load leaves error:', error);
+    $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
     showToast('خطأ في تحميل طلبات الإجازة', 'error');
   } finally {
     hideLoader('leaveLoader');
@@ -717,142 +738,82 @@ async function setLeaveStatus(row, status) {
   if (!confirm(`هل تريد ${status === 'Approved' ? 'قبول' : 'رفض'} هذا الطلب؟`)) return;
 
   showLoader('leaveLoader');
+
   try {
-    const res = await fetch(SCRIPT_URL, {
+    await fetch(SCRIPT_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "updateLeaveStatus",
         payload: { row, status }
       })
     });
-    const data = await res.json().catch(() => ({ ok: true }));
-    if (data && data.ok === false) throw new Error(data.error || 'Failed');
 
     showToast(`تم ${status === 'Approved' ? 'قبول' : 'رفض'} الطلب`, 'success');
     await loadLeaves();
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error('Update leave status error:', error);
     showToast('خطأ في تحديث حالة الطلب', 'error');
   } finally {
     hideLoader('leaveLoader');
   }
 }
 
-/*************** REPORTS UI ***************/
-let __lastReportRows = [];
-let __lastReportName = "report.csv";
+$('searchEmployee')?.addEventListener('input', function(e) {
+  const searchTerm = e.target.value.toLowerCase();
+  const rows = $('empTable').querySelectorAll('tr');
+  
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? '' : 'none';
+  });
+});
 
-async function loadReport() {
-  showLoader('repLoader');
-  try {
-    const period = $('repPeriod').value;
-    const empId = ($('repEmpId').value || '').trim();
-    const date = $('repDate').value;
-    const start = $('repStart').value;
-    const end = $('repEnd').value;
+function handleLogin() {
+  const u = $('loginUser').value.trim();
+  const p = $('loginPass').value.trim();
 
-    const payload = { period, empId };
-    if (period === 'range') {
-      payload.start = start;
-      payload.end = end;
+  showLoader('loginLoader');
+
+  setTimeout(() => {
+    if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
+      sessionStorage.setItem('adminLogged', '1');
+      $('loginBox').style.display = 'none';
+      $('adminBox').style.display = 'block';
+      $('headerInfo').style.display = 'flex';
+      
+      loadEmployees();
+      loadLeaves();
+      showToast('تم تسجيل الدخول بنجاح', 'success');
     } else {
-      payload.date = date;      // optional
-      payload.weekStart = 1;    // Monday
+      $('loginMsg').textContent = '❌ بيانات الدخول غير صحيحة';
+      showToast('بيانات الدخول غير صحيحة', 'error');
     }
-
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "getReport", payload })
-    });
-
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Failed');
-
-    $('repRangeLabel').textContent = data.range || '—';
-    __lastReportRows = data.rows || [];
-    __lastReportName = `report_${period}.csv`;
-
-    renderReportTable(__lastReportRows);
-    showToast('تم إنشاء التقرير ✅', 'success');
-  } catch (e) {
-    console.error(e);
-    showToast('فشل إنشاء التقرير', 'error');
-  } finally {
-    hideLoader('repLoader');
-  }
+    hideLoader('loginLoader');
+  }, 1000);
 }
 
-function renderReportTable(rows) {
-  const tbody = $('repTable');
-  if (!rows || !rows.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>`;
-    return;
-  }
+$('btnLogin').onclick = handleLogin;
 
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.id || '-'}</td>
-      <td>${r.name || '-'}</td>
-      <td>${r.presentDays ?? 0}</td>
-      <td>${r.totalHHMM || '00:00'}</td>
-      <td>${r.avgPerDayHHMM || '00:00'}</td>
-    </tr>
-  `).join('');
-}
+['loginUser', 'loginPass'].forEach(id => {
+  $(id)?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
+});
 
-function exportReportCSV() {
-  if (!__lastReportRows || !__lastReportRows.length) {
-    showToast('أنشئ التقرير أولاً', 'warning');
-    return;
-  }
-
-  const header = ['ID','Name','PresentDays','TotalHHMM','AvgPerDayHHMM'];
-  const lines = [
-    header.join(','),
-    ...__lastReportRows.map(r => [
-      safeCSV(r.id),
-      safeCSV(r.name),
-      safeCSV(r.presentDays),
-      safeCSV(r.totalHHMM),
-      safeCSV(r.avgPerDayHHMM)
-    ].join(','))
-  ];
-
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = __lastReportName || 'report.csv';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-
-  showToast('تم تصدير CSV ✅', 'success');
-}
-
-function safeCSV(v) {
-  const s = (v ?? '').toString().replace(/"/g, '""');
-  return `"${s}"`;
-}
-
-/*************** ONLOAD ***************/
-window.onload = async () => {
+window.onload = () => {
   updateUAETime();
-
+  
   if (sessionStorage.getItem('adminLogged') === '1') {
     $('loginBox').style.display = 'none';
     $('adminBox').style.display = 'block';
     $('headerInfo').style.display = 'flex';
-
-    showTab('employees');
-    await loadEmployees();
-    await loadLeaves();
+    
+    loadEmployees();
+    loadLeaves();
   }
 };
 
 setInterval(() => {
-  updateUAETime();
   if (sessionStorage.getItem('adminLogged') === '1') {
     loadLeaves();
   }
