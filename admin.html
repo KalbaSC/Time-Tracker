@@ -971,6 +971,14 @@ async function loadReport() {
     const date = $('repDate').value;
     const start = $('repStart').value;
     const end = $('repEnd').value;
+    const workedDays = Number(r.days || 0);
+    const workedMin  = parseHHMM(r.hhmm || "00:00");
+    const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+    const diffMin = workedMin - expectedMin;
+
+    const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+    const diffText  = diffLabel + " " + fmtMin(diffMin);
+
 
     if (period === "range") {
       payload.start = start;
@@ -1125,7 +1133,22 @@ document.addEventListener("click", (e)=>{
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape") closeOverlayModal();
 });
-  
+
+const REQUIRED_MIN_PER_DAY = 7 * 60;
+
+function parseHHMM(hhmm){
+  if(!hhmm) return 0;
+  const [h,m] = String(hhmm).split(":").map(n => parseInt(n,10) || 0);
+  return (h*60) + m;
+}
+function fmtMin(min){
+  const sign = min < 0 ? "-" : "";
+  min = Math.abs(min);
+  const h = Math.floor(min/60);
+  const m = min % 60;
+  return sign + String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+}
+    
 </script>
 
 </body>
