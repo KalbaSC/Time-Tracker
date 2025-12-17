@@ -550,11 +550,13 @@
           <th>الفترة</th>
           <th>ساعات العمل</th>
           <th>الأيام</th>
+          <th>المتوقع</th>
+          <th>نقص/زيادة</th>
           <th class="center">التفاصيل</th>
         </tr>
       </thead>
       <tbody id="repTable">
-        <tr><td colspan="6" style="text-align:center;color:#777">لا توجد بيانات بعد.</td></tr>
+        <tr><td colspan="8" style="text-align:center;color:#777">لا توجد بيانات بعد.</td></tr>
       </tbody>
     </table>
   </div>
@@ -958,7 +960,7 @@ function downloadCSV(text, filename){
 
 async function loadReport() {
   showLoader('repLoader');
-  $('repTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
+  $('repTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
 
   try {
     const period = $('repPeriod').value;
@@ -971,14 +973,6 @@ async function loadReport() {
     const date = $('repDate').value;
     const start = $('repStart').value;
     const end = $('repEnd').value;
-    const workedDays = Number(r.days || 0);
-    const workedMin  = parseHHMM(r.hhmm || "00:00");
-    const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
-    const diffMin = workedMin - expectedMin;
-
-    const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
-    const diffText  = diffLabel + " " + fmtMin(diffMin);
-
 
     if (period === "range") {
       payload.start = start;
@@ -1001,28 +995,38 @@ async function loadReport() {
 
     const rows = data.rows || [];
     if (!rows.length) {
-      $('repTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
+      $('repTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
       return;
     }
+$('repTable').innerHTML = rows.map(r => {
+  const workedDays = Number(r.presentDays || 0);
+  const workedMin  = parseHHMM(r.totalHHMM || "00:00");
+  const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+  const diffMin = workedMin - expectedMin;
 
-    $('repTable').innerHTML = rows.map(r => {
-      const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
-      return `
-        <tr>
-          <td>${r.id}</td>
-          <td>${r.name || ''}</td>
-          <td>${data.range || ''}</td>
-          <td>${r.totalHHMM || '00:00'}</td>
-          <td>${r.presentDays || 0}</td>
-          <td style="text-align:center;">${btn}</td>
-        </tr>
-      `;
-    }).join("");
+  const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+  const diffText  = diffLabel + " " + fmtMin(diffMin);
+
+  const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
+
+  return `
+    <tr>
+      <td>${r.id}</td>
+      <td>${r.name || ''}</td>
+      <td>${data.range || ''}</td>
+      <td>${r.totalHHMM || '00:00'}</td>
+      <td>${workedDays}</td>
+      <td>${fmtMin(expectedMin)}</td>
+      <td>${diffText}</td>
+      <td style="text-align:center;">${btn}</td>
+    </tr>
+  `;
+}).join("");
 
     showToast('تم تحميل التقرير بنجاح', 'success');
   } catch (err) {
     console.error(err);
-    $('repTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#777">خطأ في تحميل التقرير</td></tr>`;
+    $('repTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل التقرير</td></tr>`;
     showToast('خطأ في تحميل التقرير', 'error');
   } finally {
     hideLoader('repLoader');
@@ -1052,15 +1056,26 @@ function openReportDetails(empId){
   const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
   const meta  = `الفترة: ${lastReport.range || ''}`;
 
-  const rowsHtml = details.length
-    ? details.map(d => `
+const rowsHtml = details.length
+  ? details.map(d => {
+      const dayWorkedMin = parseHHMM(d.dayHHMM || "00:00");
+      const dayExpectedMin = dayWorkedMin > 0 ? REQUIRED_MIN_PER_DAY : 0;
+      const dayDiffMin = dayWorkedMin - dayExpectedMin;
+
+      const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+      const dayDiffText  = dayDiffLabel + " " + fmtMin(dayDiffMin);
+
+      return `
         <tr>
           <td>${dateOnly(d.date)}</td>
           <td>${d.pairsText || '—'}</td>
           <td>${d.dayHHMM || '00:00'}</td>
+          <td>${fmtMin(dayExpectedMin)}</td>
+          <td>${dayDiffText}</td>
         </tr>
-      `).join("")
-    : `<tr><td colspan="3" style="text-align:center;color:#777">لا توجد تفاصيل.</td></tr>`;
+      `;
+    }).join("")
+  : `<tr><td colspan="5" style="text-align:center;color:#777">لا توجد تفاصيل.</td></tr>`;
 
   const html = `
     <div style="margin-bottom:10px;">
@@ -1072,9 +1087,11 @@ function openReportDetails(empId){
       <table>
         <thead>
           <tr>
-            <th>التاريخ</th>
-            <th>الأزواج (دخول → خروج)</th>
-            <th>مجموع اليوم</th>
+          <th>التاريخ</th>
+          <th>الأزواج (دخول → خروج)</th>
+          <th>مجموع اليوم</th>
+          <th>المتوقع</th>
+          <th>نقص/زيادة</th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
@@ -1083,10 +1100,6 @@ function openReportDetails(empId){
   `;
 
   openReportModal(html);
-}
-
-function closeReportModal(){
-  $('repModal').style.display = 'none';
 }
 
 function downloadReportCsv(){
@@ -1110,8 +1123,6 @@ function downloadReportCsv(){
 
 $('btnLoadReport').onclick = loadReport;
 $('btnDlReportCsv').onclick = downloadReportCsv;
-$('repModalClose').onclick = closeReportModal;
-
 
 function openReportModal(html){
   const overlay = document.getElementById("reportModal");
