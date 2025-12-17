@@ -783,6 +783,13 @@ function getPositionSmart() {
   });
 }
 
+function onlyDate(val){
+  if (!val) return "—";
+  const d = new Date(val);
+  if (isNaN(d)) return val;
+  return d.toISOString().slice(0, 10);
+}
+  
 function checkLocationStatus() {
   const statusElement = $('locationStatus');
   if (!navigator.geolocation) {
@@ -1303,8 +1310,8 @@ async function loadMyLeaves(){
       return `
         <tr>
           <td>${lv.type || "—"}</td>
-          <td>${lv.fromDate || "—"}</td>
-          <td>${lv.toDate || "—"}</td>
+          <td>${onlyDate(lv.fromDate)}</td>
+          <td>${onlyDate(lv.toDate)}</td>
           <td>${badge}</td>
           <td>${note}</td>
         </tr>
