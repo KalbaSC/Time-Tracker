@@ -609,6 +609,30 @@
         </form>
         <div class="loader" id="leaveLoader"></div>
         <div id="leaveMsg" class="msg"></div>
+
+       <hr style="margin:18px 0;border:0;border-top:1px solid var(--line);">
+
+<h4 style="margin-bottom:10px;color:var(--accent);font-weight:900;">
+  <i class="fas fa-clipboard-list"></i> طلباتي السابقة وحالتها
+</h4>
+
+<div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>النوع</th>
+        <th>من</th>
+        <th>إلى</th>
+        <th>الحالة</th>
+        <th>سبب الرفض/ملاحظة</th>
+      </tr>
+    </thead>
+    <tbody id="myLeavesTable">
+      <tr><td colspan="5" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>
+    </tbody>
+  </table>
+</div>
+ 
       </div>
 
       <div class="section">
@@ -869,6 +893,7 @@ async function login() {
 
     await refreshAll();
     checkLocationStatus();
+    loadMyLeaves();
     
     const today = ymd(new Date());
     const leaveFrom = $('#leaveFrom');
@@ -1206,7 +1231,7 @@ await fetch(SCRIPT_URL, {
     if (fromElement) fromElement.min = today;
     if (toElement) toElement.min = today;
 
-    if (typeof loadLeaves === "function") loadLeaves();
+    loadMyLeaves();
 
   } catch (error) {
     console.error('Form submission error:', error);
@@ -1226,6 +1251,65 @@ await fetch(SCRIPT_URL, {
   return false;
 }
 
+function statusBadgeHtml_(statusRaw, note){
+  const s = String(statusRaw || "Pending").toLowerCase();
+  let bg = "rgba(245,158,11,.12)", color = "#f59e0b", label = "قيد الانتظار";
+  if (s === "approved") { bg = "rgba(34,197,94,.12)"; color = "#22c55e"; label = "مقبولة"; }
+  if (s === "rejected") { bg = "rgba(239,68,68,.12)"; color = "#ef4444"; label = "مرفوضة"; }
+  return `<span style="padding:4px 10px;border-radius:999px;background:${bg};color:${color};font-weight:800;font-size:12px;">${label}</span>`;
+}
+
+async function loadMyLeaves(){
+  if (!window.currentID) return;
+
+  const tbody = document.getElementById("myLeavesTable");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "getLeavesByEmployee",
+        payload: { id: String(window.currentID) }
+      })
+    });
+
+    const text = await res.text();
+    const data = JSON.parse(text);
+
+    if (!data.ok) throw new Error(data.error || "Server error");
+
+    const leaves = data.leaves || [];
+    if (!leaves.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>`;
+      return;
+    }
+
+    leaves.sort((a,b) => String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+
+    tbody.innerHTML = leaves.map(lv => {
+      const badge = statusBadgeHtml_(lv.status, lv.note);
+      const note = lv.note ? String(lv.note) : "—";
+      return `
+        <tr>
+          <td>${lv.type || "—"}</td>
+          <td>${lv.fromDate || "—"}</td>
+          <td>${lv.toDate || "—"}</td>
+          <td>${badge}</td>
+          <td>${note}</td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">تعذر تحميل الطلبات.</td></tr>`;
+  }
+}
+  
 function readFileAsBase64_(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
