@@ -347,6 +347,36 @@
   padding: 15px 20px;
   z-index: 50;
 }
+
+
+.modal-overlay{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  display:flex; align-items:center; justify-content:center;
+  z-index: 99999;
+}
+.modal-window{
+  width: min(900px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  border-radius: 18px;
+  background: #101010;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.modal-header{
+  position: sticky; top: 0;
+  background: #0f0f0f;
+  padding: 14px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.modal-title{ font-weight: 700; color:#ffd24a; }
+.modal-close{
+  border:0; background:transparent; color:#fff;
+  font-size: 20px; cursor:pointer;
+}
+.modal-body{ padding: 14px 16px; }
     
   </style>
 </head>
@@ -556,6 +586,16 @@
 
 </div>
 
+<div id="reportModal" class="modal-overlay" style="display:none;">
+  <div class="modal-window" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div id="modalTitle" class="modal-title">تفاصيل الموظف</div>
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+  </div>
+</div>
+  
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGSjc43X89ZJ2py8GndB-AfRrP38fI0mzHyr9rLLAcW_OZegive8D3u-eCOyroKElj/exec";
 const ADMIN_CREDENTIALS = {
@@ -950,7 +990,6 @@ async function loadReport() {
       empId: ($('repEmpId').value || '').trim()
     };
 
-    // date/range handling
     const date = $('repDate').value;
     const start = $('repStart').value;
     const end = $('repEnd').value;
@@ -981,7 +1020,7 @@ async function loadReport() {
     }
 
     $('repTable').innerHTML = rows.map(r => {
-      const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
+      const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportModal('${r.id}')">تفاصيل</button>`;
       return `
         <tr>
           <td>${r.id}</td>
@@ -1066,6 +1105,26 @@ function downloadReportCsv(){
 $('btnLoadReport').onclick = loadReport;
 $('btnDlReportCsv').onclick = downloadReportCsv;
 $('repModalClose').onclick = closeReportModal;
+
+
+function openReportModal(html){
+  const overlay = document.getElementById("reportModal");
+  const body = document.getElementById("modalBody");
+  body.innerHTML = html;
+  overlay.style.display = "flex";
+}
+function closeReportModal(){
+  document.getElementById("reportModal").style.display = "none";
+  document.getElementById("modalBody").innerHTML = "";
+}
+document.addEventListener("click", (e)=>{
+  const overlay = document.getElementById("reportModal");
+  if(overlay.style.display !== "flex") return;
+  if(e.target === overlay) closeReportModal();
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape") closeReportModal();
+});
   
 </script>
 
