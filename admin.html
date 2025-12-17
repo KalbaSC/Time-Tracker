@@ -450,6 +450,89 @@
         </table>
       </div>
     </div>
+<div id="reportsBox" class="card">
+  <h2>📊 التقارير</h2>
+
+  <div class="flex">
+    <div class="col">
+      <label>الفترة</label>
+      <select id="repPeriod">
+        <option value="daily">يومي</option>
+        <option value="weekly">أسبوعي</option>
+        <option value="monthly">شهري</option>
+        <option value="range">فترة محددة</option>
+      </select>
+    </div>
+
+    <div class="col">
+      <label>تاريخ (لليومي/الأسبوعي/الشهري)</label>
+      <input type="date" id="repDate">
+    </div>
+
+    <div class="col">
+      <label>من تاريخ (للـ Range)</label>
+      <input type="date" id="repStart">
+    </div>
+
+    <div class="col">
+      <label>إلى تاريخ (للـ Range)</label>
+      <input type="date" id="repEnd">
+    </div>
+
+    <div class="col">
+      <label>تصفية بالموظف (اختياري)</label>
+      <input id="repEmpId" placeholder="ID مثل: 1">
+    </div>
+  </div>
+
+  <div class="flex">
+    <button class="btn-yellow" id="btnLoadReport" style="flex:1">🔍 عرض التقرير</button>
+    <button class="btn-yellow" id="btnDlReportCsv" style="flex:0.5">⬇️ تنزيل CSV</button>
+  </div>
+
+  <div class="loader" id="repLoader"></div>
+
+  <div class="badge">النطاق: <span id="repRange">—</span></div>
+
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>الرقم الوظيفي</th>
+          <th>الاسم</th>
+          <th>الفترة</th>
+          <th>ساعات العمل</th>
+          <th>الأيام</th>
+          <th class="center">التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody id="repTable">
+        <tr><td colspan="6" style="text-align:center;color:#777">لا توجد بيانات بعد.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="toast" id="repModal" style="display:none; max-width:900px; width:95%; left:50%; transform:translateX(-50%); top:70px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+    <b id="repModalTitle">تفاصيل</b>
+    <button class="btn-danger" id="repModalClose" style="width:auto;">إغلاق</button>
+  </div>
+  <div id="repModalMeta" style="color:#aaa; margin-top:8px;"></div>
+  <div style="overflow:auto; max-height:60vh; margin-top:10px;">
+    <table>
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>الأزواج (دخول → خروج)</th>
+          <th>مجموع اليوم</th>
+        </tr>
+      </thead>
+      <tbody id="repDetailsBody"></tbody>
+    </table>
+  </div>
+</div>
 
   </div>
 
@@ -818,6 +901,140 @@ setInterval(() => {
     loadLeaves();
   }
 }, 30000);
+
+let lastReport = null;
+
+function csvEscape(v){
+  const s = String(v ?? "");
+  return /[,"\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+}
+
+function downloadCSV(text, filename){
+  if (!text){ showToast('لا توجد بيانات للتنزيل بعد', 'warning'); return; }
+  const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function loadReport() {
+  showLoader('repLoader');
+  $('repTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
+
+  try {
+    const period = $('repPeriod').value;
+    const payload = {
+      period,
+      includeDetails: true,
+      empId: ($('repEmpId').value || '').trim()
+    };
+
+    // date/range handling
+    const date = $('repDate').value;
+    const start = $('repStart').value;
+    const end = $('repEnd').value;
+
+    if (period === "range") {
+      payload.start = start;
+      payload.end = end;
+    } else {
+      payload.date = date;
+    }
+
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "getReport", payload })
+    });
+
+    const data = JSON.parse(await res.text());
+    if (!data.ok) throw new Error(data.error || "Server error");
+
+    lastReport = data;
+
+    $('repRange').textContent = data.range || "—";
+
+    const rows = data.rows || [];
+    if (!rows.length) {
+      $('repTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
+      return;
+    }
+
+    $('repTable').innerHTML = rows.map(r => {
+      const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
+      return `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.name || ''}</td>
+          <td>${data.range || ''}</td>
+          <td>${r.totalHHMM || '00:00'}</td>
+          <td>${r.presentDays || 0}</td>
+          <td style="text-align:center;">${btn}</td>
+        </tr>
+      `;
+    }).join("");
+
+    showToast('تم تحميل التقرير بنجاح', 'success');
+  } catch (err) {
+    console.error(err);
+    $('repTable').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#777">خطأ في تحميل التقرير</td></tr>`;
+    showToast('خطأ في تحميل التقرير', 'error');
+  } finally {
+    hideLoader('repLoader');
+  }
+}
+
+function openReportDetails(empId){
+  if (!lastReport || !lastReport.details) return;
+
+  const row = (lastReport.rows || []).find(x => String(x.id) === String(empId));
+  const details = lastReport.details[empId] || [];
+
+  $('repModalTitle').textContent = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
+  $('repModalMeta').textContent = `الفترة: ${lastReport.range || ''}`;
+
+  $('repDetailsBody').innerHTML = details.length
+    ? details.map(d => `
+        <tr>
+          <td>${d.date}</td>
+          <td>${d.pairsText || '—'}</td>
+          <td>${d.dayHHMM || '00:00'}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="3" style="text-align:center;color:#777">لا توجد تفاصيل.</td></tr>`;
+
+  $('repModal').style.display = 'block';
+}
+
+function closeReportModal(){
+  $('repModal').style.display = 'none';
+}
+
+function downloadReportCsv(){
+  if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
+
+  const header = ["ID","Name","Range","TotalHHMM","PresentDays"];
+  const lines = [header.join(",")];
+
+  lastReport.rows.forEach(r => {
+    lines.push([
+      csvEscape(r.id),
+      csvEscape(r.name),
+      csvEscape(lastReport.range),
+      csvEscape(r.totalHHMM),
+      csvEscape(r.presentDays)
+    ].join(","));
+  });
+
+  downloadCSV(lines.join("\n"), `report_${(lastReport.period||'period')}.csv`);
+}
+
+$('btnLoadReport').onclick = loadReport;
+$('btnDlReportCsv').onclick = downloadReportCsv;
+$('repModalClose').onclick = closeReportModal;
+  
 </script>
 
 </body>
