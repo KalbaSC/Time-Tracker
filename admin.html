@@ -835,8 +835,8 @@ async function loadLeaves(filter = 'all') {
           <td>${lv.name || "-"}</td>
           <td>${lv.id}</td>
           <td>${lv.type}</td>
-          <td>${lv.fromDate}</td>
-          <td>${lv.toDate}</td>
+          <td>${onlyDate(lv.fromDate)}</td>
+          <td>${onlyDate(lv.toDate)}</td>
           <td>${attachHtml}</td>
           <td><span class="status-badge ${statusClass}">${lv.status}</span></td>
           <td>${actionsHtml}</td>
@@ -1045,6 +1045,13 @@ function dateOnly(v){
     return `${y}-${m}-${day}`;
   }
   return String(v).split(" ")[0];
+}
+
+function onlyDate(val){
+  if (!val) return "—";
+  const d = new Date(val);
+  if (isNaN(d)) return val;
+  return d.toISOString().slice(0, 10);
 }
   
 function openReportDetails(empId){
