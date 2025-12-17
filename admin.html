@@ -330,6 +330,24 @@
       background: #dc2626;
       color: white;
     }
+
+#reportsBox { position: relative; }
+
+.rep-modal{
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  left: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 15px 20px;
+  z-index: 50;
+}
+    
   </style>
 </head>
 <body>
@@ -415,7 +433,6 @@
       </table>
     </div>
 
-    <!-- Leave Requests -->
     <div id="leaveBox" class="card">
       <h2>📋 طلبات الإجازة</h2>
       
@@ -513,13 +530,14 @@
   </div>
 </div>
 
-<!-- Details Modal -->
-<div class="toast" id="repModal" style="display:none; max-width:900px; width:95%; left:50%; transform:translateX(-50%); top:70px;">
+<div id="repModal" class="rep-modal" style="display:none;">
   <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
     <b id="repModalTitle">تفاصيل</b>
     <button class="btn-danger" id="repModalClose" style="width:auto;">إغلاق</button>
   </div>
+
   <div id="repModalMeta" style="color:#aaa; margin-top:8px;"></div>
+
   <div style="overflow:auto; max-height:60vh; margin-top:10px;">
     <table>
       <thead>
@@ -986,6 +1004,20 @@ async function loadReport() {
   }
 }
 
+function dateOnly(v){
+  if (!v) return "—";
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return v.trim();
+
+  const d = new Date(v);
+  if (!isNaN(d)) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  return String(v).split(" ")[0];
+}
+  
 function openReportDetails(empId){
   if (!lastReport || !lastReport.details) return;
 
@@ -998,7 +1030,7 @@ function openReportDetails(empId){
   $('repDetailsBody').innerHTML = details.length
     ? details.map(d => `
         <tr>
-          <td>${d.date}</td>
+          <td>${dateOnly(d.date)}</td>
           <td>${d.pairsText || '—'}</td>
           <td>${d.dayHHMM || '00:00'}</td>
         </tr>
