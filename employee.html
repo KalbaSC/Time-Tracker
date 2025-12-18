@@ -743,6 +743,29 @@ const insideClub = (lat, lng) => {
   return { ok: d <= ALLOWED_RADIUS_M, dist: d };
 };
 
+function resetPunchUI() {
+  const msg = $("punchMsg");
+  if (msg) {
+    msg.className = "msg";
+    msg.style.display = "none";
+    msg.textContent = "";
+  }
+
+  const loc = $("locationStatus");
+  if (loc) loc.style.display = "none";
+
+  if ($("sToday")) $("sToday").textContent = "00:00";
+  if ($("sLeft")) $("sLeft").textContent = "00:00";
+  if ($("sWeek")) $("sWeek").textContent = "00:00";
+  if ($("sLast")) $("sLast").textContent = "—";
+  if ($("lastType")) $("lastType").textContent = "—";
+  if ($("todayProgress")) $("todayProgress").textContent = "0% من الوقت المطلوب";
+  if ($("weekProgress")) $("weekProgress").textContent = "0 ساعة يومياً (0%)";
+
+  const table = $("todayTable");
+  if (table) table.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>`;
+}
+  
 function showToast(message, type = 'success', duration = 3000) {
   const toast = $('toast');
   toast.textContent = message;
@@ -848,7 +871,9 @@ async function login() {
   const id = ($("empId").value || "").trim();
   const pin = ($("empPin").value || "").trim();
   const msg = $("loginMsg");
+  const msg = $("loginMsg");
   msg.style.display = "none";
+  msg.textContent = "";
   
   showLoader('loginLoader');
 
@@ -897,7 +922,9 @@ async function login() {
     $("uaeHeader").style.display = "flex";
 
     showToast(`مرحباً ${window.employeeName}`, 'success');
-
+    resetPunchUI();
+    await refreshAll();
+    checkLocationStatus();
     await refreshAll();
     checkLocationStatus();
     loadMyLeaves();
@@ -918,6 +945,7 @@ async function login() {
 
 function logout() {
   if (confirm("هل تريد تسجيل الخروج؟")) {
+    resetPunchUI();
     window.currentID = null;
     window.employeeName = null;
     $("dash").style.display = "none";
