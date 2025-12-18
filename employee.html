@@ -468,14 +468,6 @@
         font-size: 24px;
       }
     }
-
-#topMsg {
-  position: sticky;
-  top: 10px;
-  z-index: 999;
-  margin-bottom: 15px;
-}
- 
   </style>
 </head>
 <body>
@@ -491,7 +483,7 @@
         <span id="uaeTime">--:--</span>
       </div>
     </div>
-<div id="topMsg" class="msg"></div>
+
     <div id="loginBox" class="login-card">
       <h2>تسجيل الدخول</h2>
       <div class="uae-info">
@@ -904,14 +896,7 @@ async function login() {
     $("dash").style.display = "block";
     $("uaeHeader").style.display = "flex";
 
-    const topMsg = document.getElementById('topMsg');
-    topMsg.className = 'msg ok';
-    topMsg.textContent = '✔ تم تسجيل الدخول بنجاح';
-    topMsg.style.display = 'block';
-    
-    setTimeout(() => {
-      topMsg.style.display = 'none';
-    }, 3000);
+    showToast(`مرحباً ${window.employeeName}`, 'success');
 
     await refreshAll();
     checkLocationStatus();
