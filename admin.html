@@ -1434,6 +1434,7 @@ lastReport.rows.forEach(r => {
 });
 
 downloadCSV(lines.join("\r\n"), `report_${(lastReport.period||'period')}.csv`);
+}
 
 $('btnLoadReport').onclick = loadReport;
 $('btnDlReportCsv').onclick = downloadReportCsv;
