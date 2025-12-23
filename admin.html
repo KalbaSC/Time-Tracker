@@ -442,7 +442,15 @@
         </div>
         <div class="col">
           <label>القسم</label>
-          <input id="empDept" placeholder="مثال: الموارد البشرية">
+          <select id="empDept">
+            <option value="">اختر القسم...</option>
+            <option value="الخدمات المساندة">الخدمات المساندة</option>
+            <option value="الالعاب الفردية">الالعاب الفردية</option>
+            <option value="الالعاب الجماعية">الالعاب الجماعية</option>
+            <option value="امانة السر">امانة السر</option>
+            <option value="الاتصال المؤسسي">الاتصال المؤسسي</option>
+            <option value="الاستراتيجية">الاستراتيجية</option>
+          </select>
       </div>
       </div>
 
@@ -537,7 +545,15 @@
     </div>
     <div class="col">
       <label>تصفية بالقسم (اختياري)</label>
-      <input id="repDept" placeholder="مثال: المالية">
+<select id="repDept">
+  <option value="">الكل</option>
+  <option value="الخدمات المساندة">الخدمات المساندة</option>
+  <option value="الالعاب الفردية">الالعاب الفردية</option>
+  <option value="الالعاب الجماعية">الالعاب الجماعية</option>
+  <option value="امانة السر">امانة السر</option>
+  <option value="الاتصال المؤسسي">الاتصال المؤسسي</option>
+  <option value="الاستراتيجية">الاستراتيجية</option>
+</select>
   </div>
   </div>
 
@@ -658,6 +674,12 @@ function clearEmployeeForm() {
   $('empId').value = '';
   $('empPin').value = '';
   $('empDept').value = '';
+
+  editMode = false;
+  editIdLocked = "";
+  $('empId').disabled = false;
+
+  $('btnAdd').textContent = '➕ إضافة موظف جديد';
   showToast('تم مسح النموذج', 'success');
 }
 
@@ -669,7 +691,7 @@ async function loadEmployees() {
   showLoader('empLoader');
   
   try {
-    $('empTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
+    $('empTable').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
     
     const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
     const res = await fetch(url);
@@ -687,16 +709,16 @@ async function loadEmployees() {
       const pin = r[2].trim();
       const dept = (r[4] || "").trim();
 
-      html += `
-        <tr>
-          <td>${name}</td>
-          <td>${id}</td>
-          <td>${pin}</td>
-           <td>${dept || "-"}</td>
-          <td class="actions-cell">
-            <button class="btn-danger delRowBtn" data-id="${id}">🗑️ حذف</button>
-          </td>
-        </tr>`;
+<td class="actions-cell">
+  <button class="btn-yellow editRowBtn"
+          data-id="${id}"
+          data-name="${encodeURIComponent(name)}"
+          data-pin="${pin}"
+          data-dept="${encodeURIComponent(dept || '')}">
+    ✏️ تعديل
+  </button>
+  <button class="btn-danger delRowBtn" data-id="${id}">🗑️ حذف</button>
+</td>
     });
 
     $('empTable').innerHTML = html || '<tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات.</td></tr>';
@@ -730,9 +752,31 @@ async function loadEmployees() {
       };
     });
 
+  document.querySelectorAll('.editRowBtn').forEach(btn => {
+  btn.onclick = () => {
+    const id = btn.dataset.id;
+    const name = decodeURIComponent(btn.dataset.name || "");
+    const pin = btn.dataset.pin || "";
+    const dept = decodeURIComponent(btn.dataset.dept || "");
+
+    $('empName').value = name;
+    $('empId').value = id;
+    $('empPin').value = pin;
+    $('empDept').value = dept;
+
+    editMode = true;
+    editIdLocked = id;
+    $('empId').disabled = true;
+
+    $('btnAdd').textContent = '💾 حفظ التعديل';
+    showToast('تم تحميل بيانات الموظف للتعديل', 'success');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+});
+
   } catch (error) {
     console.error('Load employees error:', error);
-    $('empTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777">خطأ في تحميل البيانات</td></tr>';
+    $('empTable').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777">خطأ في تحميل البيانات</td></tr>';
     showToast('خطأ في تحميل بيانات الموظفين', 'error');
   } finally {
     hideLoader('empLoader');
@@ -741,11 +785,11 @@ async function loadEmployees() {
 
 $('btnAdd').onclick = async () => {
   const name = $('empName').value.trim();
-  const id = $('empId').value.trim();
+  const id = (editMode ? editIdLocked : $('empId').value.trim());
   const pin = $('empPin').value.trim();
   const department = $('empDept').value.trim();
 
-  if (!name || !id || !pin) {
+  if (!name || !id || !pin || !department) {
     showToast('جميع الحقول مطلوبة', 'warning');
     return;
   }
@@ -768,7 +812,7 @@ $('btnAdd').onclick = async () => {
       })
     });
 
-    showToast('تمت إضافة الموظف بنجاح', 'success');
+    showToast(editMode ? 'تم تحديث بيانات الموظف بنجاح' : 'تمت إضافة الموظف بنجاح', 'success');
     clearEmployeeForm();
     await loadEmployees();
   } catch (error) {
@@ -954,6 +998,8 @@ setInterval(() => {
 }, 30000);
 
 let lastReport = null;
+let editMode = false;
+let editIdLocked = "";  
 
 function csvEscape(v){
   const s = String(v ?? "");
