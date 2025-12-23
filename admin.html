@@ -703,25 +703,36 @@ async function loadEmployees() {
       .filter(r => r[0] && r[0].trim() !== "ID");
 
     let html = "";
-    rows.forEach(r => {
-      const id = r[0].trim();
-      const name = r[1].trim();
-      const pin = r[2].trim();
-      const dept = (r[4] || "").trim();
 
-<td class="actions-cell">
-  <button class="btn-yellow editRowBtn"
+rows.forEach(r => {
+  const id = r[0].trim();
+  const name = r[1].trim();
+  const pin = r[2].trim();
+  const dept = (r[4] || "").trim();
+
+  html += `
+    <tr>
+      <td>${name}</td>
+      <td>${id}</td>
+      <td>${pin}</td>
+      <td>${dept || "-"}</td>
+      <td class="actions-cell">
+        <button class="btn-yellow editRowBtn"
           data-id="${id}"
           data-name="${encodeURIComponent(name)}"
           data-pin="${pin}"
-          data-dept="${encodeURIComponent(dept || '')}">
-    ✏️ تعديل
-  </button>
-  <button class="btn-danger delRowBtn" data-id="${id}">🗑️ حذف</button>
-</td>
-    });
+          data-dept="${encodeURIComponent(dept)}">
+          ✏️ تعديل
+        </button>
+        <button class="btn-danger delRowBtn" data-id="${id}">
+          🗑️ حذف
+        </button>
+      </td>
+    </tr>
+  `;
+});
 
-    $('empTable').innerHTML = html || '<tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات.</td></tr>';
+    $('empTable').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
     $('userCount').textContent = rows.length;
 
     document.querySelectorAll('.delRowBtn').forEach(btn => {
