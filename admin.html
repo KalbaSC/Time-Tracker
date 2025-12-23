@@ -1190,13 +1190,22 @@ function csvEscape(v){
 
 function downloadCSV(text, filename){
   if (!text){ showToast('لا توجد بيانات للتنزيل بعد', 'warning'); return; }
-  const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+
+  const BOM = "\ufeff";
+  const blob = new Blob([BOM + text], { type: "text/csv;charset=utf-8;" });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
+  URL.revokeObjectURL(url);
+}
+  
+function excelText(v){
+  return "\t" + String(v ?? "");
 }
 
 async function loadReport() {
@@ -1411,21 +1420,20 @@ function downloadReportCsv(){
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
   const header = ["ID","Name","Department","Range","TotalHHMM","PresentDays"];
-  const lines = [header.join(",")];
+const lines = [header.join(",")];
 
-  lastReport.rows.forEach(r => {
-lines.push([
-  csvEscape(r.id),
-  csvEscape(r.name),
-  csvEscape(r.department || ""),
-  csvEscape(lastReport.range),
-  csvEscape(r.totalHHMM),
-  csvEscape(r.presentDays)
-].join(","));
-  });
+lastReport.rows.forEach(r => {
+  lines.push([
+    csvEscape(excelText(r.id)),
+    csvEscape(r.name),
+    csvEscape(r.department || ""),
+    csvEscape(lastReport.range),
+    csvEscape(excelText(r.totalHHMM)),
+    csvEscape(r.presentDays)
+  ].join(","));
+});
 
-  downloadCSV(lines.join("\n"), `report_${(lastReport.period||'period')}.csv`);
-}
+downloadCSV(lines.join("\r\n"), `report_${(lastReport.period||'period')}.csv`);
 
 $('btnLoadReport').onclick = loadReport;
 $('btnDlReportCsv').onclick = downloadReportCsv;
