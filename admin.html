@@ -399,6 +399,54 @@
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: var(--muted);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: #2a2a2a;
+  color: var(--text);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #111;
+  border-color: var(--accent);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}  
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}    
   </style>
 </head>
 <body>
@@ -444,7 +492,8 @@
   <button class="tab-btn" onclick="showTab('reports')">📊 التقارير</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
 </div>
-    
+
+    <div id="employeesContent" class="tab-content active">
     <div class="card">
       <h2>👥 إدارة الموظفين</h2>
       
@@ -503,8 +552,10 @@
         </tbody>
       </table>
     </div>
+    </div>
 
-    <div id="leaveBox" class="card">
+    <div id="leavesContent" class="tab-content">
+    <div class="card">
       <h2>📋 طلبات الإجازة</h2>
       
       <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -538,7 +589,10 @@
         </table>
       </div>
     </div>
-<div id="reportsBox" class="card">
+    </div>
+    
+<div id="reportsContent" class="tab-content">
+  <div class="card">
   <h2>📊 التقارير</h2>
 
   <div class="flex">
@@ -615,7 +669,49 @@
     </table>
   </div>
 </div>
+</div>
 
+<div id="settingsContent" class="tab-content">
+  <div class="card">
+    <h2>⚙️ الإعدادات</h2>
+    
+    <div class="flex">
+      <div class="col">
+        <label>عدد أيام الإجازة السنوية الافتراضية</label>
+        <input type="number" id="annualLeaveDays" value="30">
+      </div>
+      <div class="col">
+        <label>ساعات العمل اليومية المطلوبة</label>
+        <input type="number" id="dailyWorkHours" value="7" step="0.5">
+      </div>
+    </div>
+    
+    <div class="flex">
+      <div class="col">
+        <label>لون المظهر</label>
+        <select id="themeColor">
+          <option value="gold">ذهبي</option>
+          <option value="blue">أزرق</option>
+          <option value="green">أخضر</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>تحديث البيانات تلقائياً كل (ثانية)</label>
+        <input type="number" id="autoRefresh" value="30">
+      </div>
+    </div>
+    
+    <button class="btn-yellow" onclick="saveSettings()">💾 حفظ الإعدادات</button>
+    <button class="btn-danger" onclick="resetSettings()">🔄 إعادة تعيين</button>
+    
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #2a2a2a;">
+      <h3>نسخة احتياطية</h3>
+      <button class="btn-yellow" onclick="exportAllData()">📥 تصدير جميع البيانات</button>
+      <button class="btn-yellow" onclick="importData()">📤 استيراد بيانات</button>
+    </div>
+  </div>
+</div>
+    
   </div>
 
 </div>
@@ -691,6 +787,26 @@ function hideLoader(id) {
   if (loader) loader.style.display = 'none';
 }
 
+let currentTab = 'employees';
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+  
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById(`${tabName}Content`).classList.add('active');
+  
+  currentTab = tabName;
+  
+  if (tabName === 'reports' && !lastReport) {
+    loadReport();
+  }
+}
+  
 function logout() {
   if (confirm('هل تريد تسجيل الخروج؟')) {
     sessionStorage.removeItem('adminLogged');
@@ -832,6 +948,12 @@ $('btnAdd').onclick = async () => {
   const pin = $('empPin').value.trim();
   const department = $('empDept').value.trim();
 
+    const validationError = validateEmployeeData(name, id, pin, department);
+  if (validationError) {
+    showToast(validationError, 'warning');
+    return;
+  }
+  
   if (!name || !id || !pin || !department) {
     showToast('جميع الحقول مطلوبة', 'warning');
     return;
