@@ -377,7 +377,28 @@
   font-size: 20px; cursor:pointer;
 }
 .modal-body{ padding: 14px 16px; }
-    
+
+@media (max-width: 768px) {
+  .flex { flex-direction: column; }
+  .col { flex: 1 1 100%; }
+  table { font-size: 12px; }
+  .header-info { flex-direction: column; gap: 10px; }
+}
+    .processing {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.success-animation {
+  animation: fadeInOut 2s ease;
+}
+
+/* Add loading skeletons for tables */
+.skeleton-row {
+  background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
   </style>
 </head>
 <body>
@@ -416,6 +437,13 @@
   </div>
 
   <div id="adminBox" class="card" style="display:none;">
+
+  <div class="tabs">
+  <button class="tab-btn active" onclick="showTab('employees')">👥 الموظفين</button>
+  <button class="tab-btn" onclick="showTab('leaves')">📋 الإجازات</button>
+  <button class="tab-btn" onclick="showTab('reports')">📊 التقارير</button>
+  <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
+</div>
     
     <div class="card">
       <h2>👥 إدارة الموظفين</h2>
@@ -684,10 +712,13 @@ function clearEmployeeForm() {
   showToast('تم مسح النموذج', 'success');
 }
 
-function validatePIN(pin) {
-  return /^\d{4}$/.test(pin);
-}
-
+function validateEmployeeData(name, id, pin, dept) {
+  if (name.length < 2) return "الاسم يجب أن يكون أكثر من حرفين";
+  if (!/^\d{4,6}$/.test(id)) return "الرقم الوظيفي غير صحيح";
+  if (!/^\d{4}$/.test(pin)) return "PIN يجب أن يكون 4 أرقام";
+  if (!dept) return "يرجى اختيار القسم";
+  return null;
+}  
 async function loadEmployees() {
   showLoader('empLoader');
   
@@ -803,11 +834,6 @@ $('btnAdd').onclick = async () => {
 
   if (!name || !id || !pin || !department) {
     showToast('جميع الحقول مطلوبة', 'warning');
-    return;
-  }
-
-  if (!validatePIN(pin)) {
-    showToast('الرمز السري يجب أن يكون 4 أرقام فقط', 'warning');
     return;
   }
 
