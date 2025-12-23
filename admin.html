@@ -1483,6 +1483,14 @@ function fmtMin(min){
   const m = min % 60;
   return sign + String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
 }
+
+function safeFileName(text){
+  return String(text || "")
+    .replace(/[\\/:*?"<>|]/g, "") 
+    .replace(/\s+/g, " ")
+    .trim();
+}
+  
 function downloadReportXLSX(){
   if (!lastReport || !lastReport.rows) {
     showToast('لا توجد بيانات بعد', 'warning');
@@ -1494,7 +1502,6 @@ function downloadReportXLSX(){
       "الرقم الوظيفي",
       "الاسم",
       "القسم",
-      "الفترة",
       "إجمالي الساعات",
       "عدد الأيام",
       "نقص/زيادة"
@@ -1514,7 +1521,6 @@ function downloadReportXLSX(){
       r.id,
       r.name,
       r.department || "",
-      lastReport.range || "",
       r.totalHHMM || "00:00",
       workedDays,
       diffText
@@ -1523,10 +1529,8 @@ function downloadReportXLSX(){
 
   const ws = XLSX.utils.aoa_to_sheet(data);
 
-  /* ✅ RTL worksheet */
   ws["!rtl"] = true;
 
-  /* ✅ Column widths */
   ws["!cols"] = [
     { wch: 15 },
     { wch: 22 },
@@ -1540,7 +1544,13 @@ function downloadReportXLSX(){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
 
-  XLSX.writeFile(wb, "تقرير_الحضور.xlsx");
+  const dept = safeFileName($('repDept')?.value);
+const fileName = dept
+  ? `تقرير الحضور إدارة ${dept}.xlsx`
+  : `تقرير الحضور.xlsx`;
+
+XLSX.writeFile(wb, fileName);
+
 }
     
 </script>
