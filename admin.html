@@ -1419,17 +1419,26 @@ async function saveEmployeeEdit() {
 function downloadReportCsv(){
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
-  const header = ["ID","Name","Department","Range","TotalHHMM","PresentDays"];
+const header = ["الرقم الوظيفي","الاسم","القسم","الفترة","ساعات العمل","الايام","نقص/زيادة"];
 const lines = [header.join(",")];
 
 lastReport.rows.forEach(r => {
+  const workedDays = Number(r.presentDays || 0);
+  const workedMin  = parseHHMM(r.totalHHMM || "00:00");
+  const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+  const diffMin = workedMin - expectedMin;
+
+  const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+  const diffText  = diffLabel + " " + fmtMin(diffMin);
+
   lines.push([
     csvEscape(excelText(r.id)),
     csvEscape(r.name),
     csvEscape(r.department || ""),
     csvEscape(lastReport.range),
     csvEscape(excelText(r.totalHHMM)),
-    csvEscape(r.presentDays)
+    csvEscape(r.presentDays),
+    csvEscape(diffText)
   ].join(","));
 });
 
