@@ -440,6 +440,10 @@
           <label>الرمز السري PIN</label>
           <input id="empPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
         </div>
+        <div class="col">
+          <label>القسم</label>
+          <input id="empDept" placeholder="مثال: الموارد البشرية">
+      </div>
       </div>
 
       <div class="flex">
@@ -454,11 +458,12 @@
             <th>الاسم</th>
             <th>الرقم</th>
             <th>PIN</th>
+            <th>القسم</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
         <tbody id="empTable">
-          <tr><td colspan="4" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
+          <tr><td colspan="5" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
         </tbody>
       </table>
     </div>
@@ -530,6 +535,10 @@
       <label>تصفية بالموظف (اختياري)</label>
       <input id="repEmpId" placeholder="ID مثل: 1">
     </div>
+    <div class="col">
+      <label>تصفية بالقسم (اختياري)</label>
+      <input id="repDept" placeholder="مثال: المالية">
+  </div>
   </div>
 
   <div class="flex">
@@ -648,6 +657,7 @@ function clearEmployeeForm() {
   $('empName').value = '';
   $('empId').value = '';
   $('empPin').value = '';
+  $('empDept').value = '';
   showToast('تم مسح النموذج', 'success');
 }
 
@@ -675,12 +685,14 @@ async function loadEmployees() {
       const id = r[0].trim();
       const name = r[1].trim();
       const pin = r[2].trim();
+      const dept = (r[4] || "").trim();
 
       html += `
         <tr>
           <td>${name}</td>
           <td>${id}</td>
           <td>${pin}</td>
+           <td>${dept || "-"}</td>
           <td class="actions-cell">
             <button class="btn-danger delRowBtn" data-id="${id}">🗑️ حذف</button>
           </td>
@@ -731,6 +743,7 @@ $('btnAdd').onclick = async () => {
   const name = $('empName').value.trim();
   const id = $('empId').value.trim();
   const pin = $('empPin').value.trim();
+  const department = $('empDept').value.trim();
 
   if (!name || !id || !pin) {
     showToast('جميع الحقول مطلوبة', 'warning');
@@ -751,7 +764,7 @@ $('btnAdd').onclick = async () => {
       mode: "no-cors",
       body: JSON.stringify({
         action: "addEmployee",
-        payload: { name, id, pin }
+        payload: { name, id, pin, department }
       })
     });
 
@@ -960,7 +973,7 @@ function downloadCSV(text, filename){
 
 async function loadReport() {
   showLoader('repLoader');
-  $('repTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
+  $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
 
   try {
     const period = $('repPeriod').value;
@@ -969,7 +982,7 @@ async function loadReport() {
       includeDetails: true,
       empId: ($('repEmpId').value || '').trim()
     };
-
+    payload.department = ($('repDept').value || '').trim();
     const date = $('repDate').value;
     const start = $('repStart').value;
     const end = $('repEnd').value;
@@ -995,7 +1008,7 @@ async function loadReport() {
 
     const rows = data.rows || [];
     if (!rows.length) {
-      $('repTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
+      $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
       return;
     }
 $('repTable').innerHTML = rows.map(r => {
@@ -1013,6 +1026,7 @@ $('repTable').innerHTML = rows.map(r => {
     <tr>
       <td>${r.id}</td>
       <td>${r.name || ''}</td>
+      <td>${r.department || '-'}</td>
       <td>${data.range || ''}</td>
       <td>${r.totalHHMM || '00:00'}</td>
       <td>${workedDays}</td>
@@ -1026,7 +1040,7 @@ $('repTable').innerHTML = rows.map(r => {
     showToast('تم تحميل التقرير بنجاح', 'success');
   } catch (err) {
     console.error(err);
-    $('repTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل التقرير</td></tr>`;
+    $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">خطأ في تحميل التقرير</td></tr>`;
     showToast('خطأ في تحميل التقرير', 'error');
   } finally {
     hideLoader('repLoader');
@@ -1112,17 +1126,18 @@ const rowsHtml = details.length
 function downloadReportCsv(){
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
-  const header = ["ID","Name","Range","TotalHHMM","PresentDays"];
+  const header = ["ID","Name","Department","Range","TotalHHMM","PresentDays"];
   const lines = [header.join(",")];
 
   lastReport.rows.forEach(r => {
-    lines.push([
-      csvEscape(r.id),
-      csvEscape(r.name),
-      csvEscape(lastReport.range),
-      csvEscape(r.totalHHMM),
-      csvEscape(r.presentDays)
-    ].join(","));
+lines.push([
+  csvEscape(r.id),
+  csvEscape(r.name),
+  csvEscape(r.department || ""),
+  csvEscape(lastReport.range),
+  csvEscape(r.totalHHMM),
+  csvEscape(r.presentDays)
+].join(","));
   });
 
   downloadCSV(lines.join("\n"), `report_${(lastReport.period||'period')}.csv`);
