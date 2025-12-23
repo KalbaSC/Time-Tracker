@@ -1419,7 +1419,7 @@ async function saveEmployeeEdit() {
 function downloadReportCsv(){
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
-const header = ["الرقم الوظيفي","الاسم","القسم","الفترة","ساعات العمل","الايام","نقص/زيادة"];
+const header = ["الرقم الوظيفي","الاسم","القسم","ساعات العمل","الايام","نقص/زيادة"];
 const lines = [header.join(",")];
 
 lastReport.rows.forEach(r => {
@@ -1435,7 +1435,6 @@ lastReport.rows.forEach(r => {
     csvEscape(excelText(r.id)),
     csvEscape(r.name),
     csvEscape(r.department || ""),
-    csvEscape(lastReport.range),
     csvEscape(excelText(r.totalHHMM)),
     csvEscape(r.presentDays),
     csvEscape(diffText)
