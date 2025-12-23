@@ -830,7 +830,7 @@ function clearEmployeeForm() {
 
 function validateEmployeeData(name, id, pin, dept) {
   if (name.length < 2) return "الاسم يجب أن يكون أكثر من حرفين";
-  if (!/^\d{4,6}$/.test(id)) return "الرقم الوظيفي غير صحيح";
+  if (!/^\d{1,6}$/.test(id)) return "الرقم الوظيفي غير صحيح";
   if (!/^\d{4}$/.test(pin)) return "PIN يجب أن يكون 4 أرقام";
   if (!dept) return "يرجى اختيار القسم";
   return null;
