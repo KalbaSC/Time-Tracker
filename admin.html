@@ -447,7 +447,61 @@
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
-}    
+}   
+
+/* ===== Mobile layout fixes ===== */
+@media (max-width: 768px) {
+
+  body { padding: 12px; }
+  .card { padding: 14px; }
+
+  /* Header */
+  .header-info { flex-direction: column; align-items: stretch; gap: 10px; }
+  .header-info h2 { font-size: 16px; }
+  .header-info .time-location { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .logout-btn { width: 100%; justify-content: center; }
+
+  /* Tabs */
+  .tabs { flex-wrap: wrap; gap: 8px; }
+  .tab-btn { flex: 1 1 calc(50% - 8px); padding: 10px 12px; font-size: 14px; }
+
+  /* Employee header line (count + search) */
+  .badge { width: 100%; text-align: center; }
+  .search-box { width: 100% !important; }
+  .search-box input { width: 100%; }
+
+  /* Make employee table responsive as cards */
+  #empTableContainer thead { display: none; }
+  #empTableContainer, #empTableContainer tbody, #empTableContainer tr, #empTableContainer td {
+    display: block;
+    width: 100%;
+  }
+  #empTableContainer tr {
+    border: 1px solid #222;
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+  #empTableContainer td {
+    border: 0;
+    padding: 8px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  #empTableContainer td::before {
+    content: attr(data-label);
+    color: #aaa;
+    font-weight: 700;
+    flex: 0 0 auto;
+  }
+
+  .actions-cell { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .actions-cell button { width: 100%; margin: 0; }
+}
+    
   </style>
 </head>
 <body>
@@ -892,26 +946,26 @@ rows.forEach(r => {
   const pin = r[2].trim();
   const dept = (r[4] || "").trim();
 
-  html += `
-    <tr>
-      <td>${name}</td>
-      <td>${id}</td>
-      <td>${pin}</td>
-      <td>${dept || "-"}</td>
-      <td class="actions-cell">
-        <button class="btn-yellow editRowBtn"
-          data-id="${id}"
-          data-name="${encodeURIComponent(name)}"
-          data-pin="${pin}"
-          data-dept="${encodeURIComponent(dept)}">
-          ✏️ تعديل
-        </button>
-        <button class="btn-danger delRowBtn" data-id="${id}">
-          🗑️ حذف
-        </button>
-      </td>
-    </tr>
-  `;
+html += `
+  <tr>
+    <td data-label="الاسم">${name}</td>
+    <td data-label="الرقم">${id}</td>
+    <td data-label="PIN">${pin}</td>
+    <td data-label="القسم">${dept || "-"}</td>
+    <td class="actions-cell" data-label="الإجراءات">
+      <button class="btn-yellow editRowBtn"
+        data-id="${id}"
+        data-name="${encodeURIComponent(name)}"
+        data-pin="${pin}"
+        data-dept="${encodeURIComponent(dept)}">
+        ✏️ تعديل
+      </button>
+      <button class="btn-danger delRowBtn" data-id="${id}">
+        🗑️ حذف
+      </button>
+    </td>
+  </tr>
+`;
 });
 
     $('empTable').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
