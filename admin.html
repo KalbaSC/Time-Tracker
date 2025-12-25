@@ -521,6 +521,61 @@
 .leave-filters .all {
   grid-column: span 2;
 }
+/* ===== Leave buttons (desktop + mobile) ===== */
+.leave-toolbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* Desktop: pills row */
+.leave-filters{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.leave-btn{
+  width: auto;              /* override global button width */
+  padding: 10px 14px;
+  border-radius: 999px;     /* pill look */
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Update button on desktop */
+.leave-refresh{
+  width: auto;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+/* Mobile: 2x2 grid + refresh full width */
+@media (max-width: 768px){
+  .leave-toolbar{ align-items: stretch; }
+
+  .leave-filters{
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .leave-btn{
+    width: 100%;
+    border-radius: 14px;  /* nicer on mobile */
+    padding: 12px 10px;
+  }
+
+  .leave-refresh{
+    width: 100%;
+  }
+}
     
   </style>
 </head>
@@ -633,17 +688,17 @@
     <div class="card">
       <h2>📋 طلبات الإجازة</h2>
       
-      <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div class="leave-filters">
-        <div class="flex" style="gap: 5px;">
-          <button class="btn-yellow" onclick="loadLeaves('all')">الكل</button>
-          <button class="btn-yellow" onclick="loadLeaves('pending')">قيد الانتظار</button>
-          <button class="btn-yellow" onclick="loadLeaves('approved')">المقبولة</button>
-          <button class="btn-yellow" onclick="loadLeaves('rejected')">المرفوضة</button>
-        </div>
-        </div>
-        <button class="btn-yellow" onclick="loadLeaves()">🔄 تحديث</button>
-      </div>
+<div class="leave-toolbar">
+  <div class="leave-filters">
+    <button class="btn-yellow leave-btn" onclick="loadLeaves('all')">الكل</button>
+    <button class="btn-yellow leave-btn" onclick="loadLeaves('pending')">قيد الانتظار</button>
+    <button class="btn-yellow leave-btn" onclick="loadLeaves('approved')">المقبولة</button>
+    <button class="btn-yellow leave-btn" onclick="loadLeaves('rejected')">المرفوضة</button>
+  </div>
+
+  <button class="btn-yellow leave-refresh" onclick="loadLeaves()">🔄 تحديث</button>
+</div>
+
 
       <div class="loader" id="leaveLoader"></div>
       <div style="overflow-x: auto;">
