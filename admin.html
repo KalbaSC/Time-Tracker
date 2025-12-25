@@ -501,6 +501,26 @@
   .actions-cell { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .actions-cell button { width: 100%; margin: 0; }
 }
+/* ترتيب أزرار طلبات الإجازة */
+.leave-filters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.leave-filters button {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* لو حابة زر "الكل" يكون بعرض كامل */
+.leave-filters .all {
+  grid-column: span 2;
+}
     
   </style>
 </head>
@@ -614,11 +634,13 @@
       <h2>📋 طلبات الإجازة</h2>
       
       <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="leave-filters">
         <div class="flex" style="gap: 5px;">
           <button class="btn-yellow" onclick="loadLeaves('all')">الكل</button>
           <button class="btn-yellow" onclick="loadLeaves('pending')">قيد الانتظار</button>
           <button class="btn-yellow" onclick="loadLeaves('approved')">المقبولة</button>
           <button class="btn-yellow" onclick="loadLeaves('rejected')">المرفوضة</button>
+        </div>
         </div>
         <button class="btn-yellow" onclick="loadLeaves()">🔄 تحديث</button>
       </div>
