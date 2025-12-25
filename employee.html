@@ -468,6 +468,28 @@
         font-size: 24px;
       }
     }
+    /* Leave date inputs layout */
+.leave-dates{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 768px){
+  .leave-dates{
+    grid-template-columns: 1fr;   /* stack on mobile */
+    gap: 10px;
+  }
+
+  /* make date fields look nicer + easier to tap */
+  .leave-dates input[type="date"]{
+    width: 100%;
+    min-height: 48px;
+    font-size: 15px;
+    padding: 12px 12px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -587,7 +609,7 @@
             <option value="أخرى">أخرى</option>
           </select>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="leave-dates">
             <div>
               <label><i class="fas fa-calendar-day"></i> من تاريخ</label>
               <input id="leaveFrom" name="fromDate" type="date" min="">
