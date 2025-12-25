@@ -490,6 +490,31 @@
   }
 }
 
+/* Leave dates layout (fix iPhone overflow) */
+.leave-dates{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.leave-dates > div{ min-width: 0; }
+
+/* iOS date inputs can have a min width -> force them to shrink inside the card */
+.leave-dates input[type="date"]{
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+}
+
+/* Mobile: stack dates 1 column */
+@media (max-width: 520px){
+  .leave-dates{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+    
   </style>
 </head>
 <body>
@@ -609,16 +634,17 @@
             <option value="أخرى">أخرى</option>
           </select>
 
-          <div class="leave-dates">
-            <div>
-              <label><i class="fas fa-calendar-day"></i> من تاريخ</label>
-              <input id="leaveFrom" name="fromDate" type="date" min="">
-            </div>
-            <div>
-              <label><i class="fas fa-calendar-day"></i> إلى تاريخ</label>
-              <input id="leaveTo" name="toDate" type="date" min="">
-            </div>
-          </div>
+<div class="leave-dates">
+  <div>
+    <label><i class="fas fa-calendar-day"></i> من تاريخ</label>
+    <input id="leaveFrom" name="fromDate" type="date" min="">
+  </div>
+
+  <div>
+    <label><i class="fas fa-calendar-day"></i> إلى تاريخ</label>
+    <input id="leaveTo" name="toDate" type="date" min="">
+  </div>
+</div>
 
           <label><i class="fas fa-paperclip"></i> ملف الإجازة (صورة أو PDF - اختياري)</label>
           <input type="file" id="leaveFile" name="leaveFile" accept=".pdf,.jpg,.jpeg,.png" />
