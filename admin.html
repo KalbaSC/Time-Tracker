@@ -1284,6 +1284,16 @@ window.onload = () => {
     loadEmployees();
     loadLeaves();
   }
+
+const saved = localStorage.getItem('adminSettings');
+if (saved) {
+  const s = JSON.parse(saved);
+  $('annualLeaveDays').value = s.annualLeaveDays ?? 30;
+  $('dailyWorkHours').value = s.dailyWorkHours ?? 7;
+  $('themeColor').value = s.themeColor ?? 'gold';
+  $('autoRefresh').value = s.autoRefresh ?? 30;
+}
+  
 };
 
 setInterval(() => {
@@ -1664,7 +1674,40 @@ const fileName = dept
 XLSX.writeFile(wb, fileName);
 
 }
-    
+
+function saveSettings() {
+  const settings = {
+    annualLeaveDays: $('annualLeaveDays').value,
+    dailyWorkHours: $('dailyWorkHours').value,
+    themeColor: $('themeColor').value,
+    autoRefresh: $('autoRefresh').value
+  };
+
+  localStorage.setItem('adminSettings', JSON.stringify(settings));
+  showToast('✅ تم حفظ الإعدادات بنجاح', 'success');
+}
+
+function resetSettings() {
+  if (!confirm('هل تريد إعادة تعيين الإعدادات؟')) return;
+
+  localStorage.removeItem('adminSettings');
+
+  $('annualLeaveDays').value = 30;
+  $('dailyWorkHours').value = 7;
+  $('themeColor').value = 'gold';
+  $('autoRefresh').value = 30;
+
+  showToast('🔄 تم إعادة تعيين الإعدادات', 'success');
+}
+
+function exportAllData() {
+  showToast('⚠️ التصدير غير مفعل حالياً', 'warning');
+}
+
+function importData() {
+  showToast('⚠️ الاستيراد غير مفعل حالياً', 'warning');
+}
+  
 </script>
 
 </body>
