@@ -1171,8 +1171,8 @@ async function loadLeaves(filter = 'all') {
       if (lv.status === "Pending") {
         actionsHtml = `
           <div class="actions-cell">
-            <button class="btn-success" onclick="setLeaveStatus(${index + 2}, 'Approved')">✔ قبول</button>
-            <button class="btn-danger" onclick="setLeaveStatus(${index + 2}, 'Rejected')">✖ رفض</button>
+            <button class="btn-success" onclick="setLeaveStatus(${lv.row}, 'Approved')">✔ قبول</button>
+            <button class="btn-danger" onclick="setLeaveStatus(${lv.row}, 'Rejected')">✖ رفض</button>
           </div>
         `;
       } else {
@@ -1184,7 +1184,7 @@ async function loadLeaves(filter = 'all') {
         : `<span style="color:#777">—</span>`;
 
       const noteBox = (lv.status === "Pending")
-        ? `<textarea id="note_${index+2}" placeholder="Write note / rejection reason..." style="width:100%;min-height:38px;border-radius:10px;padding:8px;"></textarea>`
+        ? `<textarea id="note_${lv.row}" placeholder="Write note / rejection reason..." style="width:100%;min-height:38px;border-radius:10px;padding:8px;"></textarea>`
         : `<span style="color:#777">${lv.note || "—"}</span>`;
 
       html += `
