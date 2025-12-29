@@ -693,6 +693,7 @@
               <th>إلى</th>
               <th>المرفق</th>
               <th>الحالة</th>
+              <th>الملاحظة / سبب الرفض</th>
               <th>الإجراء</th>
             </tr>
           </thead>
@@ -1232,7 +1233,6 @@ async function setLeaveStatus(row, status) {
 
     showToast(`تم ${status === 'Approved' ? 'قبول' : 'رفض'} الطلب`, 'success');
     await loadLeaves();
-
   } catch (error) {
     console.error('Update leave status error:', error);
     showToast('خطأ في تحديث حالة الطلب', 'error');
@@ -1240,7 +1240,6 @@ async function setLeaveStatus(row, status) {
     hideLoader('leaveLoader');
   }
 }
-
 
 $('searchEmployee')?.addEventListener('input', function(e) {
   const searchTerm = e.target.value.toLowerCase();
