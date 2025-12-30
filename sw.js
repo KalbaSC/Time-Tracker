@@ -1,19 +1,3 @@
-const CACHE = "ksc-employee-v1";
-const ASSETS = [
-  "./employee.html",
-  "./manifest.json"
-];
-
-self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-});
-
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
-  );
-});
-
 const CACHE = "ksc-time-tracker-v1";
 const ASSETS = [
   "./",
@@ -21,8 +5,8 @@ const ASSETS = [
   "./employee.html",
   "./manifest.json",
   "./manifest-admin.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (e) => {
@@ -39,6 +23,6 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match("./admin.html")))
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
