@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة إدارة الموارد البشرية - الإمارات</title>
+  <link rel="manifest" href="./manifest-admin.json">
+<meta name="theme-color" content="#f6c21a">
+
+<!-- iOS (makes it feel like an app when added to Home Screen) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HR Admin">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -394,7 +403,6 @@
   animation: fadeInOut 2s ease;
 }
 
-/* Add loading skeletons for tables */
 .skeleton-row {
   background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
   background-size: 200% 100%;
@@ -449,28 +457,23 @@
   100% { background-position: -200% 0; }
 }   
 
-/* ===== Mobile layout fixes ===== */
 @media (max-width: 768px) {
 
   body { padding: 12px; }
   .card { padding: 14px; }
 
-  /* Header */
   .header-info { flex-direction: column; align-items: stretch; gap: 10px; }
   .header-info h2 { font-size: 16px; }
   .header-info .time-location { flex-direction: column; align-items: flex-start; gap: 6px; }
   .logout-btn { width: 100%; justify-content: center; }
 
-  /* Tabs */
   .tabs { flex-wrap: wrap; gap: 8px; }
   .tab-btn { flex: 1 1 calc(50% - 8px); padding: 10px 12px; font-size: 14px; }
 
-  /* Employee header line (count + search) */
   .badge { width: 100%; text-align: center; }
   .search-box { width: 100% !important; }
   .search-box input { width: 100%; }
 
-  /* Make employee table responsive as cards */
   #empTableContainer thead { display: none; }
   #empTableContainer, #empTableContainer tbody, #empTableContainer tr, #empTableContainer td {
     display: block;
@@ -501,17 +504,15 @@
   .actions-cell { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .actions-cell button { width: 100%; margin: 0; }
 }
-/* ترتيب أزرار طلبات الإجازة */
 .leave-toolbar{
   display: flex;
   align-items: center;
-  justify-content: flex-end;   /* keep everything aligned nicely */
+  justify-content: flex-end;
   gap: 12px;
   margin-bottom: 15px;
   flex-wrap: wrap;
 }
 
-/* Desktop: buttons in one clean row */
 .leave-filters{
   display: flex;
   gap: 10px;
@@ -522,13 +523,12 @@
 .leave-btn{
   width: auto;
   padding: 10px 16px;
-  border-radius: 999px;       /* pill style */
+  border-radius: 999px;
   font-size: 14px;
   font-weight: 800;
   white-space: nowrap;
 }
 
-/* Desktop: refresh sits next to them (not far left) */
 .leave-refresh{
   width: auto;
   padding: 10px 16px;
@@ -536,7 +536,6 @@
   font-weight: 800;
 }
 
-/* Mobile: 2x2 grid + refresh full width */
 @media (max-width: 768px){
   .leave-toolbar{ align-items: stretch; }
 
@@ -557,7 +556,12 @@
     width: 100%;
   }
 }
-    
+body{
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-left: calc(20px + env(safe-area-inset-left));
+  padding-right: calc(20px + env(safe-area-inset-right));
+}    
   </style>
 </head>
 <body>
@@ -1717,7 +1721,11 @@ function exportAllData() {
 function importData() {
   showToast('⚠️ الاستيراد غير مفعل حالياً', 'warning');
 }
-  
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }  
 </script>
 
 </body>
