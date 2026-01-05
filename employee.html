@@ -711,6 +711,47 @@ const EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC;
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
 
+const SESSION_KEY = "kscc_emp_session_v1";
+
+function saveSession_() {
+  if (!window.currentID) return;
+  const data = {
+    id: String(window.currentID),
+    name: String(window.employeeName || ""),
+    savedAt: Date.now()
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+
+function restoreSession_() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+
+    const data = JSON.parse(raw);
+    if (!data || !data.id) return false;
+
+    window.currentID = data.id;
+    window.employeeName = data.name || "موظف";
+
+    $('employeeName').textContent = window.employeeName;
+    $('employeeId').textContent = window.currentID;
+    $('leaveEmpId').value = window.currentID;
+
+    $("loginBox").style.display = "none";
+    $("dash").style.display = "block";
+    $("uaeHeader").style.display = "flex";
+
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function clearSession_() {
+  localStorage.removeItem(SESSION_KEY);
+}
+  
 function getUAETime() {
   const now = new Date();
   return now.toLocaleTimeString('ar-AE', {
@@ -912,6 +953,24 @@ function checkLocationStatus() {
     });
 }
 
+let lastYMD_ = null;
+
+async function handleDayRollover_() {
+  if (!window.currentID) return;
+
+  const today = ymd(new Date());
+  if (lastYMD_ === null) lastYMD_ = today;
+
+  if (today !== lastYMD_) {
+    lastYMD_ = today;
+
+    resetPunchUI();
+    await refreshAll();
+    checkLocationStatus();
+    loadMyLeaves();
+  }
+}  
+  
 async function login() {
   const id = ($("empId").value || "").trim();
   const pin = ($("empPin").value || "").trim();
@@ -956,6 +1015,7 @@ async function login() {
     window.currentID = id;
     window.employeeName = found[1]?.trim() || 'موظف';
     window.employeePin = pin;
+ saveSession_();
 
     $('employeeName').textContent = window.employeeName;
     $('employeeId').textContent = id;
@@ -991,6 +1051,7 @@ function logout() {
     window.currentID = null;
     window.employeeName = null;
     $("dash").style.display = "none";
+    clearSession_();
     $("loginBox").style.display = "block";
     $("uaeHeader").style.display = "none";
     $("empId").value = "";
@@ -1413,49 +1474,59 @@ function readFileAsBase64_(file) {
 function initialize() {
   updateUAETime();
   setInterval(updateUAETime, 1000);
-  
+
+  const restored = restoreSession_();
+
   const today = ymd(new Date());
-  const leaveFrom = $('#leaveFrom');
-  const leaveTo = $('#leaveTo');
+  const leaveFrom = $("leaveFrom");
+  const leaveTo   = $("leaveTo");
   if (leaveFrom) leaveFrom.min = today;
-  if (leaveTo) leaveTo.min = today;
-  
+  if (leaveTo)   leaveTo.min = today;
+
+  lastYMD_ = ymd(new Date());
+  setInterval(handleDayRollover_, 10000);
+
   if (window.currentID) {
     $("loginBox").style.display = "none";
     $("dash").style.display = "block";
     $("uaeHeader").style.display = "flex";
+
+    resetPunchUI();
     refreshAll();
     checkLocationStatus();
-    
+    loadMyLeaves();
+
     setInterval(checkLocationStatus, 30000);
+    setInterval(() => {
+      if (window.currentID) refreshAll();
+    }, 60000);
+
+    setInterval(loadMyLeaves, 30000);
+  } else {
+    $("dash").style.display = "none";
+    $("uaeHeader").style.display = "none";
+    $("loginBox").style.display = "block";
   }
-  
-  setInterval(() => {
-    if (window.currentID) {
-      refreshAll();
-    }
-  }, 60000);
-  
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && $('loginBox').style.display !== 'none') {
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && $("loginBox").style.display !== "none") {
       login();
     }
   });
-  
-  const leaveFromElement = $('#leaveFrom');
-  const leaveToElement = $('#leaveTo');
-  
-  if (leaveFromElement) {
-    leaveFromElement.addEventListener('change', function() {
-      if (leaveToElement) {
-        leaveToElement.min = this.value;
-      }
+
+  if (leaveFrom && leaveTo) {
+    leaveFrom.addEventListener("change", function () {
+      leaveTo.min = this.value;
     });
   }
 
-loadMyLeaves();
-setInterval(loadMyLeaves, 30000);
-  
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && window.currentID) {
+      refreshAll();
+      checkLocationStatus();
+      handleDayRollover_();
+    }
+  });
 }
 
 window.onload = initialize;
