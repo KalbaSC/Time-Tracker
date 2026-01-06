@@ -1044,8 +1044,12 @@ async function login() {
 
   try {
     const csv = await (await fetch(EMP_CSV)).text();
-    const rows = csv.trim().split("\n").map(r => r.split(","));
-    const found = rows.find(r => String(r[0]).trim() == id && String(r[2]).trim() == pin);
+    const rows = parseCSVText(csv);
+const found = rows.find(r =>
+  String(r[0]).trim() === id &&
+  String(r[2]).trim() === pin
+);
+;
 
     if (!found) {
       hideLoader('loginLoader');
@@ -1173,6 +1177,7 @@ async function punch(type) {
     }
 
     const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+    const beforeCount = todayRows.length;
 
     await fetch(SCRIPT_URL, {
       method: "POST",
@@ -1191,6 +1196,18 @@ async function punch(type) {
         }
       })
     });
+
+await new Promise(r => setTimeout(r, 1500));
+const afterRows = await getTodayRows();
+
+if (afterRows.length <= beforeCount) {
+  hideLoader('punchLoader');
+  msg.className = "msg err";
+  msg.style.display = "block";
+  msg.textContent = "⚠️ لم يتم تأكيد تسجيل البصمة. حاول مرة أخرى.";
+  showToast('لم يتم تأكيد تسجيل البصمة', 'error');
+  return;
+}
 
     hideLoader('punchLoader');
 
@@ -1427,6 +1444,7 @@ await fetch(SCRIPT_URL, {
     if (toElement) toElement.min = today;
 
     loadMyLeaves();
+setTimeout(loadMyLeaves, 2000);
 
   } catch (error) {
     console.error('Form submission error:', error);
