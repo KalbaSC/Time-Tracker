@@ -813,6 +813,50 @@ const secToHHMM = sec => {
   return pad(h) + ':' + pad(m);
 };
 
+function parseCSVText(csvText) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  const s = String(csvText || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+
+    if (ch === '"') {
+      if (inQuotes && s[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (ch === "," && !inQuotes) {
+      row.push(cell);
+      cell = "";
+      continue;
+    }
+
+    if (ch === "\n" && !inQuotes) {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+      continue;
+    }
+
+    cell += ch;
+  }
+
+  row.push(cell);
+  rows.push(row);
+
+  return rows.filter(r => r.some(c => String(c || "").trim() !== ""));
+}
+  
 const distanceMeters = (lat1, lng1, lat2, lng2) => {
   const R = 6371000;
   const toRad = x => x * Math.PI / 180;
@@ -1063,13 +1107,18 @@ function logout() {
 
 async function getTodayRows() {
   const csv = await (await fetch(PUNCH_CSV)).text();
-  const rows = csv.trim().split("\n").map(r => r.split(","));
+  const rows = parseCSVText(csv);
+
   const today = ymd(new Date());
-  return rows.filter(r =>
-    String(r[1]).trim() === String(window.currentID) &&
-    String(r[0]).trim() === today
-  );
+
+  return rows
+    .filter(r =>
+      String(r[1]).trim() === String(window.currentID) &&
+      String(r[0]).trim() === today
+    )
+    .sort((a, b) => timeToSec((a[4] || "").slice(0, 5)) - timeToSec((b[4] || "").slice(0, 5)));
 }
+
 
 function canPunch(type, todayRows) {
   if (todayRows.length === 0) {
@@ -1212,14 +1261,18 @@ async function refreshAll() {
     const todayPercent = Math.min(100, Math.round((workedToday / EXPECTED_DAY_SEC) * 100));
     $("todayProgress").textContent = `${todayPercent}% من الوقت المطلوب`;
 
-    const csv = await (await fetch(PUNCH_CSV)).text();
-    const rows = csv.trim().split("\n").map(r => r.split(","));
-    const mine = rows.filter(r => String(r[1]).trim() == window.currentID);
+const csv = await (await fetch(PUNCH_CSV)).text();
+const rows = parseCSVText(csv);
+const mine = rows.filter(r => String(r[1]).trim() == window.currentID);
 
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay());
-    const weekStartStr = ymd(weekStart);
+const nowUAE = new Date(new Date().toLocaleString('en-US', { timeZone: UAE_TIMEZONE }));
+const weekStart = new Date(nowUAE);
+weekStart.setDate(nowUAE.getDate() - nowUAE.getDay());
+const weekStartStr = ymd(weekStart);
+
+const todayStr = ymd(nowUAE);
+const nowSec = timeToSec(nowHHMM()); 
+
 
     const byDate = {};
     mine.forEach(r => {
@@ -1246,7 +1299,10 @@ async function refreshAll() {
           inT = null;
         }
       });
-      
+      if (inT && d === todayStr) {
+  dayWorked += Math.max(0, nowSec - timeToSec(inT));
+  inT = null;
+}
       weekWorked += dayWorked;
     });
 
@@ -1257,9 +1313,10 @@ async function refreshAll() {
     $("weekProgress").textContent = `${Math.round(avgPerDay / 3600)} ساعة يومياً (${weekPercent}%)`;
 
     if (mine.length) {
-      const last = mine
-        .filter(r => r[4])
-        .sort((a, b) => (a[2] + a[4]).localeCompare(b[2] + b[4]))[mine.length - 1];
+const mineWithTime = mine.filter(r => r[0] && r[4]);
+const last = mineWithTime
+  .sort((a, b) => (String(a[0]).trim() + " " + String(a[4]).trim()).localeCompare(String(b[0]).trim() + " " + String(b[4]).trim()))
+  [mineWithTime.length - 1];
       
       const lastType = (last[3] || "").trim() === "IN" ? "دخول" : "خروج";
       const lastTime = (last[4] || "").slice(0, 5);
