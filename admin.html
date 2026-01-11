@@ -1006,7 +1006,7 @@ rows.forEach(r => {
   const n = parseInt(String(r[0] || "").trim(), 10);
   if (!isNaN(n) && n > maxId) maxId = n;
 });
-const nextEmpId = String(maxId + 1);
+nextEmpId = String(maxId + 1);
 
 const idInput = document.getElementById("empId");
 if (idInput && !editMode && !idInput.value.trim()) {
