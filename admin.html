@@ -991,9 +991,10 @@ async function loadEmployees() {
   try {
     $('empTable').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
     
-    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
-    const res = await fetch(url);
-    const text = await res.text();
+const baseUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
+const url = baseUrl + "&t=" + Date.now(); 
+const res = await fetch(url, { cache: "no-store" });
+const text = await res.text();    
 
     const rows = text
       .split("\n")
@@ -1080,19 +1081,18 @@ document.querySelectorAll('.editRowBtn').forEach(btn => {
     hideLoader('empLoader');
   }
 }
-
 $('btnAdd').onclick = async () => {
   const name = $('empName').value.trim();
-  const id = (editMode ? editIdLocked : $('empId').value.trim());
+  const id = String(editMode ? editIdLocked : $('empId').value).trim();
   const pin = $('empPin').value.trim();
   const department = $('empDept').value.trim();
 
-    const validationError = validateEmployeeData(name, id, pin, department);
+  const validationError = validateEmployeeData(name, id, pin, department);
   if (validationError) {
     showToast(validationError, 'warning');
     return;
   }
-  
+
   if (!name || !id || !pin || !department) {
     showToast('جميع الحقول مطلوبة', 'warning');
     return;
@@ -1113,7 +1113,10 @@ $('btnAdd').onclick = async () => {
 
     showToast(editMode ? 'تم تحديث بيانات الموظف بنجاح' : 'تمت إضافة الموظف بنجاح', 'success');
     clearEmployeeForm();
+
+    await new Promise(r => setTimeout(r, 600));
     await loadEmployees();
+
   } catch (error) {
     console.error('Add employee error:', error);
     showToast('خطأ في إضافة الموظف', 'error');
