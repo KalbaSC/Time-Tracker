@@ -1147,56 +1147,6 @@ async function loadEmployees() {
   }
 }
 
-$('btnAdd').onclick = async () => {
-  const name = $('empName').value.trim();
-  const id = $('empId').value.trim();
-  const pin = $('empPin').value.trim();
-  const department = $('empDept').value.trim();
-
-  if (!id) {
-    showToast('يرجى توليد رقم موظف أولاً', 'warning');
-    return;
-  }
-
-  const validationError = validateEmployeeData(name, id, pin, department);
-  if (validationError) {
-    showToast(validationError, 'warning');
-    return;
-  }
-
-  showLoader('empLoader');
-  $('btnAdd').disabled = true;
-
-  try {
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify({
-        action: "addEmployee",
-        payload: { name, id, pin, department }
-      })
-    });
-
-    showToast('تمت إضافة الموظف بنجاح', 'success');
-    
-    // إعادة تحميل القائمة مباشرة بعد الإضافة
-    await loadEmployees();
-    
-    // مسح النموذج بعد الإضافة الناجحة
-    $('empName').value = '';
-    $('empId').value = '';
-    $('empPin').value = '';
-    $('empDept').value = '';
-    
-  } catch (error) {
-    console.error('Add employee error:', error);
-    showToast('خطأ في إضافة الموظف', 'error');
-  } finally {
-    hideLoader('empLoader');
-    $('btnAdd').disabled = false;
-  }
-};
-
 async function loadLeaves(filter = 'all') {
   showLoader('leaveLoader');
 
