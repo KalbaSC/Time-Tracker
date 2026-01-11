@@ -1753,8 +1753,13 @@ function downloadReportCsv(){
   downloadCSV(lines.join("\r\n"), `report_${(lastReport.period||'period')}.csv`);
 }
 
-$('btnLoadReport').onclick = loadReport;
-$('btnDlReportCsv').onclick = downloadReportXLSX;
+if ($('btnLoadReport')) {
+  $('btnLoadReport').onclick = loadReport;
+}
+
+if ($('btnDlReportCsv')) {
+  $('btnDlReportCsv').onclick = downloadReportXLSX;
+}
 
 function openReportModal(html){
   const overlay = document.getElementById("reportModal");
