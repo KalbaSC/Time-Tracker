@@ -1280,13 +1280,19 @@ $('searchEmployee')?.addEventListener('input', function(e) {
 function openAddEmployeeModal() {
   generateEmployeeIdForModal();
   
-  $('#modalEmpName').value = '';
-  $('#modalEmpPin').value = '';
-  $('#modalEmpDept').value = '';
-  $('#modalEmpMsg').textContent = '';
-  $('#modalEmpLoader').style.display = 'none';
+  const modalEmpName = $('#modalEmpName');
+  const modalEmpPin = $('#modalEmpPin');
+  const modalEmpDept = $('#modalEmpDept');
+  const modalEmpMsg = $('#modalEmpMsg');
+  const modalEmpLoader = $('#modalEmpLoader');
+  const addEmployeeModal = $('#addEmployeeModal');
   
-  $('#addEmployeeModal').style.display = 'flex';
+  if (modalEmpName) modalEmpName.value = '';
+  if (modalEmpPin) modalEmpPin.value = '';
+  if (modalEmpDept) modalEmpDept.value = '';
+  if (modalEmpMsg) modalEmpMsg.textContent = '';
+  if (modalEmpLoader) modalEmpLoader.style.display = 'none';
+  if (addEmployeeModal) addEmployeeModal.style.display = 'flex';
 }
 
 function closeAddEmployeeModal() {
@@ -1311,42 +1317,57 @@ function generateEmployeeIdForModal() {
       }
       
       const newId = maxId + 1;
-      $('#modalEmpId').value = newId;
+      const modalEmpId = $('#modalEmpId');
+      if (modalEmpId) modalEmpId.value = newId;
     })
     .catch(err => {
       console.error('Error generating ID:', err);
       const randomId = Math.floor(Math.random() * 9000) + 1000;
-      $('#modalEmpId').value = randomId;
+      const modalEmpId = $('#modalEmpId');
+      if (modalEmpId) modalEmpId.value = randomId;
     });
 }
 
 async function addEmployeeFromModal() {
-  const name = $('#modalEmpName').value.trim();
-  const id = $('#modalEmpId').value.trim();
-  const pin = $('#modalEmpPin').value.trim();
-  const department = $('#modalEmpDept').value.trim();
+  const modalEmpName = $('#modalEmpName');
+  const modalEmpId = $('#modalEmpId');
+  const modalEmpPin = $('#modalEmpPin');
+  const modalEmpDept = $('#modalEmpDept');
+  const modalEmpMsg = $('#modalEmpMsg');
+  const modalEmpLoader = $('#modalEmpLoader');
+  
+  // Check if all required elements exist
+  if (!modalEmpName || !modalEmpId || !modalEmpPin || !modalEmpDept || !modalEmpMsg || !modalEmpLoader) {
+    showToast('❌ عناصر النموذج غير موجودة', 'error');
+    return;
+  }
+  
+  const name = modalEmpName.value.trim();
+  const id = modalEmpId.value.trim();
+  const pin = modalEmpPin.value.trim();
+  const department = modalEmpDept.value.trim();
 
   if (!id) {
-    $('#modalEmpMsg').textContent = '❌ الرقم الوظيفي مطلوب';
-    $('#modalEmpMsg').style.color = 'var(--danger)';
+    modalEmpMsg.textContent = '❌ الرقم الوظيفي مطلوب';
+    modalEmpMsg.style.color = 'var(--danger)';
     return;
   }
 
   if (!name || !pin || !department) {
-    $('#modalEmpMsg').textContent = '❌ جميع الحقول مطلوبة';
-    $('#modalEmpMsg').style.color = 'var(--danger)';
+    modalEmpMsg.textContent = '❌ جميع الحقول مطلوبة';
+    modalEmpMsg.style.color = 'var(--danger)';
     return;
   }
 
   if (!/^\d{4}$/.test(pin)) {
-    $('#modalEmpMsg').textContent = '❌ الرمز السري يجب أن يكون 4 أرقام';
-    $('#modalEmpMsg').style.color = 'var(--danger)';
+    modalEmpMsg.textContent = '❌ الرمز السري يجب أن يكون 4 أرقام';
+    modalEmpMsg.style.color = 'var(--danger)';
     return;
   }
 
-  $('#modalEmpLoader').style.display = 'block';
-  $('#modalEmpMsg').textContent = 'جاري إضافة الموظف...';
-  $('#modalEmpMsg').style.color = 'var(--info)';
+  modalEmpLoader.style.display = 'block';
+  modalEmpMsg.textContent = 'جاري إضافة الموظف...';
+  modalEmpMsg.style.color = 'var(--info)';
 
   try {
     await fetch(SCRIPT_URL, {
@@ -1358,8 +1379,8 @@ async function addEmployeeFromModal() {
       })
     });
 
-    $('#modalEmpMsg').textContent = '✅ تمت إضافة الموظف بنجاح';
-    $('#modalEmpMsg').style.color = 'var(--success)';
+    modalEmpMsg.textContent = '✅ تمت إضافة الموظف بنجاح';
+    modalEmpMsg.style.color = 'var(--success)';
     
     setTimeout(() => {
       closeAddEmployeeModal();
@@ -1369,10 +1390,10 @@ async function addEmployeeFromModal() {
     
   } catch (error) {
     console.error('Add employee error:', error);
-    $('#modalEmpMsg').textContent = '❌ خطأ في إضافة الموظف';
-    $('#modalEmpMsg').style.color = 'var(--danger)';
+    modalEmpMsg.textContent = '❌ خطأ في إضافة الموظف';
+    modalEmpMsg.style.color = 'var(--danger)';
   } finally {
-    $('#modalEmpLoader').style.display = 'none';
+    modalEmpLoader.style.display = 'none';
   }
 }
   
