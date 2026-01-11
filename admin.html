@@ -938,6 +938,7 @@ function hideLoader(id) {
 }
 
 let currentTab = 'employees';
+let nextEmpId = "";
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -966,7 +967,7 @@ function logout() {
 
 function clearEmployeeForm() {
   $('empName').value = '';
-  $('empId').value = '';
+  $('empId').value = nextEmpId || '';
   $('empPin').value = '';
   $('empDept').value = '';
 
@@ -1000,6 +1001,18 @@ async function loadEmployees() {
       .map(r => r.split(","))
       .filter(r => r[0] && r[0].trim() !== "ID");
 
+let maxId = 0;
+rows.forEach(r => {
+  const n = parseInt(String(r[0] || "").trim(), 10);
+  if (!isNaN(n) && n > maxId) maxId = n;
+});
+const nextEmpId = String(maxId + 1);
+
+const idInput = document.getElementById("empId");
+if (idInput && !editMode && !idInput.value.trim()) {
+  idInput.value = nextEmpId;
+}
+    
     let html = "";
 
 rows.forEach(r => {
@@ -1122,6 +1135,9 @@ $('btnAdd').onclick = async () => {
     $('btnAdd').disabled = false;
   }
 };
+
+await loadEmployees();
+clearEmployeeForm();  
 
 async function loadLeaves(filter = 'all') {
   showLoader('leaveLoader');
@@ -1333,7 +1349,25 @@ setInterval(() => {
 
 let lastReport = null;
 let editMode = false;
-let editIdLocked = "";  
+let editIdLocked = ""; 
+
+let nextEmpId = "";
+
+function setNextEmpId_(employees) {
+  let maxId = 0;
+
+  (employees || []).forEach(emp => {
+    const n = parseInt(String(emp.id || "").trim(), 10);
+    if (!isNaN(n) && n > maxId) maxId = n;
+  });
+
+  nextEmpId = String(maxId + 1);
+
+  const idEl = document.getElementById("empId");
+  if (idEl && !editMode && !String(idEl.value || "").trim()) {
+    idEl.value = nextEmpId;
+  }
+}  
 
 function csvEscape(v){
   const s = String(v ?? "");
