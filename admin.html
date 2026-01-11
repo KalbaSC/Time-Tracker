@@ -1049,9 +1049,9 @@ html += `
             })
           });
 
-          btn.closest('tr').remove();
-          $('userCount').textContent = parseInt($('userCount').textContent) - 1;
-          showToast('تم حذف الموظف بنجاح', 'success');
+        showToast('تم إرسال طلب الحذف... جاري التحديث', 'success');
+        await loadEmployees();
+          
         } catch (error) {
           showToast('خطأ في حذف الموظف', 'error');
           console.error('Delete error:', error);
