@@ -12,8 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="HR Admin">
 <link rel="apple-touch-icon" href="./icon-192.png">
-
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -560,6 +560,49 @@ body{
   padding-bottom: calc(20px + env(safe-area-inset-bottom));
   padding-left: calc(20px + env(safe-area-inset-left));
   padding-right: calc(20px + env(safe-area-inset-right));
+}   
+
+/* Add this to your existing CSS */
+.btn-add-employee {
+  background: var(--accent);
+  color: #111;
+  font-weight: 900;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 16px;
+  box-shadow: var(--shadow);
+}
+
+.btn-add-employee:hover {
+  background: #ffda41;
+  transform: translateY(-2px);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.top-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.add-employee-btn {
+  width: auto !important;
+  padding: 12px 24px !important;
 }    
   </style>
 </head>
@@ -608,32 +651,56 @@ body{
 </div>
 
     <div id="employeesContent" class="tab-content active">
-    <div class="card">
-      <h2>👥 إدارة الموظفين</h2>
+<div class="card">
+  <h2>👥 إدارة الموظفين</h2>
 
-      <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
-        <div class="search-box" style="width: 300px;">
-          <input type="text" id="searchEmployee" placeholder="🔍 بحث عن موظف...">
+  <div class="header-actions">
+    <div class="top-buttons">
+      <button class="btn-yellow add-employee-btn" onclick="openAddEmployeeModal()">
+        <i class="fas fa-user-plus"></i> إضافة موظف جديد
+      </button>
+    </div>
+    
+    <div class="flex" style="align-items: center; gap: 15px;">
+      <span class="badge">عدد المستخدمين: <span id="userCount">0</span></span>
+      <div class="search-box" style="width: 300px;">
+        <input type="text" id="searchEmployee" placeholder="🔍 بحث عن موظف...">
+      </div>
+    </div>
+  </div>
+
+<div id="addEmployeeModal" class="modal-overlay" style="display:none;">
+  <div class="modal-window">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-user-plus"></i> إضافة موظف جديد</div>
+      <button class="modal-close" onclick="closeAddEmployeeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="flex">
+        <div class="col">
+          <label><i class="fas fa-user"></i> الاسم الكامل</label>
+          <input id="modalEmpName" placeholder="أدخل الاسم الكامل">
+        </div>
+        <div class="col">
+          <label><i class="fas fa-id-card"></i> الرقم الوظيفي</label>
+          <div style="display: flex; gap: 10px;">
+            <input id="modalEmpId" placeholder="سيتم توليده تلقائياً" readonly style="flex: 1;">
+            <button class="btn-yellow" onclick="generateEmployeeIdForModal()" style="width: auto; padding: 10px;">
+              <i class="fas fa-redo"></i>
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="flex">
         <div class="col">
-          <label>الاسم الكامل</label>
-          <input id="empName" placeholder="الاسم الكامل">
+          <label><i class="fas fa-lock"></i> الرمز السري PIN</label>
+          <input id="modalEmpPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
         </div>
         <div class="col">
-          <label>الرقم الوظيفي (يتم توليده تلقائياً)</label>
-          <input id="empId" placeholder="سيتم توليده تلقائياً" readonly>
-        </div>
-        <div class="col">
-          <label>الرمز السري PIN</label>
-          <input id="empPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
-        </div>
-        <div class="col">
-          <label>القسم</label>
-          <select id="empDept">
+          <label><i class="fas fa-building"></i> القسم</label>
+          <select id="modalEmpDept">
             <option value="">اختر القسم...</option>
             <option value="الخدمات المساندة">الخدمات المساندة</option>
             <option value="الالعاب الفردية">الالعاب الفردية</option>
@@ -642,15 +709,24 @@ body{
             <option value="الاتصال المؤسسي">الاتصال المؤسسي</option>
             <option value="الاستراتيجية">الاستراتيجية</option>
           </select>
-      </div>
-      </div>
-
-      <div class="flex">
-        <button id="btnAdd" style="flex:1">➕ إضافة موظف جديد</button>
-        <button id="btnGenerateId" style="flex:0.3" onclick="generateEmployeeId()">🆔 توليد رقم</button>
-        <button id="btnClear" style="flex:0.3" onclick="clearEmployeeForm()">🗑️ مسح</button>
+        </div>
       </div>
 
+      <div class="loader" id="modalEmpLoader" style="display: none;"></div>
+      <div id="modalEmpMsg" style="text-align: center; margin: 10px 0; color: var(--muted);"></div>
+
+      <div class="flex" style="margin-top:20px;">
+        <button class="btn-success" onclick="addEmployeeFromModal()" style="flex: 1;">
+          <i class="fas fa-check"></i> إضافة الموظف
+        </button>
+        <button class="btn-danger" onclick="closeAddEmployeeModal()" style="flex: 0.5;">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+  
       <div class="loader" id="empLoader"></div>
       <table id="empTableContainer">
         <thead>
@@ -965,52 +1041,6 @@ function logout() {
   }
 }
 
-function generateEmployeeId() {
-  // تحميل الموظفين الحاليين للحصول على أعلى رقم
-  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv")
-    .then(res => res.text())
-    .then(csv => {
-      const rows = csv.split("\n").filter(r => r.trim());
-      let maxId = 0;
-      
-      // تخطي العنوان
-      for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i].split(",");
-        if (cols[0]) {
-          const id = parseInt(cols[0]);
-          if (!isNaN(id) && id > maxId) {
-            maxId = id;
-          }
-        }
-      }
-      
-      // توليد الرقم التالي
-      const newId = maxId + 1;
-      $('empId').value = newId;
-      showToast(`تم توليد الرقم ${newId}`, 'success');
-    })
-    .catch(err => {
-      console.error('Error generating ID:', err);
-      // في حالة الخطأ، استخدم رقم عشوائي
-      const randomId = Math.floor(Math.random() * 9000) + 1000;
-      $('empId').value = randomId;
-      showToast(`تم توليد الرقم ${randomId}`, 'success');
-    });
-}
-
-function clearEmployeeForm() {
-  $('empName').value = '';
-  $('empId').value = '';
-  $('empPin').value = '';
-  $('empDept').value = '';
-
-  editMode = false;
-  editIdLocked = "";
-  $('empId').disabled = false;
-  $('btnAdd').textContent = '➕ إضافة موظف جديد';
-  showToast('تمت الاضافة', 'success');
-}
-
 function validateEmployeeData(name, id, pin, dept) {
   if (name.length < 2) return "الاسم يجب أن يكون أكثر من حرفين";
   if (!/^\d+$/.test(id)) return "الرقم الوظيفي يجب أن يكون رقماً";
@@ -1297,6 +1327,105 @@ $('searchEmployee')?.addEventListener('input', function(e) {
   });
 });
 
+function openAddEmployeeModal() {
+  generateEmployeeIdForModal();
+  
+  $('#modalEmpName').value = '';
+  $('#modalEmpPin').value = '';
+  $('#modalEmpDept').value = '';
+  $('#modalEmpMsg').textContent = '';
+  $('#modalEmpLoader').style.display = 'none';
+  
+  $('#addEmployeeModal').style.display = 'flex';
+}
+
+function closeAddEmployeeModal() {
+  $('#addEmployeeModal').style.display = 'none';
+}
+
+function generateEmployeeIdForModal() {
+  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv")
+    .then(res => res.text())
+    .then(csv => {
+      const rows = csv.split("\n").filter(r => r.trim());
+      let maxId = 0;
+      
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i].split(",");
+        if (cols[0]) {
+          const id = parseInt(cols[0]);
+          if (!isNaN(id) && id > maxId) {
+            maxId = id;
+          }
+        }
+      }
+      
+      const newId = maxId + 1;
+      $('#modalEmpId').value = newId;
+    })
+    .catch(err => {
+      console.error('Error generating ID:', err);
+      const randomId = Math.floor(Math.random() * 9000) + 1000;
+      $('#modalEmpId').value = randomId;
+    });
+}
+
+async function addEmployeeFromModal() {
+  const name = $('#modalEmpName').value.trim();
+  const id = $('#modalEmpId').value.trim();
+  const pin = $('#modalEmpPin').value.trim();
+  const department = $('#modalEmpDept').value.trim();
+
+  if (!id) {
+    $('#modalEmpMsg').textContent = '❌ الرقم الوظيفي مطلوب';
+    $('#modalEmpMsg').style.color = 'var(--danger)';
+    return;
+  }
+
+  if (!name || !pin || !department) {
+    $('#modalEmpMsg').textContent = '❌ جميع الحقول مطلوبة';
+    $('#modalEmpMsg').style.color = 'var(--danger)';
+    return;
+  }
+
+  if (!/^\d{4}$/.test(pin)) {
+    $('#modalEmpMsg').textContent = '❌ الرمز السري يجب أن يكون 4 أرقام';
+    $('#modalEmpMsg').style.color = 'var(--danger)';
+    return;
+  }
+
+  $('#modalEmpLoader').style.display = 'block';
+  $('#modalEmpMsg').textContent = 'جاري إضافة الموظف...';
+  $('#modalEmpMsg').style.color = 'var(--info)';
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "addEmployee",
+        payload: { name, id, pin, department }
+      })
+    });
+
+    $('#modalEmpMsg').textContent = '✅ تمت إضافة الموظف بنجاح';
+    $('#modalEmpMsg').style.color = 'var(--success)';
+    
+    setTimeout(() => {
+      closeAddEmployeeModal();
+      loadEmployees();
+      showToast('تمت إضافة الموظف بنجاح', 'success');
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Add employee error:', error);
+    $('#modalEmpMsg').textContent = '❌ خطأ في إضافة الموظف';
+    $('#modalEmpMsg').style.color = 'var(--danger)';
+  } finally {
+    $('#modalEmpLoader').style.display = 'none';
+  }
+}
+  
 function handleLogin() {
   const u = $('loginUser').value.trim();
   const p = $('loginPass').value.trim();
