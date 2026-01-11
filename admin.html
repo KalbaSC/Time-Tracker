@@ -624,8 +624,8 @@ body{
           <input id="empName" placeholder="الاسم الكامل">
         </div>
         <div class="col">
-          <label>الرقم الوظيفي</label>
-          <input id="empId" placeholder="مثال: 1001">
+          <label>الرقم الوظيفي (يتم توليده تلقائياً)</label>
+          <input id="empId" placeholder="سيتم توليده تلقائياً" readonly>
         </div>
         <div class="col">
           <label>الرمز السري PIN</label>
@@ -647,6 +647,7 @@ body{
 
       <div class="flex">
         <button id="btnAdd" style="flex:1">➕ إضافة موظف جديد</button>
+        <button id="btnGenerateId" style="flex:0.3" onclick="generateEmployeeId()">🆔 توليد رقم</button>
         <button id="btnClear" style="flex:0.3" onclick="clearEmployeeForm()">🗑️ مسح</button>
       </div>
 
@@ -964,6 +965,39 @@ function logout() {
   }
 }
 
+function generateEmployeeId() {
+  // تحميل الموظفين الحاليين للحصول على أعلى رقم
+  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv")
+    .then(res => res.text())
+    .then(csv => {
+      const rows = csv.split("\n").filter(r => r.trim());
+      let maxId = 0;
+      
+      // تخطي العنوان
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i].split(",");
+        if (cols[0]) {
+          const id = parseInt(cols[0]);
+          if (!isNaN(id) && id > maxId) {
+            maxId = id;
+          }
+        }
+      }
+      
+      // توليد الرقم التالي
+      const newId = maxId + 1;
+      $('empId').value = newId;
+      showToast(`تم توليد الرقم ${newId}`, 'success');
+    })
+    .catch(err => {
+      console.error('Error generating ID:', err);
+      // في حالة الخطأ، استخدم رقم عشوائي
+      const randomId = Math.floor(Math.random() * 9000) + 1000;
+      $('empId').value = randomId;
+      showToast(`تم توليد الرقم ${randomId}`, 'success');
+    });
+}
+
 function clearEmployeeForm() {
   $('empName').value = '';
   $('empId').value = '';
@@ -973,18 +1007,18 @@ function clearEmployeeForm() {
   editMode = false;
   editIdLocked = "";
   $('empId').disabled = false;
-
   $('btnAdd').textContent = '➕ إضافة موظف جديد';
-  showToast('تم مسح النموذج', 'success');
+  showToast('تمت الاضافة', 'success');
 }
 
 function validateEmployeeData(name, id, pin, dept) {
   if (name.length < 2) return "الاسم يجب أن يكون أكثر من حرفين";
-  if (!/^\d{1,6}$/.test(id)) return "الرقم الوظيفي غير صحيح";
+  if (!/^\d+$/.test(id)) return "الرقم الوظيفي يجب أن يكون رقماً";
   if (!/^\d{4}$/.test(pin)) return "PIN يجب أن يكون 4 أرقام";
   if (!dept) return "يرجى اختيار القسم";
   return null;
 }  
+
 async function loadEmployees() {
   showLoader('empLoader');
 
@@ -1002,37 +1036,38 @@ async function loadEmployees() {
 
     let html = "";
 
-rows.forEach(r => {
-  const id = r[0].trim();
-  const name = r[1].trim();
-  const pin = r[2].trim();
-  const dept = (r[4] || "").trim();
+    rows.forEach(r => {
+      const id = r[0].trim();
+      const name = r[1].trim();
+      const pin = r[2].trim();
+      const dept = (r[4] || "").trim();
 
-html += `
-  <tr>
-    <td data-label="الاسم">${name}</td>
-    <td data-label="الرقم">${id}</td>
-    <td data-label="PIN">${pin}</td>
-    <td data-label="القسم">${dept || "-"}</td>
-    <td class="actions-cell" data-label="الإجراءات">
-      <button class="btn-yellow editRowBtn"
-        data-id="${id}"
-        data-name="${encodeURIComponent(name)}"
-        data-pin="${pin}"
-        data-dept="${encodeURIComponent(dept)}">
-        ✏️ تعديل
-      </button>
-      <button class="btn-danger delRowBtn" data-id="${id}">
-        🗑️ حذف
-      </button>
-    </td>
-  </tr>
-`;
-});
+      html += `
+        <tr>
+          <td data-label="الاسم">${name}</td>
+          <td data-label="الرقم">${id}</td>
+          <td data-label="PIN">${pin}</td>
+          <td data-label="القسم">${dept || "-"}</td>
+          <td class="actions-cell" data-label="الإجراءات">
+            <button class="btn-yellow editRowBtn"
+              data-id="${id}"
+              data-name="${encodeURIComponent(name)}"
+              data-pin="${pin}"
+              data-dept="${encodeURIComponent(dept)}">
+              ✏️ تعديل
+            </button>
+            <button class="btn-danger delRowBtn" data-id="${id}">
+              🗑️ حذف
+            </button>
+          </td>
+        </tr>
+      `;
+    });
 
     $('empTable').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
     $('userCount').textContent = rows.length;
 
+    // إضافة مستمعات الأحداث للحذف
     document.querySelectorAll('.delRowBtn').forEach(btn => {
       btn.onclick = async () => {
         const id = btn.dataset.id;
@@ -1049,8 +1084,8 @@ html += `
             })
           });
 
-          btn.closest('tr').remove();
-          $('userCount').textContent = parseInt($('userCount').textContent) - 1;
+          // إعادة تحميل البيانات من المصدر بعد الحذف
+          await loadEmployees();
           showToast('تم حذف الموظف بنجاح', 'success');
         } catch (error) {
           showToast('خطأ في حذف الموظف', 'error');
@@ -1061,16 +1096,17 @@ html += `
       };
     });
 
-document.querySelectorAll('.editRowBtn').forEach(btn => {
-  btn.onclick = () => {
-    openEditEmployee({
-      id: btn.dataset.id,
-      name: decodeURIComponent(btn.dataset.name || ""),
-      pin: btn.dataset.pin || "",
-      dept: decodeURIComponent(btn.dataset.dept || "")
+    // إضافة مستمعات الأحداث للتعديل
+    document.querySelectorAll('.editRowBtn').forEach(btn => {
+      btn.onclick = () => {
+        openEditEmployee({
+          id: btn.dataset.id,
+          name: decodeURIComponent(btn.dataset.name || ""),
+          pin: btn.dataset.pin || "",
+          dept: decodeURIComponent(btn.dataset.dept || "")
+        });
+      };
     });
-  };
-});
 
   } catch (error) {
     console.error('Load employees error:', error);
@@ -1083,18 +1119,18 @@ document.querySelectorAll('.editRowBtn').forEach(btn => {
 
 $('btnAdd').onclick = async () => {
   const name = $('empName').value.trim();
-  const id = (editMode ? editIdLocked : $('empId').value.trim());
+  const id = $('empId').value.trim();
   const pin = $('empPin').value.trim();
   const department = $('empDept').value.trim();
 
-    const validationError = validateEmployeeData(name, id, pin, department);
-  if (validationError) {
-    showToast(validationError, 'warning');
+  if (!id) {
+    showToast('يرجى توليد رقم موظف أولاً', 'warning');
     return;
   }
 
-  if (!name || !id || !pin || !department) {
-    showToast('جميع الحقول مطلوبة', 'warning');
+  const validationError = validateEmployeeData(name, id, pin, department);
+  if (validationError) {
+    showToast(validationError, 'warning');
     return;
   }
 
@@ -1111,9 +1147,17 @@ $('btnAdd').onclick = async () => {
       })
     });
 
-    showToast(editMode ? 'تم تحديث بيانات الموظف بنجاح' : 'تمت إضافة الموظف بنجاح', 'success');
-    clearEmployeeForm();
+    showToast('تمت إضافة الموظف بنجاح', 'success');
+    
+    // إعادة تحميل القائمة مباشرة بعد الإضافة
     await loadEmployees();
+    
+    // مسح النموذج بعد الإضافة الناجحة
+    $('empName').value = '';
+    $('empId').value = '';
+    $('empPin').value = '';
+    $('empDept').value = '';
+    
   } catch (error) {
     console.error('Add employee error:', error);
     showToast('خطأ في إضافة الموظف', 'error');
@@ -1191,18 +1235,17 @@ async function loadLeaves(filter = 'all') {
         : `<span style="color:#777">${lv.note || "—"}</span>`;
 
       html += `
-  <tr>
-    <td>${lv.name || "-"}</td>
-    <td>${lv.id}</td>
-    <td>${lv.type}</td>
-    <td>${onlyDate(lv.fromDate)}</td>
-    <td>${onlyDate(lv.toDate)}</td>
-    <td>${attachHtml}</td>
-    <td><span class="status-badge ${statusClass}">${lv.status}</span></td>
-    <td>${noteBox}</td>
-    <td>${actionsHtml}</td>
-  </tr>`;
-
+        <tr>
+          <td>${lv.name || "-"}</td>
+          <td>${lv.id}</td>
+          <td>${lv.type}</td>
+          <td>${onlyDate(lv.fromDate)}</td>
+          <td>${onlyDate(lv.toDate)}</td>
+          <td>${attachHtml}</td>
+          <td><span class="status-badge ${statusClass}">${lv.status}</span></td>
+          <td>${noteBox}</td>
+          <td>${actionsHtml}</td>
+        </tr>`;
     });
 
     $('leaveTable').innerHTML = html;
@@ -1298,14 +1341,14 @@ window.onload = () => {
     loadLeaves();
   }
 
-const saved = localStorage.getItem('adminSettings');
-if (saved) {
-  const s = JSON.parse(saved);
-  $('annualLeaveDays').value = s.annualLeaveDays ?? 30;
-  $('dailyWorkHours').value = s.dailyWorkHours ?? 7;
-  $('themeColor').value = s.themeColor ?? 'gold';
-  $('autoRefresh').value = s.autoRefresh ?? 30;
-}
+  const saved = localStorage.getItem('adminSettings');
+  if (saved) {
+    const s = JSON.parse(saved);
+    $('annualLeaveDays').value = s.annualLeaveDays ?? 30;
+    $('dailyWorkHours').value = s.dailyWorkHours ?? 7;
+    $('themeColor').value = s.themeColor ?? 'gold';
+    $('autoRefresh').value = s.autoRefresh ?? 30;
+  }
 
 };
 
@@ -1384,31 +1427,32 @@ async function loadReport() {
       $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
       return;
     }
-$('repTable').innerHTML = rows.map(r => {
-  const workedDays = Number(r.presentDays || 0);
-  const workedMin  = parseHHMM(r.totalHHMM || "00:00");
-  const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
-  const diffMin = workedMin - expectedMin;
+    
+    $('repTable').innerHTML = rows.map(r => {
+      const workedDays = Number(r.presentDays || 0);
+      const workedMin  = parseHHMM(r.totalHHMM || "00:00");
+      const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+      const diffMin = workedMin - expectedMin;
 
-  const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
-  const diffText  = diffLabel + " " + fmtMin(diffMin);
+      const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+      const diffText  = diffLabel + " " + fmtMin(diffMin);
 
-  const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
+      const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
 
-  return `
-    <tr>
-      <td>${r.id}</td>
-      <td>${r.name || ''}</td>
-      <td>${r.department || '-'}</td>
-      <td>${data.range || ''}</td>
-      <td>${r.totalHHMM || '00:00'}</td>
-      <td>${workedDays}</td>
-      <td>${fmtMin(expectedMin)}</td>
-      <td>${diffText}</td>
-      <td style="text-align:center;">${btn}</td>
-    </tr>
-  `;
-}).join("");
+      return `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.name || ''}</td>
+          <td>${r.department || '-'}</td>
+          <td>${data.range || ''}</td>
+          <td>${r.totalHHMM || '00:00'}</td>
+          <td>${workedDays}</td>
+          <td>${fmtMin(expectedMin)}</td>
+          <td>${diffText}</td>
+          <td style="text-align:center;">${btn}</td>
+        </tr>
+      `;
+    }).join("");
 
     showToast('تم تحميل التقرير بنجاح', 'success');
   } catch (err) {
@@ -1450,26 +1494,26 @@ function openReportDetails(empId){
   const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
   const meta  = `الفترة: ${lastReport.range || ''}`;
 
-const rowsHtml = details.length
-  ? details.map(d => {
-      const dayWorkedMin = parseHHMM(d.dayHHMM || "00:00");
-      const dayExpectedMin = dayWorkedMin > 0 ? REQUIRED_MIN_PER_DAY : 0;
-      const dayDiffMin = dayWorkedMin - dayExpectedMin;
+  const rowsHtml = details.length
+    ? details.map(d => {
+        const dayWorkedMin = parseHHMM(d.dayHHMM || "00:00");
+        const dayExpectedMin = dayWorkedMin > 0 ? REQUIRED_MIN_PER_DAY : 0;
+        const dayDiffMin = dayWorkedMin - dayExpectedMin;
 
-      const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
-      const dayDiffText  = dayDiffLabel + " " + fmtMin(dayDiffMin);
+        const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+        const dayDiffText  = dayDiffLabel + " " + fmtMin(dayDiffMin);
 
-      return `
-        <tr>
-          <td>${dateOnly(d.date)}</td>
-          <td>${d.pairsText || '—'}</td>
-          <td>${d.dayHHMM || '00:00'}</td>
-          <td>${fmtMin(dayExpectedMin)}</td>
-          <td>${dayDiffText}</td>
-        </tr>
-      `;
-    }).join("")
-  : `<tr><td colspan="5" style="text-align:center;color:#777">لا توجد تفاصيل.</td></tr>`;
+        return `
+          <tr>
+            <td>${dateOnly(d.date)}</td>
+            <td>${d.pairsText || '—'}</td>
+            <td>${d.dayHHMM || '00:00'}</td>
+            <td>${fmtMin(dayExpectedMin)}</td>
+            <td>${dayDiffText}</td>
+          </tr>
+        `;
+      }).join("")
+    : `<tr><td colspan="5" style="text-align:center;color:#777">لا توجد تفاصيل.</td></tr>`;
 
   const html = `
     <div style="margin-bottom:10px;">
@@ -1481,11 +1525,11 @@ const rowsHtml = details.length
       <table>
         <thead>
           <tr>
-          <th>التاريخ</th>
-          <th>الأزواج (دخول → خروج)</th>
-          <th>مجموع اليوم</th>
-          <th>المتوقع</th>
-          <th>نقص/زيادة</th>
+            <th>التاريخ</th>
+            <th>الأزواج (دخول → خروج)</th>
+            <th>مجموع اليوم</th>
+            <th>المتوقع</th>
+            <th>نقص/زيادة</th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
@@ -1544,7 +1588,7 @@ async function saveEmployeeEdit() {
 
     showToast('تم تحديث بيانات الموظف', 'success');
     closeEditEmployee();
-    loadEmployees();
+    loadEmployees(); // إعادة تحميل القائمة بعد التعديل
   } catch (e) {
     showToast('خطأ في التحديث', 'error');
   } finally {
@@ -1555,29 +1599,29 @@ async function saveEmployeeEdit() {
 function downloadReportCsv(){
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
-const header = ["الرقم الوظيفي","الاسم","القسم","ساعات العمل","الايام","نقص/زيادة"];
-const lines = [header.join(",")];
+  const header = ["الرقم الوظيفي","الاسم","القسم","ساعات العمل","الايام","نقص/زيادة"];
+  const lines = [header.join(",")];
 
-lastReport.rows.forEach(r => {
-  const workedDays = Number(r.presentDays || 0);
-  const workedMin  = parseHHMM(r.totalHHMM || "00:00");
-  const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
-  const diffMin = workedMin - expectedMin;
+  lastReport.rows.forEach(r => {
+    const workedDays = Number(r.presentDays || 0);
+    const workedMin  = parseHHMM(r.totalHHMM || "00:00");
+    const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+    const diffMin = workedMin - expectedMin;
 
-  const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
-  const diffText  = diffLabel + " " + fmtMin(diffMin);
+    const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+    const diffText  = diffLabel + " " + fmtMin(diffMin);
 
-  lines.push([
-    csvEscape(excelText(r.id)),
-    csvEscape(r.name),
-    csvEscape(r.department || ""),
-    csvEscape(excelText(r.totalHHMM)),
-    csvEscape(r.presentDays),
-    csvEscape(diffText)
-  ].join(","));
-});
+    lines.push([
+      csvEscape(excelText(r.id)),
+      csvEscape(r.name),
+      csvEscape(r.department || ""),
+      csvEscape(excelText(r.totalHHMM)),
+      csvEscape(r.presentDays),
+      csvEscape(diffText)
+    ].join(","));
+  });
 
-downloadCSV(lines.join("\r\n"), `report_${(lastReport.period||'period')}.csv`);
+  downloadCSV(lines.join("\r\n"), `report_${(lastReport.period||'period')}.csv`);
 }
 
 $('btnLoadReport').onclick = loadReport;
@@ -1589,17 +1633,20 @@ function openReportModal(html){
   body.innerHTML = html;
   overlay.style.display = "flex";
 }
+
 function closeOverlayModal(){
   const overlay = document.getElementById("reportModal");
   const body = document.getElementById("modalBody");
   overlay.style.display = "none";
   body.innerHTML = "";
 }
+
 document.addEventListener("click", (e)=>{
   const overlay = document.getElementById("reportModal");
   if(overlay.style.display !== "flex") return;
   if(e.target === overlay) closeOverlayModal();
 });
+
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape") closeOverlayModal();
 });
@@ -1611,6 +1658,7 @@ function parseHHMM(hhmm){
   const [h,m] = String(hhmm).split(":").map(n => parseInt(n,10) || 0);
   return (h*60) + m;
 }
+
 function fmtMin(min){
   const sign = min < 0 ? "-" : "";
   min = Math.abs(min);
@@ -1663,9 +1711,7 @@ function downloadReportXLSX(){
   });
 
   const ws = XLSX.utils.aoa_to_sheet(data);
-
   ws["!rtl"] = true;
-
   ws["!cols"] = [
     { wch: 15 },
     { wch: 22 },
@@ -1680,12 +1726,11 @@ function downloadReportXLSX(){
   XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
 
   const dept = safeFileName($('repDept')?.value);
-const fileName = dept
-  ? `تقرير الحضور إدارة ${dept}.xlsx`
-  : `تقرير الحضور.xlsx`;
+  const fileName = dept
+    ? `تقرير الحضور إدارة ${dept}.xlsx`
+    : `تقرير الحضور.xlsx`;
 
-XLSX.writeFile(wb, fileName);
-
+  XLSX.writeFile(wb, fileName);
 }
 
 function saveSettings() {
@@ -1720,11 +1765,12 @@ function exportAllData() {
 function importData() {
   showToast('⚠️ الاستيراد غير مفعل حالياً', 'warning');
 }
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    });
-  }  
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
 </script>
 
 </body>
