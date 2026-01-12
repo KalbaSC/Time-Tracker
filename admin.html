@@ -1100,7 +1100,6 @@ async function loadEmployees() {
     $('empTable').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
     $('userCount').textContent = rows.length;
 
-    // إضافة مستمعات الأحداث للحذف
     document.querySelectorAll('.delRowBtn').forEach(btn => {
       btn.onclick = async () => {
         const id = btn.dataset.id;
@@ -1129,7 +1128,6 @@ async function loadEmployees() {
       };
     });
 
-    // إضافة مستمعات الأحداث للتعديل
     document.querySelectorAll('.editRowBtn').forEach(btn => {
       btn.onclick = () => {
         openEditEmployee({
@@ -1282,20 +1280,14 @@ $('searchEmployee')?.addEventListener('input', function(e) {
 
 function openAddEmployeeModal() {
   generateEmployeeIdForModal();
-  
-  const modalEmpName = $('#modalEmpName');
-  const modalEmpPin = $('#modalEmpPin');
-  const modalEmpDept = $('#modalEmpDept');
-  const modalEmpMsg = $('#modalEmpMsg');
-  const modalEmpLoader = $('#modalEmpLoader');
-  const addEmployeeModal = $('#addEmployeeModal');
-  
-  if (modalEmpName) modalEmpName.value = '';
-  if (modalEmpPin) modalEmpPin.value = '';
-  if (modalEmpDept) modalEmpDept.value = '';
-  if (modalEmpMsg) modalEmpMsg.textContent = '';
-  if (modalEmpLoader) modalEmpLoader.style.display = 'none';
-  if (addEmployeeModal) addEmployeeModal.style.display = 'flex';
+
+  $('modalEmpName').value = '';
+  $('modalEmpPin').value = '';
+  $('modalEmpDept').value = '';
+  $('modalEmpMsg').textContent = '';
+  $('modalEmpLoader').style.display = 'none';
+
+  $('addEmployeeModal').style.display = 'flex';
 }
 
 function closeAddEmployeeModal() {
