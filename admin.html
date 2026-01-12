@@ -1279,6 +1279,12 @@ $('searchEmployee')?.addEventListener('input', function(e) {
 });
 
 function openAddEmployeeModal() {
+  const modal = $('addEmployeeModal');
+  if (!modal) {
+    console.error('❌ addEmployeeModal not found');
+    return;
+  }
+
   generateEmployeeIdForModal();
 
   $('modalEmpName').value = '';
@@ -1287,11 +1293,16 @@ function openAddEmployeeModal() {
   $('modalEmpMsg').textContent = '';
   $('modalEmpLoader').style.display = 'none';
 
-  $('addEmployeeModal').style.display = 'flex';
+  modal.style.display = 'flex';
 }
 
 function closeAddEmployeeModal() {
-  $('#addEmployeeModal').style.display = 'none';
+  const modal = $('addEmployeeModal');
+  if (!modal) {
+    console.error('❌ addEmployeeModal not found');
+    return;
+  }
+  modal.style.display = 'none';
 }
 
 function generateEmployeeIdForModal() {
