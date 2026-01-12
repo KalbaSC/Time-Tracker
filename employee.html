@@ -708,20 +708,12 @@ const ALLOWED_RADIUS_M = 300;
 let EXPECTED_DAY_SEC = 7 * 3600;
 let EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC;
 
-function getDailyWorkHours_(){
-  try{
-    const s = JSON.parse(localStorage.getItem('adminSettings') || '{}');
-    const h = Number(s.dailyWorkHours);
-    return (h && h > 0) ? h : 7;
-  }catch(e){
-    return 7;
+async function applySettings(){
+  const res = await fetchSettings();
+  if (res.ok && res.dailyWorkHours) {
+    EXPECTED_DAY_SEC = res.dailyWorkHours * 3600;
+    EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC;
   }
-}
-
-function applyWorkHoursSettings_(){
-  const hours = getDailyWorkHours_();
-  EXPECTED_DAY_SEC = Math.round(hours * 3600);
-  EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC; 
 }
 
 const $ = id => document.getElementById(id);
@@ -1246,7 +1238,26 @@ if (afterRows.length <= beforeCount) {
   }
 }
 
+function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb = "cb_" + Date.now();
+    window[cb] = (data) => {
+      delete window[cb];
+      script.remove();
+      resolve(data);
+    };
+    const script = document.createElement("script");
+    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+}
 
+async function fetchSettings(){
+  const data = await jsonp(SCRIPT_URL + "?action=getSettings");
+  return data; 
+}
+ 
 async function refreshAll() {
   if (!window.currentID) return;
   applyWorkHoursSettings_();
