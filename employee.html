@@ -705,8 +705,24 @@ const CLUB_LAT = 25.0599489;
 const CLUB_LNG = 56.3467097;
 const ALLOWED_RADIUS_M = 300;
 
-const EXPECTED_DAY_SEC = 7 * 3600;
-const EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC;
+let EXPECTED_DAY_SEC = 7 * 3600;
+let EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC;
+
+function getDailyWorkHours_(){
+  try{
+    const s = JSON.parse(localStorage.getItem('adminSettings') || '{}');
+    const h = Number(s.dailyWorkHours);
+    return (h && h > 0) ? h : 7;
+  }catch(e){
+    return 7;
+  }
+}
+
+function applyWorkHoursSettings_(){
+  const hours = getDailyWorkHours_();
+  EXPECTED_DAY_SEC = Math.round(hours * 3600);
+  EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC; 
+}
 
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
@@ -1233,7 +1249,7 @@ if (afterRows.length <= beforeCount) {
 
 async function refreshAll() {
   if (!window.currentID) return;
-
+  applyWorkHoursSettings_();
   try {
     const todayRows = await getTodayRows();
 
