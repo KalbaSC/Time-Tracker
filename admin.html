@@ -1549,7 +1549,7 @@ async function loadReport() {
     $('repTable').innerHTML = rows.map(r => {
       const workedDays = Number(r.presentDays || 0);
       const workedMin  = parseHHMM(r.totalHHMM || "00:00");
-      const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+      const expectedMin = workedDays * requiredMinPerDay_();
       const diffMin = workedMin - expectedMin;
 
       const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
@@ -1725,7 +1725,7 @@ function downloadReportCsv(){
   lastReport.rows.forEach(r => {
     const workedDays = Number(r.presentDays || 0);
     const workedMin  = parseHHMM(r.totalHHMM || "00:00");
-    const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+    const expectedMin = workedDays * requiredMinPerDay_();
     const diffMin = workedMin - expectedMin;
 
     const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
@@ -1776,7 +1776,16 @@ document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape") closeOverlayModal();
 });
 
-const REQUIRED_MIN_PER_DAY = 7 * 60;
+function requiredMinPerDay_() {
+  try {
+    const s = JSON.parse(localStorage.getItem("adminSettings") || "{}");
+    const h = Number(s.dailyWorkHours);
+    const hours = (h && h > 0) ? h : 7;
+    return Math.round(hours * 60);
+  } catch (e) {
+    return 7 * 60;
+  }
+}
 
 function parseHHMM(hhmm){
   if(!hhmm) return 0;
@@ -1819,7 +1828,7 @@ function downloadReportXLSX(){
   lastReport.rows.forEach(r => {
     const workedDays = Number(r.presentDays || 0);
     const workedMin  = parseHHMM(r.totalHHMM || "00:00");
-    const expectedMin = workedDays * REQUIRED_MIN_PER_DAY;
+    const expectedMin = workedDays * requiredMinPerDay_();
     const diffMin = workedMin - expectedMin;
 
     const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
@@ -1857,6 +1866,15 @@ function downloadReportXLSX(){
 
   XLSX.writeFile(wb, fileName);
 }
+  
+fetch(SCRIPT_URL, {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify({
+    action: "setSettings",
+    payload: { dailyWorkHours: $('dailyWorkHours').value }
+  })
+});
 
 function saveSettings() {
   const settings = {
