@@ -1866,17 +1866,8 @@ function downloadReportXLSX(){
 
   XLSX.writeFile(wb, fileName);
 }
-  
-await fetch(SCRIPT_URL, {
-  method: "POST",
-  mode: "no-cors",
-  body: JSON.stringify({
-    action: "setSettings",
-    payload: { dailyWorkHours: document.getElementById("dailyWorkHours").value }
-  })
-});
 
-function saveSettings() {
+async function saveSettings() {
   const settings = {
     annualLeaveDays: $('annualLeaveDays').value,
     dailyWorkHours: $('dailyWorkHours').value,
@@ -1885,7 +1876,20 @@ function saveSettings() {
   };
 
   localStorage.setItem('adminSettings', JSON.stringify(settings));
-  showToast('✅ تم حفظ الإعدادات بنجاح', 'success');
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "setSettings",
+        payload: { dailyWorkHours: Number(settings.dailyWorkHours) }
+      })
+    });
+    showToast('✅ Settings saved (local + server)', 'success');
+  } catch (e) {
+    showToast('⚠️ Saved locally, but server save failed', 'warning');
+  }
 }
 
 function resetSettings() {
