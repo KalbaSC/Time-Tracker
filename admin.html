@@ -1594,7 +1594,9 @@ function openReportDetails(empId){
   if (!lastReport || !lastReport.details) return;
 
   const row = (lastReport.rows || []).find(x => String(x.id) === String(empId));
-  const details = lastReport.details[empId] || [];
+  const details = (lastReport.details[empId] || [])
+  .slice()
+  .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
   const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
   const meta  = `الفترة: ${lastReport.range || ''}`;
