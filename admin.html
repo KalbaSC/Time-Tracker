@@ -938,15 +938,9 @@ body{
 
       <div class="flex">
         <div class="col">
-          <label><i class="fas fa-lock"></i> الرمز السري PIN</label>
+          <label><i class="fas fa-lock"></i> كلمة مرور الموظف </label>
           <input id="modalEmpPin" type="password" placeholder="4 أرقام فقط" maxlength="4">
         </div>
-       <div class="col">
-  <label><i class="fas fa-key"></i> كلمة المرور المؤقتة</label>
-  <input id="modalEmpPass" type="password" placeholder="على الأقل 6 أحرف">
-        <input id="modalEmpMustChange" type="hidden" value="1">
-</div>
-
         <div class="col">
           <label><i class="fas fa-building"></i> القسم</label>
           <select id="modalEmpDept">
@@ -1434,8 +1428,6 @@ const modalEmpPin = $('modalEmpPin');
 const modalEmpDept = $('modalEmpDept');
 const modalEmpMsg = $('modalEmpMsg');
 const modalEmpLoader = $('modalEmpLoader');
-const modalEmpPass = $('modalEmpPass');
-const modalEmpMustChange = $('modalEmpMustChange');
   
   if (!modalEmpName || !modalEmpId || !modalEmpPin || !modalEmpDept || !modalEmpMsg || !modalEmpLoader) {
     showToast('❌ عناصر النموذج غير موجودة', 'error');
@@ -1446,8 +1438,6 @@ const modalEmpMustChange = $('modalEmpMustChange');
   const id = modalEmpId.value.trim();
   const pin = modalEmpPin.value.trim();
   const department = modalEmpDept.value.trim();
-  const password = (modalEmpPass?.value || "").trim();
-  const mustChangePassword = (modalEmpMustChange?.value === "1");
 
   if (!id) {
     modalEmpMsg.textContent = '❌ الرقم الوظيفي مطلوب';
