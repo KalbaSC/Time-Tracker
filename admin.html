@@ -1163,6 +1163,87 @@ function loadEmployees() {
   });
 }
 
+function changePasswordRaw_(q) {
+  try {
+    const sh = SpreadsheetApp.getActive().getSheetByName("Employees");
+    if (!sh) return { ok:false, error:"Employees sheet not found" };
+
+    const id = String(q.id || "").trim();
+    const oldPassword = String(q.oldPassword || "").trim();
+    const newPassword = String(q.newPassword || "").trim();
+
+    if (!id || !oldPassword || !newPassword) return { ok:false, error:"Missing fields" };
+    if (newPassword.length < 6) return { ok:false, error:"Password must be at least 6 characters" };
+    if (newPassword === oldPassword) return { ok:false, error:"New password must be different" };
+
+    const row = findEmployeeRowById_(sh, id);
+    if (row === -1) return { ok:false, error:"User not found" };
+
+    const currentHash = String(sh.getRange(row, 6).getValue() || "");
+    if (hashPass_(oldPassword) !== currentHash) return { ok:false, error:"Old password incorrect" };
+
+    sh.getRange(row, 6).setValue(hashPass_(newPassword));
+    sh.getRange(row, 7).setValue(false);
+    SpreadsheetApp.flush();
+
+    return { ok:true, changed:true };
+  } catch (e) {
+    return { ok:false, error: e.message };
+  }
+}
+
+async function handleChangePassword(){
+  const id = $('cpEmpId').value.trim();
+  const oldPassword = $('cpOld').value.trim();
+  const newPassword = $('cpNew').value.trim();
+  const newPassword2 = $('cpNew2').value.trim();
+
+  if (!oldPassword || !newPassword || !newPassword2){
+    showToast("أكمل جميع الحقول", "warning");
+    return;
+  }
+  if (newPassword.length < 6){
+    showToast("كلمة المرور يجب أن تكون 6 أحرف على الأقل", "warning");
+    return;
+  }
+  if (newPassword !== newPassword2){
+    showToast("كلمتا المرور غير متطابقتين", "warning");
+    return;
+  }
+  if (newPassword === oldPassword){
+    showToast("اختر كلمة مرور جديدة مختلفة", "warning");
+    return;
+  }
+
+  try{
+    showLoader('cpLoader');
+
+    const url =
+      SCRIPT_URL +
+      `?action=changePassword&id=${encodeURIComponent(id)}` +
+      `&oldPassword=${encodeURIComponent(oldPassword)}` +
+      `&newPassword=${encodeURIComponent(newPassword)}` +
+      `&_=${Date.now()}`;
+
+    const res = await jsonp(url);
+
+    if (!res.ok){
+      showToast(res.error || "لم يتم تغيير كلمة المرور", "error");
+      return;
+    }
+
+    showToast("تم تغيير كلمة المرور بنجاح ✅", "success");
+    closeChangePasswordModal();
+
+    goToEmployeeHome();
+
+  } catch(e){
+    showToast("خطأ اتصال", "error");
+  } finally {
+    hideLoader('cpLoader');
+  }
+}
+  
 async function loadLeaves(filter = 'all') {
   showLoader('leaveLoader');
 
