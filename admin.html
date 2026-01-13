@@ -1065,101 +1065,102 @@ function validateEmployeeData(name, id, pin, dept) {
   return null;
 }  
 
-async function loadEmployees() {
+function loadEmployees() {
   showLoader('empLoader');
 
-  try {
-    $('empTable').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
+  return new Promise((resolve) => {
+    $('empTable').innerHTML =
+      '<tr><td colspan="5" style="text-align:center; color:#777">جاري التحميل...</td></tr>';
 
-    const baseUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbPiOqJCKgfP4hS_W1tmL1gP1ISn3e1ERUV61-WPzalHOXk0s1BLiAmTJT94hYeZyEG8NAZQgGGWm7/pub?gid=0&single=true&output=csv";
-const url = baseUrl + "&_=" + Date.now(); // cache buster
-const res = await fetch(url, { cache: "no-store" });
-const text = await res.text();
-   
-    const rows = text
-      .split("\n")
-      .map(r => r.split(","))
-      .filter(r => r[0] && r[0].trim() !== "ID");
+    const cbName = "cb_emp_" + Date.now();
+    window[cbName] = (data) => {
+      try {
+        if (!data || !data.ok) throw new Error(data?.error || "Bad response");
 
-    let html = "";
+        const rows = data.employees || [];
+        let html = "";
 
-    rows.forEach(r => {
-      const id = r[0].trim();
-      const name = r[1].trim();
-      const pin = r[2].trim();
-      const dept = (r[4] || "").trim();
+        rows.forEach(emp => {
+          const id = String(emp.id || "").trim();
+          const name = String(emp.name || "").trim();
+          const pin = String(emp.pin || "").trim();
+          const dept = String(emp.department || "").trim();
 
-      html += `
-        <tr>
-          <td data-label="الاسم">${name}</td>
-          <td data-label="الرقم">${id}</td>
-          <td data-label="PIN">${pin}</td>
-          <td data-label="القسم">${dept || "-"}</td>
-          <td class="actions-cell" data-label="الإجراءات">
-            <button class="btn-yellow editRowBtn"
-              data-id="${id}"
-              data-name="${encodeURIComponent(name)}"
-              data-pin="${pin}"
-              data-dept="${encodeURIComponent(dept)}">
-              ✏️ تعديل
-            </button>
-            <button class="btn-danger delRowBtn" data-id="${id}">
-              🗑️ حذف
-            </button>
-          </td>
-        </tr>
-      `;
-    });
-
-    $('empTable').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
-    $('userCount').textContent = rows.length;
-
-    document.querySelectorAll('.delRowBtn').forEach(btn => {
-      btn.onclick = async () => {
-        const id = btn.dataset.id;
-        if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) return;
-
-        showLoader('empLoader');
-        try {
-          await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({
-              action: "deleteEmployee",
-              payload: { id }
-            })
-          });
-
-          // إعادة تحميل البيانات من المصدر بعد الحذف
-          await loadEmployees();
-          showToast('تم حذف الموظف بنجاح', 'success');
-        } catch (error) {
-          showToast('خطأ في حذف الموظف', 'error');
-          console.error('Delete error:', error);
-        } finally {
-          hideLoader('empLoader');
-        }
-      };
-    });
-
-    document.querySelectorAll('.editRowBtn').forEach(btn => {
-      btn.onclick = () => {
-        openEditEmployee({
-          id: btn.dataset.id,
-          name: decodeURIComponent(btn.dataset.name || ""),
-          pin: btn.dataset.pin || "",
-          dept: decodeURIComponent(btn.dataset.dept || "")
+          html += `
+            <tr data-empid="${id}">
+              <td data-label="الاسم">${name}</td>
+              <td data-label="الرقم">${id}</td>
+              <td data-label="PIN">${pin}</td>
+              <td data-label="القسم">${dept || "-"}</td>
+              <td class="actions-cell" data-label="الإجراءات">
+                <button class="btn-yellow editRowBtn"
+                  data-id="${id}"
+                  data-name="${encodeURIComponent(name)}"
+                  data-pin="${pin}"
+                  data-dept="${encodeURIComponent(dept)}">
+                  ✏️ تعديل
+                </button>
+                <button class="btn-danger delRowBtn" data-id="${id}">
+                  🗑️ حذف
+                </button>
+              </td>
+            </tr>
+          `;
         });
-      };
-    });
 
-  } catch (error) {
-    console.error('Load employees error:', error);
-    $('empTable').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777">خطأ في تحميل البيانات</td></tr>';
-    showToast('خطأ في تحميل بيانات الموظفين', 'error');
-  } finally {
-    hideLoader('empLoader');
-  }
+        $('empTable').innerHTML =
+          html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
+        $('userCount').textContent = rows.length;
+
+        document.querySelectorAll('.delRowBtn').forEach(btn => {
+          btn.onclick = async () => {
+            const id = btn.dataset.id;
+            if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) return;
+
+            showLoader('empLoader');
+            try {
+              await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ action: "deleteEmployee", payload: { id } })
+              });
+
+              document.querySelector(`tr[data-empid="${id}"]`)?.remove();
+              await loadEmployees();
+
+              showToast('تم حذف الموظف بنجاح', 'success');
+            } catch (e) {
+              showToast('خطأ في حذف الموظف', 'error');
+            } finally {
+              hideLoader('empLoader');
+            }
+          };
+        });
+
+        document.querySelectorAll('.editRowBtn').forEach(btn => {
+          btn.onclick = () => {
+            openEditEmployee({
+              id: btn.dataset.id,
+              name: decodeURIComponent(btn.dataset.name || ""),
+              pin: btn.dataset.pin || "",
+              dept: decodeURIComponent(btn.dataset.dept || "")
+            });
+          };
+        });
+
+        resolve();
+      } finally {
+        hideLoader('empLoader');
+
+        delete window[cbName];
+        script.remove();
+      }
+    };
+
+    const script = document.createElement("script");
+    script.src = `${SCRIPT_URL}?action=getEmployees&callback=${cbName}&_=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 async function loadLeaves(filter = 'all') {
@@ -1703,7 +1704,7 @@ async function saveEmployeeEdit() {
 
     showToast('تم تحديث بيانات الموظف', 'success');
     closeEditEmployee();
-    loadEmployees(); // إعادة تحميل القائمة بعد التعديل
+    loadEmployees(); 
   } catch (e) {
     showToast('خطأ في التحديث', 'error');
   } finally {
