@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -557,6 +557,7 @@
         <div>
           <h1 style="color: var(--accent); margin: 0;">مرحباً <span id="employeeName">...</span></h1>
           <p style="color: var(--muted); margin-top: 5px;">الرقم الوظيفي: <span id="employeeId">...</span></p>
+         <p style="color: var(--muted); margin-top: 5px;">القسم: <span id="employeeDept">—</span></p>
         </div>
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> تسجيل خروج
@@ -723,11 +724,12 @@ const SESSION_KEY = "kscc_emp_session_v1";
 
 function saveSession_() {
   if (!window.currentID) return;
-  const data = {
-    id: String(window.currentID),
-    name: String(window.employeeName || ""),
-    savedAt: Date.now()
-  };
+const data = {
+  id: String(window.currentID),
+  name: String(window.employeeName || ""),
+  dept: String(window.employeeDept || ""),
+  savedAt: Date.now()
+};
   localStorage.setItem(SESSION_KEY, JSON.stringify(data));
 }
 
@@ -741,6 +743,9 @@ function restoreSession_() {
 
     window.currentID = data.id;
     window.employeeName = data.name || "موظف";
+    window.employeeDept = data.dept || "";
+    const deptEl = $('employeeDept');
+    if (deptEl) deptEl.textContent = window.employeeDept || '—';
 
     $('employeeName').textContent = window.employeeName;
     $('employeeId').textContent = window.currentID;
@@ -1022,7 +1027,34 @@ async function handleDayRollover_() {
     loadMyLeaves();
   }
 }  
-  
+
+async function changeMyPin(){
+  if (!window.currentID) return;
+
+  const oldPin = prompt("أدخل الـ PIN الحالي:");
+  if (!oldPin) return;
+
+  const newPin = prompt("أدخل PIN جديد (4 أرقام):");
+  if (!newPin) return;
+
+  if (!/^\d{4}$/.test(newPin)) {
+    showToast("PIN لازم يكون 4 أرقام", "warning");
+    return;
+  }
+
+  try{
+    const url = `${SCRIPT_URL}?action=changePassword&id=${encodeURIComponent(window.currentID)}&oldPassword=${encodeURIComponent(oldPin)}&newPassword=${encodeURIComponent(newPin)}`;
+    const res = await jsonp(url);
+
+    if (!res || !res.ok) throw new Error(res?.error || "فشل تغيير PIN");
+
+    window.employeePin = newPin;
+    showToast("✅ تم تغيير PIN بنجاح", "success");
+  }catch(e){
+    showToast("❌ " + e.message, "error");
+  }
+}
+ 
 async function login() {
   const id = ($("empId").value || "").trim();
   const pin = ($("empPin").value || "").trim();
@@ -1051,13 +1083,31 @@ async function login() {
   }
 
   try {
-    const csv = await (await fetch(EMP_CSV)).text();
-    const rows = parseCSVText(csv);
-const found = rows.find(r =>
-  String(r[0]).trim() === id &&
-  String(r[2]).trim() === pin
-);
-;
+const url = `${SCRIPT_URL}?action=loginEmployee&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`;
+const data = await jsonp(url);
+
+if (!data || !data.ok) {
+  hideLoader('loginLoader');
+  msg.className = "msg err";
+  msg.style.display = "block";
+  msg.textContent = "❌ البيانات غير صحيحة";
+  showToast(data?.error || 'بيانات الدخول غير صحيحة', 'error');
+  return;
+}
+
+window.currentID = id;
+window.employeeName = (data.name || 'موظف').trim();
+window.employeePin = pin;
+window.employeeDept = (data.department || '').trim();
+
+saveSession_();
+
+$('employeeName').textContent = window.employeeName;
+$('employeeId').textContent = id;
+$('leaveEmpId').value = id;
+
+const deptEl = $('employeeDept');
+if (deptEl) deptEl.textContent = window.employeeDept || '—';
 
     if (!found) {
       hideLoader('loginLoader');
