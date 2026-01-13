@@ -1054,7 +1054,40 @@ async function changeMyPin(){
     showToast("❌ " + e.message, "error");
   }
 }
- 
+
+async function openPinChangeModal(){
+  const oldPin = prompt("أدخل PIN الحالي:");
+  if (!oldPin) return;
+
+  const newPin = prompt("أدخل PIN جديد (4 أرقام):");
+  if (!newPin) return;
+
+  if (!/^\d{4}$/.test(newPin)) {
+    showToast("PIN لازم يكون 4 أرقام", "warning");
+    return;
+  }
+
+  const url = `${SCRIPT_URL}?action=changePassword&id=${encodeURIComponent(window.currentID)}&oldPassword=${encodeURIComponent(oldPin)}&newPassword=${encodeURIComponent(newPin)}`;
+  const res = await jsonp(url);
+
+  if (!res || !res.ok) {
+    showToast(res?.error || "فشل تغيير PIN", "error");
+    return;
+  }
+
+  window.employeePin = newPin;
+  showToast("✅ تم تغيير PIN بنجاح", "success");
+
+  $("loginBox").style.display = "none";
+  $("dash").style.display = "block";
+  $("uaeHeader").style.display = "flex";
+
+  resetPunchUI();
+  await refreshAll();
+  checkLocationStatus();
+  loadMyLeaves();
+}
+  
 async function login() {
   const id = ($("empId").value || "").trim();
   const pin = ($("empPin").value || "").trim();
@@ -1100,6 +1133,12 @@ async function login() {
     window.employeeDept = (data.department || '').trim();
     saveSession_();
 
+   if (!data.lastPinChange) {
+    hideLoader('loginLoader');
+    showToast('أول تسجيل دخول: يجب تغير كلمة المرور', 'warning');
+    openPinChangeModal();
+    return;
+   }
     $('employeeName').textContent = window.employeeName;
     $('employeeId').textContent = id;
     $('leaveEmpId').value = id;
@@ -1288,6 +1327,17 @@ async function fetchSettings(){
   return data; 
 }
  
+ function applyWorkHoursSettings_(){
+  try{
+    const h = Number(window.dailyWorkHours || 7);
+    window.EXPECTED_DAY_SEC = Math.round(h * 3600);
+    window.EXPECTED_WEEK_SEC = 5 * window.EXPECTED_DAY_SEC;
+  }catch(e){
+    window.EXPECTED_DAY_SEC = 7 * 3600;
+    window.EXPECTED_WEEK_SEC = 5 * window.EXPECTED_DAY_SEC;
+  }
+}
+
 async function refreshAll() {
   if (!window.currentID) return;
   applyWorkHoursSettings_();
@@ -1407,6 +1457,7 @@ const last = mineWithTime
     showToast('خطأ في تحديث البيانات', 'error');
   }
 }
+ 
 async function submitLeaveForm(event) {
   event.preventDefault();
 
