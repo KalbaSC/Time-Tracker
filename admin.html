@@ -1613,7 +1613,7 @@ function openReportDetails(empId){
   const rowsHtml = details.length
     ? details.map(d => {
         const dayWorkedMin = parseHHMM(d.dayHHMM || "00:00");
-        const dayExpectedMin = dayWorkedMin > 0 ? REQUIRED_MIN_PER_DAY : 0;
+        const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
         const dayDiffMin = dayWorkedMin - dayExpectedMin;
 
         const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
