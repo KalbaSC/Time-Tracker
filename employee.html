@@ -1061,7 +1061,7 @@ async function login() {
   const msg = $("loginMsg");
   msg.style.display = "none";
   msg.textContent = "";
-  
+
   showLoader('loginLoader');
 
   if (!id || !pin) {
@@ -1083,49 +1083,29 @@ async function login() {
   }
 
   try {
-const url = `${SCRIPT_URL}?action=loginEmployee&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`;
-const data = await jsonp(url);
+    const url = `${SCRIPT_URL}?action=loginEmployee&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`;
+    const data = await jsonp(url);
 
-if (!data || !data.ok) {
-  hideLoader('loginLoader');
-  msg.className = "msg err";
-  msg.style.display = "block";
-  msg.textContent = "❌ البيانات غير صحيحة";
-  showToast(data?.error || 'بيانات الدخول غير صحيحة', 'error');
-  return;
-}
-
-window.currentID = id;
-window.employeeName = (data.name || 'موظف').trim();
-window.employeePin = pin;
-window.employeeDept = (data.department || '').trim();
-
-saveSession_();
-
-$('employeeName').textContent = window.employeeName;
-$('employeeId').textContent = id;
-$('leaveEmpId').value = id;
-
-const deptEl = $('employeeDept');
-if (deptEl) deptEl.textContent = window.employeeDept || '—';
-
-    if (!found) {
-      hideLoader('loginLoader');
+    if (!data || !data.ok) {
       msg.className = "msg err";
       msg.style.display = "block";
       msg.textContent = "❌ البيانات غير صحيحة";
-      showToast('بيانات الدخول غير صحيحة', 'error');
+      showToast(data?.error || 'بيانات الدخول غير صحيحة', 'error');
       return;
     }
 
     window.currentID = id;
-    window.employeeName = found[1]?.trim() || 'موظف';
+    window.employeeName = (data.name || 'موظف').trim();
     window.employeePin = pin;
- saveSession_();
+    window.employeeDept = (data.department || '').trim();
+    saveSession_();
 
     $('employeeName').textContent = window.employeeName;
     $('employeeId').textContent = id;
     $('leaveEmpId').value = id;
+
+    const deptEl = $('employeeDept');
+    if (deptEl) deptEl.textContent = window.employeeDept || '—';
 
     $("loginBox").style.display = "none";
     $("dash").style.display = "block";
@@ -1136,7 +1116,7 @@ if (deptEl) deptEl.textContent = window.employeeDept || '—';
     await refreshAll();
     checkLocationStatus();
     loadMyLeaves();
-    
+
     const today = ymd(new Date());
     const leaveFrom = $('#leaveFrom');
     const leaveTo = $('#leaveTo');
