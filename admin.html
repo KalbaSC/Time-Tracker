@@ -1455,12 +1455,6 @@ const modalEmpMustChange = $('modalEmpMustChange');
     return;
   }
 
- if (password.length < 6) {
-  modalEmpMsg.textContent = '❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-  modalEmpMsg.style.color = 'var(--danger)';
-  return;
-}
-
   if (!name || !pin || !department) {
     modalEmpMsg.textContent = '❌ جميع الحقول مطلوبة';
     modalEmpMsg.style.color = 'var(--danger)';
@@ -1483,7 +1477,7 @@ const modalEmpMustChange = $('modalEmpMustChange');
       mode: "no-cors",
       body: JSON.stringify({
         action: "addEmployee",
-        payload: { name, id, pin, department, password, mustChangePassword }
+        payload: { name, id, pin, department }
       })
     });
 
