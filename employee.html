@@ -1198,7 +1198,8 @@ function logout() {
 }
 
 async function getTodayRows() {
-  const csv = await (await fetch(PUNCH_CSV)).text();
+  const url = PUNCH_CSV + (PUNCH_CSV.includes("?") ? "&" : "?") + "_=" + Date.now();
+  const csv = await (await fetch(url, { cache: "no-store" })).text();
   const rows = parseCSVText(csv);
 
   const today = ymd(new Date());
@@ -1210,7 +1211,6 @@ async function getTodayRows() {
     )
     .sort((a, b) => timeToSec((a[4] || "").slice(0, 5)) - timeToSec((b[4] || "").slice(0, 5)));
 }
-
 
 function canPunch(type, todayRows) {
   if (todayRows.length === 0) {
@@ -1285,10 +1285,19 @@ async function punch(type) {
       })
     });
 
-await new Promise(r => setTimeout(r, 1500));
-const afterRows = await getTodayRows();
+let afterRows = [];
+let confirmed = false;
 
-if (afterRows.length <= beforeCount) {
+for (let i = 0; i < 4; i++) {
+  await new Promise(r => setTimeout(r, 900));
+  afterRows = await getTodayRows();
+  if (afterRows.length > beforeCount) {
+    confirmed = true;
+    break;
+  }
+}
+
+if (!confirmed) {
   hideLoader('punchLoader');
   msg.className = "msg err";
   msg.style.display = "block";
@@ -1296,7 +1305,6 @@ if (afterRows.length <= beforeCount) {
   showToast('لم يتم تأكيد تسجيل البصمة', 'error');
   return;
 }
-
     hideLoader('punchLoader');
 
     msg.className = "msg ok";
