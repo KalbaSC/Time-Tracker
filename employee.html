@@ -751,10 +751,6 @@ function restoreSession_() {
     $('employeeId').textContent = window.currentID;
     $('leaveEmpId').value = window.currentID;
 
-    $("loginBox").style.display = "none";
-    $("dash").style.display = "block";
-    $("uaeHeader").style.display = "flex";
-
     return true;
   } catch (e) {
     return false;
@@ -1043,7 +1039,12 @@ async function changeMyPin(){
   }
 
   try{
-    const url = `${SCRIPT_URL}?action=changePassword&id=${encodeURIComponent(window.currentID)}&oldPassword=${encodeURIComponent(oldPin)}&newPassword=${encodeURIComponent(newPin)}`;
+const url =
+  `${SCRIPT_URL}?action=changePassword` +
+  `&id=${encodeURIComponent(window.currentID)}` +
+  `&oldPassword=${encodeURIComponent(oldPin)}` +
+  `&newPassword=${encodeURIComponent(newPin)}` +
+  `&_=${Date.now()}`;
     const res = await jsonp(url);
 
     if (!res || !res.ok) throw new Error(res?.error || "فشل تغيير PIN");
@@ -1059,24 +1060,34 @@ async function openPinChangeModal(){
   const oldPin = prompt("أدخل PIN الحالي:");
   if (!oldPin) return;
 
-  const newPin = prompt("أدخل PIN جديد (4 أرقام):");
+  const newPin = prompt("أدخل رمز سري جديد (4 أرقام):");
   if (!newPin) return;
 
   if (!/^\d{4}$/.test(newPin)) {
-    showToast("PIN لازم يكون 4 أرقام", "warning");
+    showToast("الرمز السري يجب ان يكون 4 أرقام", "تحذير");
     return;
   }
 
-  const url = `${SCRIPT_URL}?action=changePassword&id=${encodeURIComponent(window.currentID)}&oldPassword=${encodeURIComponent(oldPin)}&newPassword=${encodeURIComponent(newPin)}`;
+const url =
+  `${SCRIPT_URL}?action=changePassword` +
+  `&id=${encodeURIComponent(window.currentID)}` +
+  `&oldPassword=${encodeURIComponent(oldPin)}` +
+  `&newPassword=${encodeURIComponent(newPin)}` +
+  `&_=${Date.now()}`;
   const res = await jsonp(url);
 
   if (!res || !res.ok) {
-    showToast(res?.error || "فشل تغيير PIN", "error");
+    showToast(res?.error || "فشل تغيير الرمز السري", "error");
     return;
   }
 
   window.employeePin = newPin;
-  showToast("✅ تم تغيير PIN بنجاح", "success");
+  showToast("✅ تم تغيير الرمز السري بنجاح", "success");
+  $("employeeName").textContent = window.employeeName || "موظف";
+  $("employeeId").textContent = window.currentID || "";
+  $("leaveEmpId").value = window.currentID || "";
+
+  saveSession_();
 
   $("loginBox").style.display = "none";
   $("dash").style.display = "block";
@@ -1305,21 +1316,6 @@ if (afterRows.length <= beforeCount) {
     showToast('فشل تحديد الموقع', 'error');
     checkLocationStatus();
   }
-}
-
-function jsonp(url){
-  return new Promise((resolve, reject)=>{
-    const cb = "cb_" + Date.now();
-    window[cb] = (data) => {
-      delete window[cb];
-      script.remove();
-      resolve(data);
-    };
-    const script = document.createElement("script");
-    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
 }
 
 async function fetchSettings(){
