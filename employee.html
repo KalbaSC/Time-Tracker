@@ -1027,76 +1027,90 @@ async function handleDayRollover_() {
 async function changeMyPin(){
   if (!window.currentID) return;
 
-  const oldPin = prompt("أدخل الـ PIN الحالي:");
-  if (!oldPin) return;
-
-  const newPin = prompt("أدخل PIN جديد (4 أرقام):");
-  if (!newPin) return;
-
-  if (!/^\d{4}$/.test(newPin)) {
-    showToast("PIN لازم يكون 4 أرقام", "warning");
-    return;
-  }
-
-  try{
-const url =
-  `${SCRIPT_URL}?action=changePassword` +
-  `&id=${encodeURIComponent(window.currentID)}` +
-  `&oldPassword=${encodeURIComponent(oldPin)}` +
-  `&newPassword=${encodeURIComponent(newPin)}` +
-  `&_=${Date.now()}`;
-    const res = await jsonp(url);
-
-    if (!res || !res.ok) throw new Error(res?.error || "فشل تغيير PIN");
-
-    window.employeePin = newPin;
-    showToast("✅ تم تغيير PIN بنجاح", "success");
-  }catch(e){
-    showToast("❌ " + e.message, "error");
-  }
-}
-
-async function openPinChangeModal(){
-  const oldPin = prompt("أدخل PIN الحالي:");
+  const oldPin = prompt("أدخل الـرمز الحالي:");
   if (!oldPin) return;
 
   const newPin = prompt("أدخل رمز سري جديد (4 أرقام):");
   if (!newPin) return;
 
   if (!/^\d{4}$/.test(newPin)) {
-    showToast("الرمز السري يجب ان يكون 4 أرقام", "تحذير");
+    showToast("الرمز السري يجب ان يكون 4 أرقام", "warning");
     return;
   }
 
-const url =
-  `${SCRIPT_URL}?action=changePassword` +
-  `&id=${encodeURIComponent(window.currentID)}` +
-  `&oldPassword=${encodeURIComponent(oldPin)}` +
-  `&newPassword=${encodeURIComponent(newPin)}` +
-  `&_=${Date.now()}`;
-  const res = await jsonp(url);
+  try {
+    const url =
+      `${SCRIPT_URL}?action=changePassword` +
+      `&id=${encodeURIComponent(window.currentID)}` +
+      `&oldPassword=${encodeURIComponent(oldPin)}` +
+      `&newPassword=${encodeURIComponent(newPin)}` +
+      `&_=${Date.now()}`;
 
-  if (!res || !res.ok) {
-    showToast(res?.error || "فشل تغيير الرمز السري", "error");
+    const res = await jsonp(url);
+    if (!res || !res.ok) throw new Error(res?.error || "فشل تغيير الرمز");
+
+    showToast("✅ تم تغيير الرمز بنجاح", "success");
+    forceLogoutAfterPinChange("✅ تم تغيير الرمز بنجاح. الرجاء تسجيل الدخول مرة أخرى باستخدام الرمز الجديد.");
+  } catch(e) {
+    showToast("❌ " + e.message, "error");
+  }
+}
+
+function forceLogoutAfterPinChange(message) {
+  localStorage.removeItem("employeeSession");
+
+  window.currentID = "";
+  window.employeeName = "";
+  window.employeeDept = "";
+  window.employeePin = "";
+
+  const msg = document.getElementById("loginMsg");
+  if (msg) {
+    msg.className = "msg ok";
+    msg.style.display = "block";
+    msg.textContent = message || "تم تغيير الرمز السري. الرجاء تسجيل الدخول مرة أخرى.";
+  }
+
+  const loginBox = document.getElementById("loginBox");
+  const dash = document.getElementById("dash");
+  const header = document.getElementById("uaeHeader");
+
+  if (dash) dash.style.display = "none";
+  if (header) header.style.display = "none";
+  if (loginBox) loginBox.style.display = "block";
+}
+  
+async function openPinChangeModal(){
+  const oldPin = prompt("أدخل الرمز الحالي:");
+  if (!oldPin) return;
+
+  const newPin = prompt("أدخل رمز سري جديد (4 أرقام):");
+  if (!newPin) return;
+
+  if (!/^\d{4}$/.test(newPin)) {
+    showToast("الرمز السري يجب ان يكون 4 أرقام", "warning");
     return;
   }
 
-  window.employeePin = newPin;
-  showToast("✅ تم تغيير الرمز السري بنجاح", "success");
-  $("employeeName").textContent = window.employeeName || "موظف";
-  $("employeeId").textContent = window.currentID || "";
-  $("leaveEmpId").value = window.currentID || "";
+  try {
+    const url =
+      `${SCRIPT_URL}?action=changePassword` +
+      `&id=${encodeURIComponent(window.currentID)}` +
+      `&oldPassword=${encodeURIComponent(oldPin)}` +
+      `&newPassword=${encodeURIComponent(newPin)}` +
+      `&_=${Date.now()}`;
 
-  saveSession_();
+    const res = await jsonp(url);
+    if (!res || !res.ok) {
+      showToast(res?.error || "فشل تغيير الرمز السري", "error");
+      return;
+    }
 
-  $("loginBox").style.display = "none";
-  $("dash").style.display = "block";
-  $("uaeHeader").style.display = "flex";
-
-  resetPunchUI();
-  await refreshAll();
-  checkLocationStatus();
-  loadMyLeaves();
+    showToast("✅ تم تغيير الرمز بنجاح", "success");
+    forceLogoutAfterPinChange("✅ تم تغيير الرمز بنجاح. الرجاء تسجيل الدخول مرة أخرى باستخدام الرمز الجديد.");
+  } catch (e) {
+    showToast("❌ " + e.message, "error");
+  }
 }
   
 async function login() {
@@ -1495,7 +1509,7 @@ async function submitLeaveForm(event) {
   const fromDate = new Date(from);
   const hoursDiff = (fromDate - now) / (1000 * 60 * 60);
   if (hoursDiff < 48) {
-    if (!confirm("تحذير: يجب تقديم طلب الإجازة قبل 48 ساعة على الأقل. هل تريد المتابعة؟")) {
+    if (!confirm("warning: يجب تقديم طلب الإجازة قبل 48 ساعة على الأقل. هل تريد المتابعة؟")) {
       return false;
     }
   }
