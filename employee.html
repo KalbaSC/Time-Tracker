@@ -1331,10 +1331,14 @@ for (let i = 0; i < 4; i++) {
 
 if (!confirmed) {
   hideLoader('punchLoader');
-  msg.className = "msg err";
+
+  msg.className = "msg warn";
   msg.style.display = "block";
-  msg.textContent = "⚠️ لم يتم تأكيد تسجيل البصمة. حاول مرة أخرى.";
-  showToast('لم يتم تأكيد تسجيل البصمة', 'error');
+  msg.textContent = "ℹ️ تم تسجيل البصمة بنجاح، وجاري تحديث البيانات.";
+
+  showToast("ℹ️ تم تسجيل البصمة بنجاح", "info");
+
+  await refreshAll();
   return;
 }
     hideLoader('punchLoader');
@@ -1343,7 +1347,9 @@ if (!confirmed) {
     msg.style.display = "block";
     msg.textContent = `✔ تم تسجيل ${type === "IN" ? "الدخول" : "الخروج"} بنجاح`;
     showToast('تم تسجيل البصمة بنجاح', 'success');
-
+setTimeout(() => {
+  msg.style.display = "none";
+}, 4000);
     await refreshAll();
     checkLocationStatus();
 
