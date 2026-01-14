@@ -1039,6 +1039,8 @@ async function changeMyPin(){
   }
 
   try {
+    showToast("⏳ جاري تغيير الرمز السري...", "info");
+
     const url =
       `${SCRIPT_URL}?action=changePassword` +
       `&id=${encodeURIComponent(window.currentID)}` +
@@ -1049,8 +1051,13 @@ async function changeMyPin(){
     const res = await jsonp(url);
     if (!res || !res.ok) throw new Error(res?.error || "فشل تغيير الرمز");
 
+    const pinInput = document.getElementById("pin");
+    if (pinInput) pinInput.value = "";
+
     showToast("✅ تم تغيير الرمز بنجاح", "success");
-    forceLogoutAfterPinChange("✅ تم تغيير الرمز بنجاح. الرجاء تسجيل الدخول مرة أخرى باستخدام الرمز الجديد.");
+    forceLogoutAfterPinChange(
+      "✅ تم تغيير الرمز بنجاح. الرجاء تسجيل الدخول مرة أخرى باستخدام الرمز الجديد."
+    );
   } catch(e) {
     showToast("❌ " + e.message, "error");
   }
@@ -1078,6 +1085,10 @@ function forceLogoutAfterPinChange(message) {
   if (dash) dash.style.display = "none";
   if (header) header.style.display = "none";
   if (loginBox) loginBox.style.display = "block";
+ setTimeout(() => {
+  const pin = document.getElementById("pin");
+  if (pin) pin.focus();
+}, 200);
 }
   
 async function openPinChangeModal(){
@@ -1093,6 +1104,8 @@ async function openPinChangeModal(){
   }
 
   try {
+    showToast("⏳ جاري تغيير الرمز السري...", "info");
+
     const url =
       `${SCRIPT_URL}?action=changePassword` +
       `&id=${encodeURIComponent(window.currentID)}` +
@@ -1106,8 +1119,13 @@ async function openPinChangeModal(){
       return;
     }
 
+    const pinInput = document.getElementById("pin");
+    if (pinInput) pinInput.value = "";
+
     showToast("✅ تم تغيير الرمز بنجاح", "success");
-    forceLogoutAfterPinChange("✅ تم تغيير الرمز بنجاح. الرجاء تسجيل الدخول مرة أخرى باستخدام الرمز الجديد.");
+    forceLogoutAfterPinChange(
+      "✅ تم تغيير الرمز بنجاح. الرجاء تسجيل الدخول مرة أخرى باستخدام الرمز الجديد."
+    );
   } catch (e) {
     showToast("❌ " + e.message, "error");
   }
