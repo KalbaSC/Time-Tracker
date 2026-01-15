@@ -1144,18 +1144,18 @@ function loadEmployees() {
               <td data-label="PIN">${pin}</td>
               <td data-label="القسم">${dept || "-"}</td>
               <td class="actions-cell" data-label="الإجراءات">
-                <button class="btn-yellow editRowBtn"
-                  data-id="${id}"
-                  data-name="${encodeURIComponent(name)}"
-                  data-pin="${pin}"
-                  data-dept="${encodeURIComponent(dept)}">
-                  data-jobtitle="${encodeURIComponent(emp.jobTitle || '')}"
-data-emptype="${encodeURIComponent(emp.empType || '')}"
-data-contractstart="${emp.contractStart || ''}"
-data-contractend="${emp.contractEnd || ''}"
-data-salary="${emp.salary || ''}"
-                  ✏️ تعديل
-                </button>
+<button class="btn-yellow editRowBtn"
+  data-id="${id}"
+  data-name="${encodeURIComponent(name)}"
+  data-pin="${pin}"
+  data-dept="${encodeURIComponent(dept)}"
+  data-jobtitle="${encodeURIComponent(emp.jobTitle || '')}"
+  data-emptype="${encodeURIComponent(emp.empType || '')}"
+  data-contractstart="${emp.contractStart || ''}"
+  data-contractend="${emp.contractEnd || ''}"
+  data-salary="${emp.salary || ''}">
+  ✏️ تعديل
+</button>
                 <button class="btn-danger delRowBtn" data-id="${id}">
                   🗑️ حذف
                 </button>
