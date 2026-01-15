@@ -512,6 +512,26 @@
     font-weight: 700;
     flex: 0 0 auto;
   }
+#empTableContainer table {
+  table-layout: fixed;
+  width: 100%;
+}
+#empTableContainer table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#empTableContainer th,
+#empTableContainer td {
+  padding: 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#empTableContainer td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
   .actions-cell { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .actions-cell button { width: 100%; margin: 0; }
