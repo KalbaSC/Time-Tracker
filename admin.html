@@ -904,6 +904,24 @@ body{
         <option value="الاستراتيجية">الاستراتيجية</option>
       </select>
 
+     <label>المسمى الوظيفي</label>
+<input id="editEmpJobTitle">
+
+<label>نوع الدوام</label>
+<select id="editEmpType">
+  <option value="كلي">كلي</option>
+  <option value="جزئي">جزئي</option>
+</select>
+
+<label>بداية العقد</label>
+<input type="date" id="editEmpContractStart">
+
+<label>نهاية العقد</label>
+<input type="date" id="editEmpContractEnd">
+
+<label>الراتب</label>
+<input id="editEmpSalary">
+
       <div class="flex" style="margin-top:10px;">
         <button class="btn-success" onclick="saveEmployeeEdit()">💾 حفظ</button>
         <button class="btn-danger" onclick="closeEditEmployee()">إلغاء</button>
@@ -954,6 +972,39 @@ body{
           </select>
         </div>
       </div>
+
+<div class="flex">
+  <div class="col">
+    <label>المسمى الوظيفي</label>
+    <input id="modalEmpJobTitle">
+  </div>
+
+  <div class="col">
+    <label>نوع الدوام</label>
+    <select id="modalEmpType">
+      <option value="">اختر</option>
+      <option value="كلي">كلي</option>
+      <option value="جزئي">جزئي</option>
+    </select>
+  </div>
+</div>
+
+<div class="flex">
+  <div class="col">
+    <label>بداية العقد</label>
+    <input type="date" id="modalEmpContractStart">
+  </div>
+
+  <div class="col">
+    <label>نهاية العقد</label>
+    <input type="date" id="modalEmpContractEnd">
+  </div>
+</div>
+
+<div class="col">
+  <label>الراتب</label>
+  <input id="modalEmpSalary">
+</div>
 
       <div class="loader" id="modalEmpLoader" style="display: none;"></div>
       <div id="modalEmpMsg" style="text-align: center; margin: 10px 0; color: var(--muted);"></div>
@@ -1098,6 +1149,11 @@ function loadEmployees() {
                   data-name="${encodeURIComponent(name)}"
                   data-pin="${pin}"
                   data-dept="${encodeURIComponent(dept)}">
+                  data-jobtitle="${encodeURIComponent(emp.jobTitle || '')}"
+data-emptype="${encodeURIComponent(emp.empType || '')}"
+data-contractstart="${emp.contractStart || ''}"
+data-contractend="${emp.contractEnd || ''}"
+data-salary="${emp.salary || ''}"
                   ✏️ تعديل
                 </button>
                 <button class="btn-danger delRowBtn" data-id="${id}">
@@ -1139,12 +1195,18 @@ function loadEmployees() {
 
         document.querySelectorAll('.editRowBtn').forEach(btn => {
           btn.onclick = () => {
-            openEditEmployee({
-              id: btn.dataset.id,
-              name: decodeURIComponent(btn.dataset.name || ""),
-              pin: btn.dataset.pin || "",
-              dept: decodeURIComponent(btn.dataset.dept || "")
-            });
+openEditEmployee({
+  id: btn.dataset.id,
+  name: decodeURIComponent(btn.dataset.name || ""),
+  pin: btn.dataset.pin || "",
+  dept: decodeURIComponent(btn.dataset.dept || ""),
+
+  jobTitle: decodeURIComponent(btn.dataset.jobtitle || ""),
+  empType: decodeURIComponent(btn.dataset.emptype || ""),
+  contractStart: btn.dataset.contractstart || "",
+  contractEnd: btn.dataset.contractend || "",
+  salary: btn.dataset.salary || ""
+});
           };
         });
 
@@ -1761,13 +1823,19 @@ function openReportDetails(empId){
 
 let editingEmployeeId = "";
 
-function openEditEmployee({ id, name, pin, dept }) {
-  editingEmployeeId = id;
+function openEditEmployee(emp) {
+  editingEmployeeId = emp.id;
 
-  $('editEmpName').value = name;
-  $('editEmpId').value = id;
-  $('editEmpPin').value = pin;
-  $('editEmpDept').value = dept;
+  $('editEmpName').value = emp.name;
+  $('editEmpId').value = emp.id;
+  $('editEmpPin').value = emp.pin;
+  $('editEmpDept').value = emp.dept;
+
+  $('editEmpJobTitle').value = emp.jobTitle || "";
+  $('editEmpType').value = emp.empType || "";
+  $('editEmpContractStart').value = emp.contractStart || "";
+  $('editEmpContractEnd').value = emp.contractEnd || "";
+  $('editEmpSalary').value = emp.salary || "";
 
   $('editEmployeeModal').style.display = "flex";
 }
