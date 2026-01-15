@@ -694,6 +694,11 @@ body{
             <th>الرقم</th>
             <th>PIN</th>
             <th>القسم</th>
+           <th>المسمى الوظيفي</th>
+<th>نوع الدوام</th>
+<th>بداية العقد</th>
+<th>نهاية العقد</th>
+<th>الراتب</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
@@ -1111,11 +1116,18 @@ function logout() {
 function validateEmployeeData(name, id, pin, dept) {
   if (name.length < 2) return "الاسم يجب أن يكون أكثر من حرفين";
   if (!/^\d+$/.test(id)) return "الرقم الوظيفي يجب أن يكون رقماً";
-  if (!/^\d{4}$/.test(pin)) return "PIN يجب أن يكون 4 أرقام";
+  if (!/^\d{4}$/.test(pin)) return "الرمز السري يجب أن يكون 4 أرقام";
   if (!dept) return "يرجى اختيار القسم";
   return null;
 }  
 
+function formatDateCell(v){
+  if (!v) return "";
+  const s = String(v);
+  if (s.includes("T")) return s.split("T")[0];
+  return s;
+}
+ 
 function loadEmployees() {
   showLoader('empLoader');
 
@@ -1143,6 +1155,11 @@ function loadEmployees() {
               <td data-label="الرقم">${id}</td>
               <td data-label="PIN">${pin}</td>
               <td data-label="القسم">${dept || "-"}</td>
+              <td data-label="المسمى الوظيفي">${emp.jobTitle || "—"}</td>
+<td data-label="نوع الدوام">${emp.empType || "—"}</td>
+<td data-label="بداية العقد">${formatDateCell(emp.contractStart) || "—"}</td>
+<td data-label="نهاية العقد">${formatDateCell(emp.contractEnd) || "—"}</td>
+<td data-label="الراتب">${emp.salary ? emp.salary : "—"}</td>
               <td class="actions-cell" data-label="الإجراءات">
 <button class="btn-yellow editRowBtn"
   data-id="${id}"
