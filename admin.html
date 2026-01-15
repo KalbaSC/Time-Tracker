@@ -1426,18 +1426,30 @@ const modalEmpName = $('modalEmpName');
 const modalEmpId = $('modalEmpId');
 const modalEmpPin = $('modalEmpPin');
 const modalEmpDept = $('modalEmpDept');
+const modalEmpJobTitle = $('modalEmpJobTitle');
+const modalEmpType = $('modalEmpType');
+const modalEmpContractStart = $('modalEmpContractStart');
+const modalEmpContractEnd = $('modalEmpContractEnd');
+const modalEmpSalary = $('modalEmpSalary');
 const modalEmpMsg = $('modalEmpMsg');
 const modalEmpLoader = $('modalEmpLoader');
   
-  if (!modalEmpName || !modalEmpId || !modalEmpPin || !modalEmpDept || !modalEmpMsg || !modalEmpLoader) {
-    showToast('❌ عناصر النموذج غير موجودة', 'error');
-    return;
-  }
+if (!modalEmpName || !modalEmpId || !modalEmpPin || !modalEmpDept ||
+    !modalEmpJobTitle || !modalEmpType || !modalEmpContractStart || !modalEmpContractEnd || !modalEmpSalary ||
+    !modalEmpMsg || !modalEmpLoader) {
+  showToast('❌ عناصر النموذج غير موجودة', 'error');
+  return;
+}
   
   const name = modalEmpName.value.trim();
   const id = modalEmpId.value.trim();
   const pin = modalEmpPin.value.trim();
   const department = modalEmpDept.value.trim();
+  const jobTitle = modalEmpJobTitle?.value.trim() || "";
+  const empType = modalEmpType?.value.trim() || "";
+  const contractStart = modalEmpContractStart?.value || "";
+  const contractEnd = modalEmpContractEnd?.value || "";
+  const salary = modalEmpSalary?.value.trim() || "";
 
   if (!id) {
     modalEmpMsg.textContent = '❌ الرقم الوظيفي مطلوب';
@@ -1466,8 +1478,18 @@ const modalEmpLoader = $('modalEmpLoader');
       method: "POST",
       mode: "no-cors",
       body: JSON.stringify({
-        action: "addEmployee",
-        payload: { name, id, pin, department }
+      action: "addEmployee",
+      payload: {
+        name,
+        id,
+        pin,
+       department,
+       jobTitle,
+       empType,
+       contractStart,
+       contractEnd,
+       salary
+      }
       })
     });
 
@@ -1759,6 +1781,11 @@ async function saveEmployeeEdit() {
   const name = $('editEmpName').value.trim();
   const pin = $('editEmpPin').value.trim();
   const department = $('editEmpDept').value.trim();
+  const jobTitle = $('editEmpJobTitle')?.value.trim() || "";
+  const empType = $('editEmpType')?.value.trim() || "";
+  const contractStart = $('editEmpContractStart')?.value || "";
+  const contractEnd = $('editEmpContractEnd')?.value || "";
+  const salary = $('editEmpSalary')?.value.trim() || "";
 
   const error = validateEmployeeData(name, editingEmployeeId, pin, department);
   if (error) {
@@ -1778,21 +1805,27 @@ async function saveEmployeeEdit() {
           id: editingEmployeeId,
           name,
           pin,
-          department
+          department,
+
+          jobTitle,
+          empType,
+          contractStart,
+          contractEnd,
+          salary
         }
       })
     });
 
     showToast('تم تحديث بيانات الموظف', 'success');
     closeEditEmployee();
-    loadEmployees(); 
+    loadEmployees();
   } catch (e) {
     showToast('خطأ في التحديث', 'error');
   } finally {
     hideLoader('empLoader');
   }
 }
-
+ 
 function downloadReportCsv(){
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
