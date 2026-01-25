@@ -1073,7 +1073,7 @@ $("empId").value = "";
 }
 
 function forceLogoutAfterPinChange(message) {
-  localStorage.removeItem("employeeSession");
+  localStorage.removeItem(SESSION_KEY);
 
   window.currentID = "";
   window.employeeName = "";
@@ -1267,115 +1267,67 @@ function canPunch(type, todayRows) {
 }
 
 async function punch(type) {
- if (punchBusy) return;
-punchBusy = true;
-setPunchButtonsDisabled(true);
-
   if (!window.currentID) {
-    showToast('يرجى تسجيل الدخول أولاً', 'error');
+    showToast("يرجى تسجيل الدخول أولاً", "error");
     return;
   }
 
+  if (punchBusy) return;
+  punchBusy = true;
+  setPunchButtonsDisabled(true);
+
   const msg = $("punchMsg");
   msg.style.display = "none";
-  showLoader('punchLoader');
+  showLoader("punchLoader");
 
   try {
-    const todayRows = await getTodayRows();
-    const seq = canPunch(type, todayRows);
-
-    if (!seq.ok) {
-      hideLoader('punchLoader');
-      msg.className = "msg err";
+    const allowed = await canPunch(type);
+    if (!allowed.ok) {
+      msg.textContent = allowed.msg || "لا يمكن تسجيل البصمة";
+      msg.className = "msg warning"; 
       msg.style.display = "block";
-      msg.textContent = seq.error;
-      showToast(seq.error, 'error');
       return;
     }
 
-    const pos = await getPositionSmart();
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
+    const loc = await getLocation();
 
-    const geo = insideClub(lat, lng);
-    if (!geo.ok) {
-      hideLoader('punchLoader');
-      msg.className = "msg err";
-      msg.style.display = "block";
-      msg.textContent = "❌ يجب أن تكون داخل موقع النادي لإتمام البصمة.";
-      showToast('يجب أن تكون داخل النادي', 'error');
-      checkLocationStatus();
-      return;
-    }
-
-    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-    const beforeCount = todayRows.length;
-
-    await fetch(SCRIPT_URL, {
+    await fetch(API_URL, {
       method: "POST",
       mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "punch",
         payload: {
           id: window.currentID,
-          name: window.employeeName,
-          type,
-          lat,
-          lng,
-          zone: "داخل نادي كلباء",
-          dist: Math.round(geo.dist),
-          mapsLink
+          name: window.currentName,
+          type: type,
+          lat: loc.lat,
+          lng: loc.lng,
+          zone: loc.zone,
+          dist: loc.dist,
+          mapsLink: loc.mapsLink
         }
       })
     });
 
-let afterRows = [];
-let confirmed = false;
-
-for (let i = 0; i < 4; i++) {
-  await new Promise(r => setTimeout(r, 900));
-  afterRows = await getTodayRows();
-  if (afterRows.length > beforeCount) {
-    confirmed = true;
-    break;
-  }
-}
-
-if (!confirmed) {
-  hideLoader('punchLoader');
-
-  msg.className = "msg warn";
-  msg.style.display = "block";
-  msg.textContent = "ℹ️ تم تسجيل البصمة بنجاح، وجاري تحديث البيانات.";
-
-  showToast("ℹ️ تم تسجيل البصمة بنجاح", "info");
-
-  await refreshAll();
-  return;
-}
-    hideLoader('punchLoader');
-
-    msg.className = "msg ok";
+    msg.textContent = "تم تسجيل البصمة بنجاح";
+    msg.className = "msg success";
     msg.style.display = "block";
-    msg.textContent = `✔ تم تسجيل ${type === "IN" ? "الدخول" : "الخروج"} بنجاح`;
-    showToast('تم تسجيل البصمة بنجاح', 'success');
-setTimeout(() => {
-  msg.style.display = "none";
-}, 4000);
-    await refreshAll();
-    checkLocationStatus();
 
   } catch (err) {
     console.error(err);
-    hideLoader('punchLoader');
-    msg.className = "msg err";
+    msg.textContent = "حدث خطأ، حاول مرة أخرى";
+    msg.className = "msg error";
     msg.style.display = "block";
-    msg.textContent = "❌ فشل تحديد الموقع";
-    showToast('فشل تحديد الموقع', 'error');
+  } finally {
+    hideLoader("punchLoader");
+    punchBusy = false;
+
+    setPunchButtonsDisabled(true);
     checkLocationStatus();
   }
 }
-
+ 
 async function fetchSettings(){
   const data = await jsonp(SCRIPT_URL + "?action=getSettings");
   return data; 
