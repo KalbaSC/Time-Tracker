@@ -1266,81 +1266,67 @@ function canPunch(type, todayRows) {
   return { ok: true };
 }
 
-async function punch(type) {
-  if (!window.currentID) {
-    showToast("يرجى تسجيل الدخول أولاً", "error");
-    return;
-  }
+function savePunch(p) {
+  const sh = SpreadsheetApp.getActive().getSheetByName("Punches");
+  if (!sh) return error("Punches sheet not found");
 
-  if (punchBusy) return;
-  punchBusy = true;
-  setPunchButtonsDisabled(true);
-
-  const msg = $("punchMsg");
-  msg.style.display = "none";
-  showLoader("punchLoader");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
 
   try {
-    const todayRows = await getTodayRows();
+    const tz = "Asia/Dubai";
+    const now = new Date();
+    const date = Utilities.formatDate(now, tz, "yyyy-MM-dd");
+    const time = Utilities.formatDate(now, tz, "HH:mm:ss");
 
-    const allowed = canPunch(type, todayRows);
-    if (!allowed.ok) {
-      msg.textContent = allowed.error || "لا يمكن تسجيل البصمة";
-      msg.className = "msg warning";
-      msg.style.display = "block";
-      return;
-    }
+    const id = String(p.id || "").trim();
+    const type = String(p.type || "").trim().toUpperCase();
+    if (!id || (type !== "IN" && type !== "OUT")) return error("Invalid punch data");
 
-    const pos = await getPositionSmart();
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
+    const lastRow = sh.getLastRow();
+    if (lastRow >= 2) {
+      const values = sh.getRange(2, 1, lastRow - 1, 5).getValues(); 
+      let lastType = "";
+      let lastTime = "";
 
-    const geo = insideClub(lat, lng);
-    if (!geo.ok) {
-      msg.textContent = `❌ خارج نادي كلباء (${Math.round(geo.dist)}م)`;
-      msg.className = "msg warning";
-      msg.style.display = "block";
-      return;
-    }
-
-    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "punch",
-        payload: {
-          id: window.currentID,
-          name: window.employeeName || "",
-          type: type,
-          lat: lat,
-          lng: lng,
-          zone: "داخل نادي كلباء",
-          dist: geo.dist,
-          mapsLink: mapsLink
+      for (let i = values.length - 1; i >= 0; i--) {
+        const rDate = String(values[i][0] || "").trim();
+        const rId   = String(values[i][1] || "").trim();
+        if (rDate === date && rId === id) {
+          lastType = String(values[i][3] || "").trim().toUpperCase();
+          lastTime = String(values[i][4] || "").trim();
+          break;
         }
-      })
-    });
+      }
 
-    msg.textContent = "✅ تم تسجيل البصمة بنجاح";
-    msg.className = "msg ok";
-    msg.style.display = "block";
+      if (lastType === type) return error("Duplicate punch blocked");
 
-    await refreshAll();
+      if (!lastType && type === "OUT") return error("Cannot punch OUT before IN");
 
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "❌ حدث خطأ، حاول مرة أخرى";
-    msg.className = "msg err";
-    msg.style.display = "block";
+      if (lastTime) {
+        const lastSec = timeToSec_(lastTime);
+        const nowSec = timeToSec_(time);
+        if (Math.abs(nowSec - lastSec) < 20) return error("Too fast, try again");
+      }
+    }
+
+    sh.appendRow([
+      date,
+      id,
+      p.name || "",
+      type,
+      time,
+      p.lat || "",
+      p.lng || "",
+      p.zone || "",
+      p.dist || "",
+      p.mapsLink || ""
+    ]);
+
+    return ok({ saved: true });
+
   } finally {
-    hideLoader("punchLoader");
-    punchBusy = false;
-
-    setPunchButtonsDisabled(true);
-    checkLocationStatus();
+    lock.releaseLock();
   }
 }
  
