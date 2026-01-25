@@ -1303,7 +1303,7 @@ async function punch(type) {
       return;
     }
 
-    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
 
 const res = await jsonp(
   SCRIPT_URL +
@@ -1327,7 +1327,6 @@ msg.className = "msg ok";
 msg.style.display = "block";
 
 await refreshAll();
-
 
   } catch (err) {
     console.error(err);
