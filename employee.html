@@ -1281,17 +1281,31 @@ async function punch(type) {
   showLoader("punchLoader");
 
   try {
-    const allowed = await canPunch(type);
+    const todayRows = await getTodayRows();
+    const allowed = canPunch(type, todayRows);
+
     if (!allowed.ok) {
-      msg.textContent = allowed.msg || "لا يمكن تسجيل البصمة";
-      msg.className = "msg warning"; 
+      msg.textContent = allowed.error || "لا يمكن تسجيل البصمة";
+      msg.className = "msg warning";
       msg.style.display = "block";
       return;
     }
 
-    const loc = await getLocation();
+    const pos = await getPositionSmart();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const geo = insideClub(lat, lng);
 
-    await fetch(API_URL, {
+    if (!geo.ok) {
+      msg.textContent = `❌ خارج نادي كلباء (${Math.round(geo.dist)}م)`;
+      msg.className = "msg warning";
+      msg.style.display = "block";
+      return;
+    }
+
+    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+
+    await fetch(SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
@@ -1299,30 +1313,31 @@ async function punch(type) {
         action: "punch",
         payload: {
           id: window.currentID,
-          name: window.currentName,
+          name: window.employeeName || "",
           type: type,
-          lat: loc.lat,
-          lng: loc.lng,
-          zone: loc.zone,
-          dist: loc.dist,
-          mapsLink: loc.mapsLink
+          lat: lat,
+          lng: lng,
+          zone: `داخل نادي كلباء`,
+          dist: geo.dist,
+          mapsLink: mapsLink
         }
       })
     });
 
-    msg.textContent = "تم تسجيل البصمة بنجاح";
-    msg.className = "msg success";
+    msg.textContent = "✅ تم تسجيل البصمة بنجاح";
+    msg.className = "msg ok";
     msg.style.display = "block";
+
+    await refreshAll();
 
   } catch (err) {
     console.error(err);
-    msg.textContent = "حدث خطأ، حاول مرة أخرى";
-    msg.className = "msg error";
+    msg.textContent = "❌ حدث خطأ، حاول مرة أخرى";
+    msg.className = "msg err";
     msg.style.display = "block";
   } finally {
     hideLoader("punchLoader");
     punchBusy = false;
-
     setPunchButtonsDisabled(true);
     checkLocationStatus();
   }
