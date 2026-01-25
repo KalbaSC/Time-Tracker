@@ -717,6 +717,15 @@ async function applySettings(){
   }
 }
 
+let punchBusy = false;
+
+function setPunchButtonsDisabled(disabled) {
+  const inBtn = document.getElementById('punchInBtn');
+  const outBtn = document.getElementById('punchOutBtn');
+  if (inBtn) inBtn.disabled = disabled;
+  if (outBtn) outBtn.disabled = disabled;
+}
+ 
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
 
@@ -1258,6 +1267,10 @@ function canPunch(type, todayRows) {
 }
 
 async function punch(type) {
+ if (punchBusy) return;
+punchBusy = true;
+setPunchButtonsDisabled(true);
+
   if (!window.currentID) {
     showToast('يرجى تسجيل الدخول أولاً', 'error');
     return;
