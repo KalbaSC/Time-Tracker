@@ -1305,30 +1305,29 @@ async function punch(type) {
 
     const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
 
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "punch",
-        payload: {
-          id: window.currentID,
-          name: window.employeeName || "",
-          type: type,
-          lat: lat,
-          lng: lng,
-          zone: "داخل نادي كلباء",
-          dist: geo.dist,
-          mapsLink: mapsLink
-        }
-      })
-    });
+const res = await jsonp(
+  SCRIPT_URL +
+    "?action=punch" +
+    "&id=" + encodeURIComponent(window.currentID) +
+    "&name=" + encodeURIComponent(window.employeeName || "") +
+    "&type=" + encodeURIComponent(type) +
+    "&lat=" + encodeURIComponent(lat) +
+    "&lng=" + encodeURIComponent(lng) +
+    "&zone=" + encodeURIComponent("داخل نادي كلباء") +
+    "&dist=" + encodeURIComponent(geo.dist) +
+    "&mapsLink=" + encodeURIComponent(mapsLink)
+);
 
-    msg.textContent = "✅ تم تسجيل البصمة بنجاح";
-    msg.className = "msg ok";
-    msg.style.display = "block";
+if (!res || res.ok !== true) {
+  throw new Error(res?.error || "فشل تسجيل البصمة");
+}
 
-    await refreshAll();
+msg.textContent = "✅ تم تسجيل البصمة بنجاح";
+msg.className = "msg ok";
+msg.style.display = "block";
+
+await refreshAll();
+
 
   } catch (err) {
     console.error(err);
@@ -1735,6 +1734,7 @@ function initialize() {
 }
 
 window.onload = initialize;
+ window.punch = punch;
 </script>
 </body>
 </html>
