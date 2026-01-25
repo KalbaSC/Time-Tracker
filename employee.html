@@ -1282,8 +1282,8 @@ async function punch(type) {
 
   try {
     const todayRows = await getTodayRows();
-    const allowed = canPunch(type, todayRows);
 
+    const allowed = canPunch(type, todayRows);
     if (!allowed.ok) {
       msg.textContent = allowed.error || "لا يمكن تسجيل البصمة";
       msg.className = "msg warning";
@@ -1294,8 +1294,8 @@ async function punch(type) {
     const pos = await getPositionSmart();
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
-    const geo = insideClub(lat, lng);
 
+    const geo = insideClub(lat, lng);
     if (!geo.ok) {
       msg.textContent = `❌ خارج نادي كلباء (${Math.round(geo.dist)}م)`;
       msg.className = "msg warning";
@@ -1317,7 +1317,7 @@ async function punch(type) {
           type: type,
           lat: lat,
           lng: lng,
-          zone: `داخل نادي كلباء`,
+          zone: "داخل نادي كلباء",
           dist: geo.dist,
           mapsLink: mapsLink
         }
@@ -1338,6 +1338,7 @@ async function punch(type) {
   } finally {
     hideLoader("punchLoader");
     punchBusy = false;
+
     setPunchButtonsDisabled(true);
     checkLocationStatus();
   }
