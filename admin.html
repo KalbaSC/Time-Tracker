@@ -1741,7 +1741,16 @@ async function loadReport() {
 
     lastReport = data;
 
-    $('repRange').innerHTML = `<span class="ltr">${data.range || "—"}</span>`;
+    if (data.range && data.range.includes("→")) {
+    const parts = data.range.split("→").map(p => p.trim());
+    if (parts.length === 2) {
+        $('repRange').textContent = `${parts[1]} ← ${parts[0]}`;
+    } else {
+        $('repRange').textContent = data.range;
+    }
+} else {
+    $('repRange').textContent = data.range || "—";
+}
 
     const rows = data.rows || [];
     if (!rows.length) {
@@ -1815,7 +1824,14 @@ function openReportDetails(empId){
   .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
   const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
-  const meta  = `الفترة: ${lastReport.range || ''}`;
+  let rangeDisplay = lastReport.range || '';
+if (rangeDisplay && rangeDisplay.includes("→")) {
+    const parts = rangeDisplay.split("→").map(p => p.trim());
+    if (parts.length === 2) {
+        rangeDisplay = `${parts[1]} ← ${parts[0]}`;
+    }
+}
+const meta  = `الفترة: ${rangeDisplay}`;
 
   const rowsHtml = details.length
     ? details.map(d => {
