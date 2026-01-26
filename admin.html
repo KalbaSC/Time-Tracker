@@ -1741,17 +1741,8 @@ async function loadReport() {
 
     lastReport = data;
 
-    if (data.range && data.range.includes("←")) {
-    const parts = data.range.split("←").map(p => p.trim());
-    if (parts.length === 2) {
-        $('repRange').textContent = `${parts[1]} ← ${parts[0]}`;
-    } else {
-        $('repRange').textContent = data.range;
-    }
-} else {
     $('repRange').textContent = data.range || "—";
-}
-
+   
     const rows = data.rows || [];
     if (!rows.length) {
       $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
@@ -1824,14 +1815,7 @@ function openReportDetails(empId){
   .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
   const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
-  let rangeDisplay = lastReport.range || '';
-if (rangeDisplay && rangeDisplay.includes("←")) {
-    const parts = rangeDisplay.split("←").map(p => p.trim());
-    if (parts.length === 2) {
-        rangeDisplay = `${parts[1]} ← ${parts[0]}`;
-    }
-}
-const meta  = `الفترة: ${rangeDisplay}`;
+  const meta  = `الفترة: ${lastReport.range || ''}`;
 
   const rowsHtml = details.length
     ? details.map(d => {
