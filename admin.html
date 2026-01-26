@@ -641,8 +641,6 @@ body{
   background: rgba(0,0,0,0.8) !important;
   z-index: 999999 !important;
 } 
-
-.ltr { direction: ltr; unicode-bidi: isolate; }
    
   </style>
 </head>
@@ -1741,7 +1739,7 @@ async function loadReport() {
 
     lastReport = data;
 
-    $('repRange').textContent = data.range || "—";
+    $('repRange').textContent = data.range || "←";
    
     const rows = data.rows || [];
     if (!rows.length) {
@@ -1765,7 +1763,7 @@ async function loadReport() {
           <td>${r.id}</td>
           <td>${r.name || ''}</td>
           <td>${r.department || '-'}</td>
-          <td class="ltr">${data.range || ''}</td>
+          <td>${data.range || ''}</td>
           <td>${r.totalHHMM || '00:00'}</td>
           <td>${workedDays}</td>
           <td>${fmtMin(expectedMin)}</td>
