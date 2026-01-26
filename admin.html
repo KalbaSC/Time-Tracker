@@ -1741,8 +1741,8 @@ async function loadReport() {
 
     lastReport = data;
 
-    if (data.range && data.range.includes("→")) {
-    const parts = data.range.split("→").map(p => p.trim());
+    if (data.range && data.range.includes("←")) {
+    const parts = data.range.split("←").map(p => p.trim());
     if (parts.length === 2) {
         $('repRange').textContent = `${parts[1]} ← ${parts[0]}`;
     } else {
@@ -1825,8 +1825,8 @@ function openReportDetails(empId){
 
   const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
   let rangeDisplay = lastReport.range || '';
-if (rangeDisplay && rangeDisplay.includes("→")) {
-    const parts = rangeDisplay.split("→").map(p => p.trim());
+if (rangeDisplay && rangeDisplay.includes("←")) {
+    const parts = rangeDisplay.split("←").map(p => p.trim());
     if (parts.length === 2) {
         rangeDisplay = `${parts[1]} ← ${parts[0]}`;
     }
@@ -1865,7 +1865,7 @@ const meta  = `الفترة: ${rangeDisplay}`;
         <thead>
           <tr>
             <th>التاريخ</th>
-            <th>الأزواج (دخول → خروج)</th>
+            <th>الأزواج (دخول ← خروج)</th>
             <th>مجموع اليوم</th>
             <th>المتوقع</th>
             <th>نقص/زيادة</th>
