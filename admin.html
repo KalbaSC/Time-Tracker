@@ -640,8 +640,7 @@ body{
 .modal-overlay {
   background: rgba(0,0,0,0.8) !important;
   z-index: 999999 !important;
-} 
-   
+}    
   </style>
 </head>
 <body>
@@ -825,9 +824,7 @@ body{
 
   <div class="loader" id="repLoader"></div>
 
-  <div class="badge">
-  النطاق: <span id="repRange">—</span>
-</div>
+  <div class="badge">النطاق: <span id="repRange">—</span></div>
 
   <div style="overflow-x:auto;">
     <table>
@@ -1739,8 +1736,8 @@ async function loadReport() {
 
     lastReport = data;
 
-    $('repRange').textContent = data.range || "←";
-   
+    $('repRange').textContent = data.range || "—";
+
     const rows = data.rows || [];
     if (!rows.length) {
       $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
@@ -1847,7 +1844,7 @@ function openReportDetails(empId){
         <thead>
           <tr>
             <th>التاريخ</th>
-            <th>الأزواج (دخول ← خروج)</th>
+            <th>الأزواج (دخول → خروج)</th>
             <th>مجموع اليوم</th>
             <th>المتوقع</th>
             <th>نقص/زيادة</th>
