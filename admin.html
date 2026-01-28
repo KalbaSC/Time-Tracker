@@ -2055,39 +2055,36 @@ function downloadReportCsv(){
 
 function downloadDetailedReportCsv() {
   if (!lastReport || !lastReport.details || Object.keys(lastReport.details).length === 0) {
-    showToast('لا توجد بيانات تفصيلية للتنزيل', 'warning');
+    showToast('No detailed data available for download', 'warning');
     return;
   }
 
   showLoader('repLoader');
-  const toastId = 'detailed-csv-toast';
   
-  showToast('جاري إنشاء التقرير التفصيلي...', 'info', 5000);
-
   try {
     const period = $('repPeriod').value;
     const startDate = $('repStart').value || $('repDate').value;
     const endDate = $('repEnd').value || $('repDate').value;
-    const dept = $('repDept').value || 'الكل';
-    const empFilter = $('repEmpId').value ? ` (رقم الموظف: ${$('repEmpId').value})` : '';
+    const dept = $('repDept').value || 'All';
+    const empFilter = $('repEmpId').value ? ` (Employee ID: ${$('repEmpId').value})` : '';
     
     const headerLines = [
-      'تقرير الحضور التفصيلي - نظام إدارة الموارد البشرية',
-      'الإمارات العربية المتحدة',
-      '==============================================',
-      `الفترة: ${getPeriodLabel(period, startDate, endDate)}`,
-      `القسم: ${dept}${empFilter}`,
-      `عدد الموظفين: ${Object.keys(lastReport.details).length}`,
-      `تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-AE', { 
+      'DETAILED ATTENDANCE REPORT - HR MANAGEMENT SYSTEM',
+      'United Arab Emirates',
+      '==================================================',
+      `Period: ${getEnglishPeriodLabel(period, startDate, endDate)}`,
+      `Department: ${dept}${empFilter}`,
+      `Total Employees: ${Object.keys(lastReport.details).length}`,
+      `Report Date: ${new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric',
         weekday: 'long'
       })}`,
-      `وقت الإنشاء: ${new Date().toLocaleTimeString('ar-AE')}`,
-      '==============================================',
+      `Report Time: ${new Date().toLocaleTimeString('en-US')}`,
+      '==================================================',
       '',
-      'ملاحظة: النسبة المئوية تحسب بناءً على ساعات العمل المطلوبة يومياً',
+      'Note: Percentage is calculated based on daily required working hours',
       '',
       ''
     ];
@@ -2099,18 +2096,18 @@ function downloadDetailedReportCsv() {
     let totalExpectedHours = 0;
 
     allRows.push([
-      "الرقم الوظيفي",
-      "اسم الموظف",
-      "القسم",
-      "التاريخ",
-      "اليوم",
-      "أوقات الدخول/الخروج",
-      "مجموع ساعات اليوم",
-      "الساعات المطلوبة",
-      "النقص/الزيادة",
-      "النسبة المئوية (%)",
-      "الحالة",
-      "ملاحظات"
+      "Employee ID",
+      "Employee Name",
+      "Department",
+      "Date",
+      "Day",
+      "Clock In/Out Times",
+      "Daily Total Hours",
+      "Required Hours",
+      "Shortage/Extra",
+      "Percentage (%)",
+      "Status",
+      "Notes"
     ]);
 
     Object.entries(lastReport.details).forEach(([empId, empDetails], empIndex) => {
@@ -2123,9 +2120,9 @@ function downloadDetailedReportCsv() {
       
       allRows.push([]);
       allRows.push([
-        `=== الموظف ${empIndex + 1}: ${empName} (رقم: ${empId}) ===`,
-        'القسم: ' + empDept,
-        'إجمالي الساعات في الفترة: ' + empTotalHHMM,
+        `=== Employee ${empIndex + 1}: ${empName} (ID: ${empId}) ===`,
+        'Department: ' + empDept,
+        'Total Hours in Period: ' + empTotalHHMM,
         '',
         '',
         '',
@@ -2143,8 +2140,8 @@ function downloadDetailedReportCsv() {
 
       sortedDetails.forEach((detail, dayIndex) => {
         const date = new Date(detail.date);
-        const dayName = getArabicDayName(date.getDay());
-        const formattedDate = formatSimpleDate(date);
+        const dayName = getEnglishDayName(date.getDay());
+        const formattedDate = formatEnglishDate(date);
         
         const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
         const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
@@ -2154,7 +2151,7 @@ function downloadDetailedReportCsv() {
         const dayExpectedHours = (dayExpectedMin / 60).toFixed(2);
         const dayDiffHours = Math.abs(dayDiffMin / 60).toFixed(2);
         
-        const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+        const dayDiffLabel = dayDiffMin >= 0 ? "Extra" : "Shortage";
         const dayDiffText = `${dayDiffLabel} ${fmtMin(Math.abs(dayDiffMin))}`;
         
         let percentage = 0;
@@ -2164,13 +2161,13 @@ function downloadDetailedReportCsv() {
         
         let status = '—';
         if (dayWorkedMin === 0) {
-          status = 'غياب';
+          status = 'Absent';
         } else if (percentage >= 100) {
-          status = 'مكتمل';
+          status = 'Complete';
         } else if (percentage >= 80) {
-          status = 'مقبول';
+          status = 'Acceptable';
         } else {
-          status = 'غير مكتمل';
+          status = 'Incomplete';
         }
         
         totalDays++;
@@ -2181,8 +2178,8 @@ function downloadDetailedReportCsv() {
           empId,
           empName,
           empDept,
-          formattedDate,
-          dayName,
+          formattedDate, 
+          dayName, 
           detail.pairsText || '—',
           detail.dayHHMM || '00:00',
           fmtMin(dayExpectedMin),
@@ -2193,10 +2190,11 @@ function downloadDetailedReportCsv() {
         ]);
       });
 
+      // Employee total - English
       const empTotalMin = parseHHMM(empTotalHHMM);
       const empExpectedMin = sortedDetails.filter(d => parseHHMM(d.dayHHMM) > 0).length * requiredMinPerDay_();
       const empDiffMin = empTotalMin - empExpectedMin;
-      const empDiffLabel = empDiffMin >= 0 ? "زيادة" : "نقص";
+      const empDiffLabel = empDiffMin >= 0 ? "Extra" : "Shortage";
       const empDiffText = `${empDiffLabel} ${fmtMin(Math.abs(empDiffMin))}`;
       const empPercentage = empExpectedMin > 0 ? (empTotalMin / empExpectedMin * 100).toFixed(1) : '0.0';
 
@@ -2206,7 +2204,7 @@ function downloadDetailedReportCsv() {
         '',
         '',
         '',
-        'إجمالي الموظف:',
+        'Employee Total:',
         empTotalHHMM,
         fmtMin(empExpectedMin),
         empDiffText,
@@ -2221,7 +2219,7 @@ function downloadDetailedReportCsv() {
     const percentage = totalExpectedHours > 0 ? (totalWorkedHours / totalExpectedHours * 100).toFixed(1) : '0.0';
     
     allRows.push([
-      '==============================================',
+      '==================================================',
       '',
       '',
       '',
@@ -2236,12 +2234,12 @@ function downloadDetailedReportCsv() {
     ]);
     
     allRows.push([
-      'ملخص التقرير',
-      `عدد الموظفين: ${totalEmployees}`,
-      `عدد الأيام: ${totalDays}`,
-      `إجمالي الساعات العمل: ${totalWorkedHours.toFixed(2)}`,
-      `إجمالي الساعات المطلوبة: ${totalExpectedHours.toFixed(2)}`,
-      `النسبة العامة: ${percentage}%`,
+      'REPORT SUMMARY',
+      `Total Employees: ${totalEmployees}`,
+      `Total Days: ${totalDays}`,
+      `Total Worked Hours: ${totalWorkedHours.toFixed(2)}`,
+      `Total Required Hours: ${totalExpectedHours.toFixed(2)}`,
+      `Overall Percentage: ${percentage}%`,
       '',
       '',
       '',
@@ -2267,8 +2265,8 @@ function downloadDetailedReportCsv() {
     });
     
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const deptName = dept === 'الكل' ? 'جميع الأقسام' : dept;
-    const fileName = `التقرير_التفصيلي_${deptName}_${period}_${timestamp}.csv`;
+    const deptName = dept === 'All' ? 'All_Departments' : dept.replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `Attendance_Report_${deptName}_${period}_${timestamp}.csv`;
     
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2283,22 +2281,60 @@ function downloadDetailedReportCsv() {
       URL.revokeObjectURL(url);
     }, 100);
 
-    showToast(`✅ تم إنشاء التقرير التفصيلي بنجاح: ${totalEmployees} موظف، ${totalDays} يوم`, 'success');
+    showToast(`✅ Detailed report created successfully: ${totalEmployees} employees, ${totalDays} days`, 'success');
     
-    console.log('📊 تفاصيل التقرير:', {
-      موظفين: totalEmployees,
-      أيام: totalDays,
-      ساعات_عمل: totalWorkedHours.toFixed(2),
-      ساعات_مطلوبة: totalExpectedHours.toFixed(2),
-      نسبة: percentage + '%'
+    console.log('📊 Report Details:', {
+      employees: totalEmployees,
+      days: totalDays,
+      worked_hours: totalWorkedHours.toFixed(2),
+      required_hours: totalExpectedHours.toFixed(2),
+      percentage: percentage + '%'
     });
 
   } catch (error) {
-    console.error('❌ خطأ في إنشاء التقرير التفصيلي:', error);
-    showToast('❌ حدث خطأ في إنشاء التقرير التفصيلي', 'error');
+    console.error('❌ Error creating detailed report:', error);
+    showToast('❌ Error creating detailed report', 'error');
   } finally {
     hideLoader('repLoader');
   }
+}
+
+function getEnglishPeriodLabel(period, start, end) {
+  const labels = {
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    range: 'Custom Range'
+  };
+  
+  let label = labels[period] || period;
+  
+  if (period === 'range' && start && end) {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    label += ` (${formatEnglishDate(startDate)} to ${formatEnglishDate(endDate)})`;
+  } else if (start) {
+    label += ` (${formatEnglishDate(new Date(start))})`;
+  }
+  
+  return label;
+}
+
+function getEnglishDayName(dayIndex) {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[dayIndex] || '';
+}
+
+function formatEnglishDate(date) {
+  if (!date || isNaN(date)) return '—';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = days[date.getDay()];
+  
+  return `${year}-${month}-${day} (${dayName})`;
 }
 
 function getPeriodLabel(period, start, end) {
@@ -2407,7 +2443,7 @@ function safeFileName(text){
 
 function downloadReportXLSX() {
   if (!lastReport || !lastReport.rows) {
-    showToast('لا توجد بيانات بعد', 'warning');
+    showToast('No data available', 'warning');
     return;
   }
 
@@ -2415,13 +2451,13 @@ function downloadReportXLSX() {
   
   try {
     const summaryData = [
-      ['تقرير الحضور الملخص', '', '', '', '', '', ''],
-      ['نظام إدارة الموارد البشرية - الإمارات العربية المتحدة', '', '', '', '', '', ''],
-      ['تاريخ الإنشاء:', new Date().toLocaleDateString('ar-AE'), '', '', '', '', ''],
-      ['الفترة:', lastReport.range || '—', '', '', '', '', ''],
-      ['عدد الموظفين:', lastReport.rows.length, '', '', '', '', ''],
+      ['ATTENDANCE SUMMARY REPORT', '', '', '', '', '', ''],
+      ['HR Management System - United Arab Emirates', '', '', '', '', '', ''],
+      ['Creation Date:', new Date().toLocaleDateString('en-US'), '', '', '', '', ''],
+      ['Period:', lastReport.range || '—', '', '', '', '', ''],
+      ['Total Employees:', lastReport.rows.length, '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
-      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'إجمالي الساعات', 'عدد الأيام', 'الساعات المطلوبة', 'النقص/الزيادة']
+      ['Employee ID', 'Employee Name', 'Department', 'Total Hours', 'Days Worked', 'Required Hours', 'Shortage/Extra']
     ];
 
     lastReport.rows.forEach(r => {
@@ -2429,7 +2465,7 @@ function downloadReportXLSX() {
       const workedMin = parseHHMM(r.totalHHMM || "00:00");
       const expectedMin = workedDays * requiredMinPerDay_();
       const diffMin = workedMin - expectedMin;
-      const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+      const diffLabel = diffMin >= 0 ? "Extra" : "Shortage";
       const diffText = diffLabel + " " + fmtMin(diffMin);
 
       summaryData.push([
@@ -2444,9 +2480,9 @@ function downloadReportXLSX() {
     });
 
     const detailsData = [
-      ['التقرير التفصيلي للحضور'],
+      ['DETAILED ATTENDANCE REPORT'],
       [''],
-      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'التاريخ', 'اليوم', 'أوقات الدخول/الخروج', 'ساعات اليوم', 'المطلوب', 'النقص/الزيادة', 'النسبة %', 'الحالة']
+      ['Employee ID', 'Employee Name', 'Department', 'Date', 'Day', 'Clock In/Out Times', 'Daily Hours', 'Required', 'Shortage/Extra', 'Percentage %', 'Status']
     ];
 
     if (lastReport.details) {
@@ -2461,19 +2497,19 @@ function downloadReportXLSX() {
 
         sortedDetails.forEach(detail => {
           const date = new Date(detail.date);
-          const dayName = getArabicDayName(date.getDay());
+          const dayName = getEnglishDayName(date.getDay());
           const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
           const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
           const dayDiffMin = dayWorkedMin - dayExpectedMin;
-          const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+          const dayDiffLabel = dayDiffMin >= 0 ? "Extra" : "Shortage";
           const dayDiffText = `${dayDiffLabel} ${fmtMin(Math.abs(dayDiffMin))}`;
           const percentage = dayExpectedMin > 0 ? ((dayWorkedMin / dayExpectedMin) * 100).toFixed(1) : '0.0';
           
           let status = '—';
-          if (dayWorkedMin === 0) status = 'غياب';
-          else if (percentage >= 100) status = 'مكتمل';
-          else if (percentage >= 80) status = 'مقبول';
-          else status = 'غير مكتمل';
+          if (dayWorkedMin === 0) status = 'Absent';
+          else if (percentage >= 100) status = 'Complete';
+          else if (percentage >= 80) status = 'Acceptable';
+          else status = 'Incomplete';
 
           detailsData.push([
             empId,
@@ -2502,7 +2538,7 @@ function downloadReportXLSX() {
       { wch: 15 }, { wch: 25 }, { wch: 20 }, 
       { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }
     ];
-    XLSX.utils.book_append_sheet(wb, wsSummary, "ملخص");
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
     const wsDetails = XLSX.utils.aoa_to_sheet(detailsData);
     wsDetails["!rtl"] = true;
@@ -2512,18 +2548,18 @@ function downloadReportXLSX() {
       { wch: 12 }, { wch: 12 }, { wch: 15 }, 
       { wch: 10 }, { wch: 12 }
     ];
-    XLSX.utils.book_append_sheet(wb, wsDetails, "تفاصيل");
+    XLSX.utils.book_append_sheet(wb, wsDetails, "Details");
 
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const dept = safeFileName($('repDept')?.value || 'الكل');
-    const fileName = `تقرير_الحضور_${dept}_${timestamp}.xlsx`;
+    const dept = safeFileName($('repDept')?.value || 'All');
+    const fileName = `Attendance_Report_${dept}_${timestamp}.xlsx`;
 
     XLSX.writeFile(wb, fileName);
     
-    showToast('تم تنزيل التقرير بصيغة Excel', 'success');
+    showToast('Report downloaded in Excel format', 'success');
   } catch (error) {
-    console.error('❌ خطأ في إنشاء Excel:', error);
-    showToast('❌ حدث خطأ في إنشاء ملف Excel', 'error');
+    console.error('❌ Error creating Excel file:', error);
+    showToast('❌ Error creating Excel file', 'error');
   } finally {
     hideLoader('repLoader');
   }
