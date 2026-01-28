@@ -817,10 +817,11 @@ body{
   </div>
   </div>
 
-  <div class="flex">
-    <button class="btn-yellow" id="btnLoadReport" style="flex:1">🔍 عرض التقرير</button>
-    <button class="btn-yellow" id="btnDlReportCsv" style="flex:0.5">⬇️ تنزيل CSV</button>
-  </div>
+<div class="flex">
+  <button class="btn-yellow" id="btnLoadReport" style="flex:1">🔍 عرض التقرير</button>
+  <button class="btn-yellow" id="btnDlReportCsv" style="flex:0.5">⬇️ CSV عام</button>
+  <button class="btn-yellow" id="btnDlDetailedCsv" style="flex:0.5">📊 CSV تفصيلي</button>
+</div>
 
   <div class="loader" id="repLoader"></div>
 
@@ -1959,6 +1960,101 @@ function downloadReportCsv(){
   downloadCSV(lines.join("\r\n"), `report_${(lastReport.period||'period')}.csv`);
 }
 
+function downloadDetailedReportCsv() {
+  if (!lastReport || !lastReport.details) {
+    showToast('لا توجد بيانات تفصيلية للتنزيل', 'warning');
+    return;
+  }
+
+  const period = $('repPeriod').value;
+  const startDate = $('repStart').value || $('repDate').value;
+  const endDate = $('repEnd').value || $('repDate').value;
+  const dept = $('repDept').value || 'الكل';
+  
+  const headerLines = [
+    `التقرير التفصيلي للحضور`,
+    `الفترة: ${period}`,
+    `من: ${startDate || '—'} إلى: ${endDate || '—'}`,
+    `القسم: ${dept}`,
+    `تاريخ التصدير: ${new Date().toLocaleDateString('ar-AE')}`,
+    ''
+  ];
+
+  const rows = [];
+  
+  rows.push([
+    "الرقم الوظيفي",
+    "اسم الموظف",
+    "القسم",
+    "التاريخ",
+    "أوقات الحضور (دخول → خروج)",
+    "مجموع ساعات اليوم",
+    "المتوقع",
+    "نقص/زيادة",
+    "ملاحظات"
+  ]);
+
+  Object.entries(lastReport.details).forEach(([empId, empDetails]) => {
+    const empRow = lastReport.rows?.find(r => String(r.id) === empId);
+    const empName = empRow?.name || '—';
+    const empDept = empRow?.department || '—';
+    
+    const sortedDetails = empDetails.slice().sort((a, b) => 
+      String(a.date).localeCompare(String(b.date))
+    );
+    
+    sortedDetails.forEach(detail => {
+      const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
+      const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
+      const dayDiffMin = dayWorkedMin - dayExpectedMin;
+      const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+      const dayDiffText = dayDiffLabel + " " + fmtMin(dayDiffMin);
+      const expectedText = fmtMin(dayExpectedMin);
+      
+      rows.push([
+        empId,
+        empName,
+        empDept,
+        dateOnly(detail.date),
+        detail.pairsText || '—',
+        detail.dayHHMM || '00:00',
+        expectedText,
+        dayDiffText,
+        detail.notes || ''
+      ]);
+    });
+    
+    rows.push([]);
+  });
+
+  const csvContent = headerLines.join('\n') + 
+    rows.map(row => 
+      row.map(cell => {
+        const cellStr = String(cell || '');
+        if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"')) {
+          return '"' + cellStr.replace(/"/g, '""') + '"';
+        }
+        return cellStr;
+      }).join(',')
+    ).join('\n');
+
+  const BOM = "\ufeff";
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  
+  const fileName = `التقرير_التفصيلي_${period}_${startDate || ''}_${endDate || ''}.csv`;
+  a.href = url;
+  a.download = fileName;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  showToast('تم تنزيل التقرير التفصيلي بنجاح', 'success');
+}
+ 
 if ($('btnLoadReport')) {
   $('btnLoadReport').onclick = loadReport;
 }
@@ -1967,6 +2063,10 @@ if ($('btnDlReportCsv')) {
   $('btnDlReportCsv').onclick = downloadReportXLSX;
 }
 
+if ($('btnDlDetailedCsv')) {
+  $('btnDlDetailedCsv').onclick = downloadDetailedReportCsv;
+}
+ 
 function openReportModal(html){
   const overlay = document.getElementById("reportModal");
   const body = document.getElementById("modalBody");
