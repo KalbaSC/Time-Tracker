@@ -2485,89 +2485,98 @@ function downloadDetailedReportCsv() {
   showLoader('repLoader');
   
   try {
+    // معلومات التقرير
     const period = $('repPeriod').value;
     const startDate = $('repStart').value || $('repDate').value;
     const endDate = $('repEnd').value || $('repDate').value;
     const dept = $('repDept').value || 'الكل';
-    const empFilter = $('repEmpId').value ? ` (رقم الموظف: ${$('repEmpId').value})` : '';
     
+    // ====== الشعار والرأس ======
     const headerLines = [
-      'تقرير الحضور التفصيلي - نظام إدارة الموارد البشرية',
-      'الإمارات العربية المتحدة',
-      '==============================================',
-      `الفترة: ${getPeriodLabelArabic(period, startDate, endDate)}`,
-      `القسم: ${dept}${empFilter}`,
-      `عدد الموظفين: ${Object.keys(lastReport.details).length}`,
-      `تاريخ الإنشاء: ${new Date().toLocaleDateString('en-US')}`, 
-      `وقت الإنشاء: ${new Date().toLocaleTimeString('en-US')}`,
-      '==============================================',
+      '******************************************************',
+      '*                تقرير الحضور التفصيلي               *',
+      '*      نظام إدارة الموارد البشرية - الإمارات        *',
+      '******************************************************',
       '',
-      'ملاحظة: النسبة المئوية تحسب بناءً على ساعات العمل المطلوبة يومياً',
+      `التاريخ: ${new Date().toLocaleDateString('en-US')}`,
+      `الوقت: ${new Date().toLocaleTimeString('en-US')}`,
+      `الفترة: ${getPeriodLabelArabic(period, startDate, endDate)}`,
+      `القسم: ${dept}`,
+      '======================================================',
       '',
       ''
     ];
 
-    const allRows = [];
-    let totalEmployees = 0;
-    let totalDays = 0;
-    let totalWorkedHours = 0;
-    let totalExpectedHours = 0;
-
-    allRows.push([
+    // ====== أعمدة ثابتة العرض ======
+    // نحدد عرض كل عمدة (عدد الأحرف)
+    const columnWidths = [12, 20, 15, 15, 10, 30, 12, 12, 15, 10, 10, 15];
+    const columnHeaders = [
       "الرقم الوظيفي",
-      "اسم الموظف",
+      "اسم الموظف", 
       "القسم",
       "التاريخ",
       "اليوم",
       "أوقات الدخول/الخروج",
-      "مجموع ساعات اليوم",
-      "الساعات المطلوبة",
+      "مجموع اليوم",
+      "المطلوب",
       "النقص/الزيادة",
-      "النسبة المئوية (%)",
+      "النسبة %",
       "الحالة",
       "ملاحظات"
-    ]);
+    ];
 
+    // دالة لضبط عرض الأعمدة
+    function padCell(content, width) {
+      const str = String(content || '');
+      const arabicLength = (str.match(/[ء-ي]/g) || []).length; // حساب الأحرف العربية
+      const otherLength = str.length - arabicLength;
+      const totalLength = arabicLength * 1.5 + otherLength; // الأحرف العربية تأخذ مساحة أكبر
+      
+      if (totalLength >= width) {
+        return str.substring(0, Math.floor(width/1.5));
+      }
+      
+      const padding = ' '.repeat(Math.max(0, width - totalLength));
+      return str + padding;
+    }
+
+    // إضافة رأس الأعمدة مع تباعد
+    const headerRow = columnHeaders.map((header, index) => 
+      padCell(header, columnWidths[index])
+    ).join(' | ');
+    
+    headerLines.push(headerRow);
+    headerLines.push('-'.repeat(headerRow.length));
+
+    const allRows = [];
+    let totalEmployees = 0;
+    let totalDays = 0;
+
+    // معالجة البيانات مع التباعد
     Object.entries(lastReport.details).forEach(([empId, empDetails], empIndex) => {
       const empRow = lastReport.rows?.find(r => String(r.id) === empId);
       const empName = empRow?.name || '—';
       const empDept = empRow?.department || '—';
-      const empTotalHHMM = empRow?.totalHHMM || '00:00';
       
       totalEmployees++;
       
-      allRows.push([]);
-      allRows.push([
-        `=== الموظف ${empIndex + 1}: ${empName} (رقم: ${empId}) ===`,
-        'القسم: ' + empDept,
-        'إجمالي الساعات في الفترة: ' + empTotalHHMM,
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        ''
-      ]);
+      // عنوان الموظف
+      headerLines.push('');
+      headerLines.push(`==== الموظف ${empIndex + 1}: ${empName} (${empId}) ====`);
+      headerLines.push(`القسم: ${empDept}`);
+      headerLines.push('');
 
       const sortedDetails = empDetails.slice().sort((a, b) => 
         new Date(a.date) - new Date(b.date)
       );
 
-      sortedDetails.forEach((detail, dayIndex) => {
+      sortedDetails.forEach(detail => {
         const date = new Date(detail.date);
         const dayName = getEnglishDayName(date.getDay());
-        const formattedDate = formatEnglishDateOnly(date);
         
         const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
         const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
         const dayDiffMin = dayWorkedMin - dayExpectedMin;
-        
-        const dayWorkedHours = (dayWorkedMin / 60).toFixed(2);
-        const dayExpectedHours = (dayExpectedMin / 60).toFixed(2);
-        const dayDiffHours = Math.abs(dayDiffMin / 60).toFixed(2);
         
         const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
         const dayDiffText = `${dayDiffLabel} ${fmtMin(Math.abs(dayDiffMin))}`;
@@ -2589,14 +2598,13 @@ function downloadDetailedReportCsv() {
         }
         
         totalDays++;
-        totalWorkedHours += parseFloat(dayWorkedHours);
-        totalExpectedHours += parseFloat(dayExpectedHours);
 
-        allRows.push([
+        // إنشاء صف مع تباعد الأعمدة
+        const rowData = [
           empId,
           empName,
           empDept,
-          formattedDate,
+          formatEnglishDateOnly(date),
           dayName,
           detail.pairsText || '—',
           detail.dayHHMM || '00:00',
@@ -2605,76 +2613,30 @@ function downloadDetailedReportCsv() {
           percentage.toFixed(1) + '%',
           status,
           detail.notes || ''
-        ]);
+        ];
+
+        const formattedRow = rowData.map((cell, index) => 
+          padCell(cell, columnWidths[index])
+        ).join(' | ');
+        
+        headerLines.push(formattedRow);
       });
-
-      const empTotalMin = parseHHMM(empTotalHHMM);
-      const empExpectedMin = sortedDetails.filter(d => parseHHMM(d.dayHHMM) > 0).length * requiredMinPerDay_();
-      const empDiffMin = empTotalMin - empExpectedMin;
-      const empDiffLabel = empDiffMin >= 0 ? "زيادة" : "نقص";
-      const empDiffText = `${empDiffLabel} ${fmtMin(Math.abs(empDiffMin))}`;
-      const empPercentage = empExpectedMin > 0 ? (empTotalMin / empExpectedMin * 100).toFixed(1) : '0.0';
-
-      allRows.push([
-        '',
-        '',
-        '',
-        '',
-        '',
-        'إجمالي الموظف:',
-        empTotalHHMM,
-        fmtMin(empExpectedMin),
-        empDiffText,
-        empPercentage + '%',
-        '',
-        ''
-      ]);
       
-      allRows.push([]);
+      headerLines.push('');
     });
 
-    const percentage = totalExpectedHours > 0 ? (totalWorkedHours / totalExpectedHours * 100).toFixed(1) : '0.0';
-    
-    allRows.push([
-      '==============================================',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ''
-    ]);
-    
-    allRows.push([
-      'ملخص التقرير',
-      `عدد الموظفين: ${totalEmployees}`,
-      `عدد الأيام: ${totalDays}`,
-      `إجمالي الساعات العمل: ${totalWorkedHours.toFixed(2)}`,
-      `إجمالي الساعات المطلوبة: ${totalExpectedHours.toFixed(2)}`,
-      `النسبة العامة: ${percentage}%`,
-      '',
-      '',
-      '',
-      '',
-      '',
-      ''
-    ]);
+    // ملخص التقرير
+    headerLines.push('');
+    headerLines.push('='.repeat(50));
+    headerLines.push('ملخص التقرير');
+    headerLines.push(`عدد الموظفين: ${totalEmployees}`);
+    headerLines.push(`عدد الأيام: ${totalDays}`);
+    headerLines.push('='.repeat(50));
+    headerLines.push('نظام إدارة الموارد البشرية © 2024');
+    headerLines.push('الإمارات العربية المتحدة');
 
-    const csvContent = headerLines.join('\n') + 
-      allRows.map(row => 
-        row.map(cell => {
-          const cellStr = String(cell || '');
-          if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"') || cellStr.includes(';')) {
-            return '"' + cellStr.replace(/"/g, '""') + '"';
-          }
-          return cellStr;
-        }).join(',')
-      ).join('\n');
+    // تحويل إلى CSV (نحافظ على التباعد)
+    const csvContent = headerLines.join('\n');
 
     const BOM = "\ufeff";
     const blob = new Blob([BOM + csvContent], { 
@@ -2682,8 +2644,8 @@ function downloadDetailedReportCsv() {
     });
     
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const deptName = dept === 'الكل' ? 'جميع الأقسام' : dept;
-    const fileName = `التقرير_التفصيلي_${deptName}_${period}_${timestamp}.csv`;
+    const deptName = dept === 'الكل' ? 'جميع_الأقسام' : dept.replace(/ /g, '_');
+    const fileName = `تقرير_الحضور_${deptName}_${timestamp}.csv`;
     
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2698,19 +2660,11 @@ function downloadDetailedReportCsv() {
       URL.revokeObjectURL(url);
     }, 100);
 
-    showToast(`✅ تم إنشاء التقرير التفصيلي بنجاح: ${totalEmployees} موظف، ${totalDays} يوم`, 'success');
-    
-    console.log('📊 تفاصيل التقرير:', {
-      موظفين: totalEmployees,
-      أيام: totalDays,
-      ساعات_عمل: totalWorkedHours.toFixed(2),
-      ساعات_مطلوبة: totalExpectedHours.toFixed(2),
-      نسبة: percentage + '%'
-    });
+    showToast(`✅ تم إنشاء التقرير: ${totalEmployees} موظف`, 'success');
 
   } catch (error) {
-    console.error('❌ خطأ في إنشاء التقرير التفصيلي:', error);
-    showToast('❌ حدث خطأ في إنشاء التقرير التفصيلي', 'error');
+    console.error('❌ خطأ في إنشاء التقرير:', error);
+    showToast('❌ حدث خطأ في إنشاء التقرير', 'error');
   } finally {
     hideLoader('repLoader');
   }
@@ -2905,16 +2859,25 @@ function downloadReportXLSX() {
   showLoader('repLoader');
   
   try {
+    // ====== إنشاء شعار وتخطيط للملف ======
     const summaryData = [
-      ['تقرير الحضور الملخص', '', '', '', '', '', ''],
-      ['نظام إدارة الموارد البشرية - الإمارات العربية المتحدة', '', '', '', '', '', ''],
-      ['تاريخ الإنشاء:', new Date().toLocaleDateString('en-US'), '', '', '', '', ''], // التاريخ بالإنجليزية
-      ['الفترة:', lastReport.range || '—', '', '', '', '', ''],
-      ['عدد الموظفين:', lastReport.rows.length, '', '', '', '', ''],
-      ['', '', '', '', '', '', ''],
-      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'إجمالي الساعات', 'عدد الأيام', 'الساعات المطلوبة', 'النقص/الزيادة']
+      // الصف 1-3: الشعار والرأس
+      ['*************************************************************'],
+      ['*                 نظام إدارة الموارد البشرية               *'],
+      ['*                الإمارات العربية المتحدة                  *'],
+      ['*************************************************************'],
+      [],
+      // معلومات التقرير
+      [`التقرير:`, 'تقرير الحضور التفصيلي'],
+      [`التاريخ:`, new Date().toLocaleDateString('en-US')],
+      [`الفترة:`, lastReport.range || '—'],
+      [`عدد الموظفين:`, lastReport.rows.length],
+      [],
+      // رأس الجدول
+      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'إجمالي الساعات', 'عدد الأيام', 'الساعات المطلوبة', 'النقص/الزيادة', 'النسبة %']
     ];
 
+    // إضافة بيانات الموظفين
     lastReport.rows.forEach(r => {
       const workedDays = Number(r.presentDays || 0);
       const workedMin = parseHHMM(r.totalHHMM || "00:00");
@@ -2922,6 +2885,7 @@ function downloadReportXLSX() {
       const diffMin = workedMin - expectedMin;
       const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
       const diffText = diffLabel + " " + fmtMin(diffMin);
+      const percentage = expectedMin > 0 ? ((workedMin / expectedMin) * 100).toFixed(1) : '0.0';
 
       summaryData.push([
         r.id,
@@ -2930,14 +2894,23 @@ function downloadReportXLSX() {
         r.totalHHMM || "00:00",
         workedDays,
         fmtMin(expectedMin),
-        diffText
+        diffText,
+        percentage + '%'
       ]);
     });
 
+    // ====== إنشاء ورقة التفاصيل مع شعار ======
     const detailsData = [
-      ['التقرير التفصيلي للحضور'],
-      [''],
-      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'التاريخ', 'اليوم', 'أوقات الدخول/الخروج', 'ساعات اليوم', 'المطلوب', 'النقص/الزيادة', 'النسبة %', 'الحالة']
+      ['*************************************************************'],
+      ['*                 التقرير التفصيلي للحضور                   *'],
+      ['*                نظام إدارة الموارد البشرية               *'],
+      ['*************************************************************'],
+      [],
+      [`تاريخ الإنشاء: ${new Date().toLocaleDateString('en-US')}`],
+      [`الفترة: ${lastReport.range || '—'}`],
+      [],
+      // رأس الجدول
+      ['الرقم', 'اسم الموظف', 'القسم', 'التاريخ', 'اليوم', 'أوقات الدخول/الخروج', 'ساعات اليوم', 'المطلوب', 'النقص/الزيادة', 'النسبة %', 'الحالة']
     ];
 
     if (lastReport.details) {
@@ -2946,13 +2919,18 @@ function downloadReportXLSX() {
         const empName = empRow?.name || '—';
         const empDept = empRow?.department || '—';
 
+        // عنوان الموظف
+        detailsData.push([]);
+        detailsData.push([`=== الموظف: ${empName} (${empId}) ===`, 'القسم: ' + empDept]);
+        detailsData.push([]);
+
         const sortedDetails = empDetails.slice().sort((a, b) =>
           new Date(a.date) - new Date(b.date)
         );
 
         sortedDetails.forEach(detail => {
           const date = new Date(detail.date);
-          const dayName = getEnglishDayName(date.getDay()); // اسم اليوم بالإنجليزية
+          const dayName = getEnglishDayName(date.getDay());
           const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
           const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
           const dayDiffMin = dayWorkedMin - dayExpectedMin;
@@ -2970,8 +2948,8 @@ function downloadReportXLSX() {
             empId,
             empName,
             empDept,
-            date.toISOString().split('T')[0] + ` (${getEnglishDayShort(date.getDay())})`, 
-            dayName, 
+            date.toISOString().split('T')[0] + ` (${getEnglishDayShort(date.getDay())})`,
+            dayName,
             detail.pairsText || '—',
             detail.dayHHMM || '00:00',
             fmtMin(dayExpectedMin),
@@ -2980,31 +2958,71 @@ function downloadReportXLSX() {
             status
           ]);
         });
-        
-        detailsData.push([]);
       });
     }
 
+    // ====== إنشاء ملف Excel مع أعمدة ثابتة ======
     const wb = XLSX.utils.book_new();
     
+    // ورقة الملخص
     const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
     wsSummary["!rtl"] = true;
+    
+    // تحديد عرض الأعمدة
     wsSummary["!cols"] = [
-      { wch: 15 }, { wch: 25 }, { wch: 20 }, 
-      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }
+      { wch: 12 },  // الرقم الوظيفي
+      { wch: 20 },  // اسم الموظف
+      { wch: 15 },  // القسم
+      { wch: 12 },  // إجمالي الساعات
+      { wch: 10 },  // عدد الأيام
+      { wch: 12 },  // الساعات المطلوبة
+      { wch: 15 },  // النقص/الزيادة
+      { wch: 10 }   // النسبة %
     ];
+    
+    // دمج خلايا الشعار
+    wsSummary["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 7 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 7 } }
+    ];
+    
     XLSX.utils.book_append_sheet(wb, wsSummary, "ملخص");
 
+    // ورقة التفاصيل
     const wsDetails = XLSX.utils.aoa_to_sheet(detailsData);
     wsDetails["!rtl"] = true;
+    
+    // تحديد عرض أعمدة التفاصيل
     wsDetails["!cols"] = [
-      { wch: 15 }, { wch: 25 }, { wch: 20 }, 
-      { wch: 12 }, { wch: 10 }, { wch: 30 }, 
-      { wch: 12 }, { wch: 12 }, { wch: 15 }, 
-      { wch: 10 }, { wch: 12 }
+      { wch: 8 },   // الرقم
+      { wch: 20 },  // اسم الموظف
+      { wch: 15 },  // القسم
+      { wch: 15 },  // التاريخ
+      { wch: 10 },  // اليوم
+      { wch: 25 },  // أوقات الدخول/الخروج
+      { wch: 12 },  // ساعات اليوم
+      { wch: 10 },  // المطلوب
+      { wch: 15 },  // النقص/الزيادة
+      { wch: 10 },  // النسبة %
+      { wch: 10 }   // الحالة
     ];
+    
+    // دمج خلايا الشعار في ورقة التفاصيل
+    wsDetails["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 10 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 10 } }
+    ];
+    
     XLSX.utils.book_append_sheet(wb, wsDetails, "تفاصيل");
 
+    // ====== إضافة تنسيقات للألوان ======
+    // ملاحظة: مكتبة xlsx.js محدودة في التنسيقات العربية،
+    // ولكن يمكن إضافة ألوان خلفية بسيطة
+    
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const dept = safeFileName($('repDept')?.value || 'الكل');
     const fileName = `تقرير_الحضور_${dept}_${timestamp}.xlsx`;
@@ -3033,6 +3051,83 @@ if ($('btnDlXlsx')) {
   $('btnDlXlsx').onclick = downloadReportXLSX;
 }
 
+function downloadFormattedCSV() {
+  if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
+
+  // إنشاء محتوى CSV مع تنسيق
+  let csvContent = "";
+  
+  // الشعار
+  csvContent += "**************************************************\n";
+  csvContent += "*      نظام إدارة الموارد البشرية - الإمارات    *\n";
+  csvContent += "*           تقرير الحضور الملخص                 *\n";
+  csvContent += "**************************************************\n\n";
+  
+  // معلومات التقرير
+  csvContent += `تاريخ التقرير: ${new Date().toLocaleDateString('en-US')}\n`;
+  csvContent += `الفترة: ${lastReport.range || '—'}\n`;
+  csvContent += `عدد الموظفين: ${lastReport.rows.length}\n\n`;
+  
+  // خط فاصل
+  csvContent += "=".repeat(80) + "\n\n";
+  
+  // رأس الجدول مع تباعد
+  const headers = ["الرقم الوظيفي", "اسم الموظف", "القسم", "إجمالي الساعات", "الأيام", "النقص/الزيادة"];
+  const widths = [15, 25, 20, 15, 10, 20];
+  
+  function formatRow(cells) {
+    return cells.map((cell, i) => {
+      const cellStr = String(cell || '');
+      const arabicChars = (cellStr.match(/[ء-ي]/g) || []).length;
+      const totalWidth = Math.max(cellStr.length + arabicChars * 0.5, widths[i]);
+      return cellStr.padEnd(totalWidth, ' ');
+    }).join('  ');
+  }
+  
+  csvContent += formatRow(headers) + "\n";
+  csvContent += "-".repeat(80) + "\n";
+  
+  // البيانات
+  lastReport.rows.forEach(r => {
+    const workedDays = Number(r.presentDays || 0);
+    const workedMin = parseHHMM(r.totalHHMM || "00:00");
+    const expectedMin = workedDays * requiredMinPerDay_();
+    const diffMin = workedMin - expectedMin;
+    const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+    const diffText = diffLabel + " " + fmtMin(diffMin);
+    
+    const row = [
+      r.id,
+      r.name,
+      r.department || "",
+      r.totalHHMM || "00:00",
+      workedDays,
+      diffText
+    ];
+    
+    csvContent += formatRow(row) + "\n";
+  });
+  
+  // تذييل
+  csvContent += "\n" + "=".repeat(80) + "\n";
+  csvContent += "نظام إدارة الموارد البشرية © 2024\n";
+  csvContent += "الإمارات العربية المتحدة\n";
+  
+  // تنزيل الملف
+  const BOM = "\ufeff";
+  const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `تقرير_الحضور_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  
+  showToast('تم تنزيل التقرير بصيغة CSV', 'success');
+}
+ 
 async function saveSettings() {
   const settings = {
     annualLeaveDays: $('annualLeaveDays').value,
