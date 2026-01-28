@@ -1882,7 +1882,8 @@ function dateOnly(v){
     const y = d.getFullYear();
     const m = String(d.getMonth()+1).padStart(2,"0");
     const day = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
+    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+    return `${y}-${m}-${day} (${dayName})`;
   }
   return String(v).split(" ")[0];
 }
@@ -2143,7 +2144,7 @@ function downloadDetailedReportCsv() {
       sortedDetails.forEach((detail, dayIndex) => {
         const date = new Date(detail.date);
         const dayName = getArabicDayName(date.getDay());
-        const formattedDate = formatArabicDate(date);
+        const formattedDate = formatSimpleDate(date);
         
         const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
         const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
@@ -2311,9 +2312,9 @@ function getPeriodLabel(period, start, end) {
   let label = labels[period] || period;
   
   if (period === 'range' && start && end) {
-    label += ` (${formatArabicDate(new Date(start))} إلى ${formatArabicDate(new Date(end))})`;
+    label += ` (${formatSimpleDate(new Date(start))} إلى ${formatSimpleDate(new Date(end))})`;
   } else if (start) {
-    label += ` (${formatArabicDate(new Date(start))})`;
+    label += ` (${formatSimpleDate(new Date(start))})`;
   }
   
   return label;
@@ -2324,21 +2325,16 @@ function getArabicDayName(dayIndex) {
   return days[dayIndex] || '';
 }
 
-function formatArabicDate(date) {
+function formatSimpleDate(date) {
   if (!date || isNaN(date)) return '—';
   
-  const options = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    calendar: 'islamic-umalqura'
-  };
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = days[date.getDay()];
   
-  try {
-    return date.toLocaleDateString('ar-SA', options);
-  } catch (e) {
-    return date.toISOString().split('T')[0];
-  }
+  return `${year}-${month}-${day} (${dayName})`;
 }
  
 if ($('btnLoadReport')) {
