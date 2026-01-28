@@ -964,6 +964,17 @@ body{
     white-space: nowrap;
   }
 } 
+
+.btn-green{
+  background:#19b37a;
+  color:#fff;
+  border:none;
+  padding:12px 24px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.btn-green:hover{ filter:brightness(1.05); }   
   </style>
 </head>
 <body>
@@ -1019,6 +1030,9 @@ body{
       <button class="btn-yellow add-employee-btn" onclick="console.log('Button clicked!'); openAddEmployeeModal()">
         <i class="fas fa-user-plus"></i> إضافة موظف جديد
       </button>
+     <button class="btn-green" onclick="downloadEmployeesCSV()">
+  <i class="fas fa-download"></i> تنزيل الموظفين (CSV)
+  </button>
     </div>
     
     <div class="flex" style="align-items: center; gap: 15px;">
@@ -2509,14 +2523,12 @@ function downloadDetailedReportCsv() {
   showLoader('repLoader');
   
   try {
-    // معلومات التقرير - بالعربية
     const period = $('repPeriod').value;
     const startDate = $('repStart').value || $('repDate').value;
     const endDate = $('repEnd').value || $('repDate').value;
     const dept = $('repDept').value || 'الكل';
     const empFilter = $('repEmpId').value ? ` (رقم الموظف: ${$('repEmpId').value})` : '';
     
-    // عنوان التقرير - بالعربية
     const headerLines = [
       'تقرير الحضور التفصيلي - نظام إدارة الموارد البشرية',
       'الإمارات العربية المتحدة',
@@ -2524,8 +2536,8 @@ function downloadDetailedReportCsv() {
       `الفترة: ${getPeriodLabelArabic(period, startDate, endDate)}`,
       `القسم: ${dept}${empFilter}`,
       `عدد الموظفين: ${Object.keys(lastReport.details).length}`,
-      `تاريخ الإنشاء: ${new Date().toLocaleDateString('en-US')}`, // التاريخ بالإنجليزية
-      `وقت الإنشاء: ${new Date().toLocaleTimeString('en-US')}`, // الوقت بالإنجليزية
+      `تاريخ الإنشاء: ${new Date().toLocaleDateString('en-US')}`,  
+      `وقت الإنشاء: ${new Date().toLocaleTimeString('en-US')}`, 
       '==============================================',
       '',
       'ملاحظة: النسبة المئوية تحسب بناءً على ساعات العمل المطلوبة يومياً',
@@ -2539,7 +2551,6 @@ function downloadDetailedReportCsv() {
     let totalWorkedHours = 0;
     let totalExpectedHours = 0;
 
-    // رأس الجدول - بالعربية
     allRows.push([
       "الرقم الوظيفي",
       "اسم الموظف",
@@ -2555,7 +2566,6 @@ function downloadDetailedReportCsv() {
       "ملاحظات"
     ]);
 
-    // معالجة بيانات كل موظف
     Object.entries(lastReport.details).forEach(([empId, empDetails], empIndex) => {
       const empRow = lastReport.rows?.find(r => String(r.id) === empId);
       const empName = empRow?.name || '—';
@@ -2564,7 +2574,6 @@ function downloadDetailedReportCsv() {
       
       totalEmployees++;
       
-      // عنوان الموظف - بالعربية
       allRows.push([]);
       allRows.push([
         `=== الموظف ${empIndex + 1}: ${empName} (رقم: ${empId}) ===`,
@@ -2581,16 +2590,14 @@ function downloadDetailedReportCsv() {
         ''
       ]);
 
-      // فرز التفاصيل حسب التاريخ
       const sortedDetails = empDetails.slice().sort((a, b) => 
         new Date(a.date) - new Date(b.date)
       );
 
-      // بيانات كل يوم - التواريخ بالإنجليزية
       sortedDetails.forEach((detail, dayIndex) => {
         const date = new Date(detail.date);
-        const dayName = getEnglishDayName(date.getDay()); // اسم اليوم بالإنجليزية
-        const formattedDate = formatEnglishDateOnly(date); // التاريخ بالإنجليزية فقط
+        const dayName = getEnglishDayName(date.getDay());
+        const formattedDate = formatEnglishDateOnly(date);
         
         const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
         const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
@@ -2627,8 +2634,8 @@ function downloadDetailedReportCsv() {
           empId,
           empName,
           empDept,
-          formattedDate, // التاريخ بالإنجليزية
-          dayName, // اسم اليوم بالإنجليزية
+          formattedDate, 
+          dayName, 
           detail.pairsText || '—',
           detail.dayHHMM || '00:00',
           fmtMin(dayExpectedMin),
@@ -2639,7 +2646,6 @@ function downloadDetailedReportCsv() {
         ]);
       });
 
-      // إجمالي الموظف - بالعربية
       const empTotalMin = parseHHMM(empTotalHHMM);
       const empExpectedMin = sortedDetails.filter(d => parseHHMM(d.dayHHMM) > 0).length * requiredMinPerDay_();
       const empDiffMin = empTotalMin - empExpectedMin;
@@ -2665,7 +2671,6 @@ function downloadDetailedReportCsv() {
       allRows.push([]);
     });
 
-    // ملخص التقرير - بالعربية
     const percentage = totalExpectedHours > 0 ? (totalWorkedHours / totalExpectedHours * 100).toFixed(1) : '0.0';
     
     allRows.push([
@@ -3113,24 +3118,17 @@ if ($('btnDlXlsx')) {
 function downloadFormattedCSV() {
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
-  // إنشاء محتوى CSV مع تنسيق
   let csvContent = "";
-  
-  // الشعار
   csvContent += "**************************************************\n";
   csvContent += "*      نظام إدارة الموارد البشرية - الإمارات    *\n";
   csvContent += "*           تقرير الحضور الملخص                 *\n";
   csvContent += "**************************************************\n\n";
   
-  // معلومات التقرير
   csvContent += `تاريخ التقرير: ${new Date().toLocaleDateString('en-US')}\n`;
   csvContent += `الفترة: ${lastReport.range || '—'}\n`;
   csvContent += `عدد الموظفين: ${lastReport.rows.length}\n\n`;
-  
-  // خط فاصل
   csvContent += "=".repeat(80) + "\n\n";
   
-  // رأس الجدول مع تباعد
   const headers = ["الرقم الوظيفي", "اسم الموظف", "القسم", "إجمالي الساعات", "الأيام", "النقص/الزيادة"];
   const widths = [15, 25, 20, 15, 10, 20];
   
@@ -3146,7 +3144,6 @@ function downloadFormattedCSV() {
   csvContent += formatRow(headers) + "\n";
   csvContent += "-".repeat(80) + "\n";
   
-  // البيانات
   lastReport.rows.forEach(r => {
     const workedDays = Number(r.presentDays || 0);
     const workedMin = parseHHMM(r.totalHHMM || "00:00");
@@ -3167,12 +3164,10 @@ function downloadFormattedCSV() {
     csvContent += formatRow(row) + "\n";
   });
   
-  // تذييل
   csvContent += "\n" + "=".repeat(80) + "\n";
   csvContent += "نظام إدارة الموارد البشرية © 2024\n";
   csvContent += "الإمارات العربية المتحدة\n";
   
-  // تنزيل الملف
   const BOM = "\ufeff";
   const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -3212,6 +3207,28 @@ async function saveSettings() {
   }
 }
 
+function downloadEmployeesCSV() {
+  const table = document.getElementById('empTableContainer');
+  if (!table) return;
+
+  const rows = Array.from(table.querySelectorAll('tr'))
+    .map(tr => Array.from(tr.querySelectorAll('th,td')).map(td => {
+      const text = (td.innerText || '').replace(/\r?\n|\r/g, ' ').trim();
+      return `"${text.replace(/"/g, '""')}"`;
+    }))
+    .map(cols => cols.slice(0, -1));
+
+  const csv = "\uFEFF" + rows.map(r => r.join(",")).join("\n"); 
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `employees_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+ 
 function resetSettings() {
   if (!confirm('هل تريد إعادة تعيين الإعدادات؟')) return;
 
