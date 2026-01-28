@@ -595,7 +595,6 @@ body{
   padding-right: calc(20px + env(safe-area-inset-right));
 }   
 
-/* Add this to your existing CSS */
 .btn-add-employee {
   background: var(--accent);
   color: #111;
@@ -717,6 +716,229 @@ body{
   .report-secondary-btns {
     flex-direction: column;
   }
+}
+
+/* شعار وتصميم محسن */
+.company-header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+  border-radius: var(--radius);
+  border: 1px solid #2a2a2a;
+  position: relative;
+  overflow: hidden;
+}
+
+.company-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f6c21a, #ffda41, #f6c21a);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #f6c21a, #ffda41);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #111;
+  box-shadow: 0 4px 15px rgba(246, 194, 26, 0.3);
+}
+
+.company-name {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffda41;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.company-subtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* تحسين تباعد الأعمدة */
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid #2a2a2a;
+  margin-top: 15px;
+  background: #0f0f0f;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.report-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.report-table th {
+  background: linear-gradient(to bottom, #1a1a1a, #151515);
+  color: #ffda41;
+  font-weight: 800;
+  padding: 14px 12px;
+  border-bottom: 2px solid #f6c21a;
+  white-space: nowrap;
+  font-size: 14px;
+  text-align: center;
+  position: relative;
+}
+
+.report-table th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.report-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #222;
+  text-align: center;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.report-table tr:hover td {
+  background: rgba(246, 194, 26, 0.05);
+}
+
+.report-table tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.report-table th:nth-child(1) { width: 10%; } /* الرقم الوظيفي */
+.report-table th:nth-child(2) { width: 15%; } /* الاسم */
+.report-table th:nth-child(3) { width: 12%; } /* القسم */
+.report-table th:nth-child(4) { width: 12%; } /* الفترة */
+.report-table th:nth-child(5) { width: 10%; } /* ساعات العمل */
+.report-table th:nth-child(6) { width: 8%; }  /* الأيام */
+.report-table th:nth-child(7) { width: 10%; } /* المتوقع */
+.report-table th:nth-child(8) { width: 12%; } /* نقص/زيادة */
+.report-table th:nth-child(9) { width: 11%; } /* التفاصيل */
+
+.status-complete { color: #10b981; font-weight: 700; }
+.status-acceptable { color: #3b82f6; font-weight: 700; }
+.status-incomplete { color: #f59e0b; font-weight: 700; }
+.status-absent { color: #ef4444; font-weight: 700; }
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.export-btn-csv {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.export-btn-csv:hover {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.export-btn-detail {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.export-btn-detail:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.export-btn-excel {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.export-btn-excel:hover {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.report-header {
+  background: linear-gradient(135deg, #1a1a1a, #151515);
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid #2a2a2a;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.report-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.progress-container {
+  background: #1a1a1a;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 15px 0;
+  border: 1px solid #2a2a2a;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #aaa;
 }   
   </style>
 </head>
@@ -848,98 +1070,114 @@ body{
 
 <div id="reportsContent" class="tab-content">
   <div class="card">
-  <h2>📊 التقارير</h2>
+    <div class="report-header">
+      <div class="logo-container">
+        <div class="logo-icon">📊</div>
+        <div>
+          <div class="company-name">نظام إدارة الموارد البشرية</div>
+          <div class="company-subtitle">الإمارات العربية المتحدة</div>
+        </div>
+      </div>
+      
+      <div class="flex" style="margin-top: 20px;">
+        <div class="col">
+          <label><i class="fas fa-calendar-alt"></i> الفترة</label>
+          <select id="repPeriod">
+            <option value="daily">يومي</option>
+            <option value="weekly">أسبوعي</option>
+            <option value="monthly">شهري</option>
+            <option value="range">فترة محددة</option>
+          </select>
+        </div>
 
-  <div class="flex">
-    <div class="col">
-      <label>الفترة</label>
-      <select id="repPeriod">
-        <option value="daily">يومي</option>
-        <option value="weekly">أسبوعي</option>
-        <option value="monthly">شهري</option>
-        <option value="range">فترة محددة</option>
-      </select>
+        <div class="col">
+          <label><i class="fas fa-calendar-day"></i> التاريخ</label>
+          <input type="date" id="repDate">
+        </div>
+
+        <div class="col">
+          <label><i class="fas fa-calendar-plus"></i> من تاريخ</label>
+          <input type="date" id="repStart">
+        </div>
+
+        <div class="col">
+          <label><i class="fas fa-calendar-minus"></i> إلى تاريخ</label>
+          <input type="date" id="repEnd">
+        </div>
+
+        <div class="col">
+          <label><i class="fas fa-user-tag"></i> تصفية بالموظف</label>
+          <input id="repEmpId" placeholder="ID مثل: 1">
+        </div>
+        <div class="col">
+          <label><i class="fas fa-building"></i> تصفية بالقسم</label>
+          <select id="repDept">
+            <option value="">الكل</option>
+            <option value="الخدمات المساندة">الخدمات المساندة</option>
+            <option value="الالعاب الفردية">الالعاب الفردية</option>
+            <option value="الالعاب الجماعية">الالعاب الجماعية</option>
+            <option value="امانة السر">امانة السر</option>
+            <option value="الاتصال المؤسسي">الاتصال المؤسسي</option>
+            <option value="الاستراتيجية">الاستراتيجية</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="export-buttons">
+        <button class="export-btn export-btn-csv" id="btnLoadReport">
+          <i class="fas fa-search"></i> عرض التقرير
+        </button>
+        <button class="export-btn export-btn-csv" id="btnDlReportCsv">
+          <i class="fas fa-file-csv"></i> CSV ملخص
+        </button>
+        <button class="export-btn export-btn-detail" id="btnDlDetailedCsv">
+          <i class="fas fa-file-alt"></i> CSV تفصيلي
+        </button>
+        <button class="export-btn export-btn-excel" id="btnDlXlsx">
+          <i class="fas fa-file-excel"></i> Excel
+        </button>
+      </div>
+
+      <div id="reportProgress" class="progress-bar" style="display: none;">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div id="progressText" class="progress-text"></div>
     </div>
 
-    <div class="col">
-      <label>التاريخ (لليومي/الأسبوعي/الشهري)</label>
-      <input type="date" id="repDate">
+    <div class="loader" id="repLoader"></div>
+
+    <div class="badge" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white;">
+      النطاق: <span id="repRange">—</span>
+      <span style="margin-right: 10px; margin-left: 10px;">|</span>
+      عدد السجلات: <span id="recordCount">0</span>
     </div>
 
-    <div class="col">
-      <label>من تاريخ (لفترة محددة)</label>
-      <input type="date" id="repStart">
+    <div class="table-container">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th><i class="fas fa-id-card"></i> الرقم الوظيفي</th>
+            <th><i class="fas fa-user"></i> الاسم</th>
+            <th><i class="fas fa-building"></i> القسم</th>
+            <th><i class="fas fa-calendar"></i> الفترة</th>
+            <th><i class="fas fa-clock"></i> ساعات العمل</th>
+            <th><i class="fas fa-calendar-day"></i> الأيام</th>
+            <th><i class="fas fa-bullseye"></i> المتوقع</th>
+            <th><i class="fas fa-chart-line"></i> نقص/زيادة</th>
+            <th><i class="fas fa-info-circle"></i> التفاصيل</th>
+          </tr>
+        </thead>
+        <tbody id="repTable">
+          <tr>
+            <td colspan="9" style="text-align:center;color:#777;padding:40px;">
+              <i class="fas fa-database" style="font-size:48px;color:#444;margin-bottom:15px;display:block;"></i>
+              لا توجد بيانات بعد. قم بتحميل التقرير أولاً.
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
-    <div class="col">
-      <label>إلى تاريخ (لفترة محددة)</label>
-      <input type="date" id="repEnd">
-    </div>
-
-    <div class="col">
-      <label>تصفية بالموظف</label>
-      <input id="repEmpId" placeholder="ID مثل: 1">
-    </div>
-    <div class="col">
-      <label>تصفية بالقسم</label>
-<select id="repDept">
-  <option value="">الكل</option>
-  <option value="الخدمات المساندة">الخدمات المساندة</option>
-  <option value="الالعاب الفردية">الالعاب الفردية</option>
-  <option value="الالعاب الجماعية">الالعاب الجماعية</option>
-  <option value="امانة السر">امانة السر</option>
-  <option value="الاتصال المؤسسي">الاتصال المؤسسي</option>
-  <option value="الاستراتيجية">الاستراتيجية</option>
-</select>
   </div>
-  </div>
-
-<div class="flex" style="gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-  <button class="btn-yellow" id="btnLoadReport" style="flex: 1 1 200px;">
-    <i class="fas fa-search"></i> عرض التقرير
-  </button>
-  <div class="flex" style="gap: 10px; flex: 1 1 auto;">
-    <button class="btn-yellow" id="btnDlReportCsv" style="flex: 1;">
-      <i class="fas fa-file-csv"></i> CSV ملخص
-    </button>
-    <button class="btn-yellow" id="btnDlDetailedCsv" style="flex: 1;">
-      <i class="fas fa-file-alt"></i> CSV تفصيلي
-    </button>
-    <button class="btn-yellow" id="btnDlXlsx" style="flex: 1;">
-      <i class="fas fa-file-excel"></i> Excel
-    </button>
-  </div>
-</div>
-   
-<div id="reportProgress" class="progress-bar" style="display: none;">
-  <div class="progress-fill" id="progressFill"></div>
-</div>
-<div id="progressText" class="progress-text"></div>
-  <div class="loader" id="repLoader"></div>
-
-  <div class="badge">النطاق: <span id="repRange">—</span></div>
-
-  <div style="overflow-x:auto;">
-    <table>
-      <thead>
-        <tr>
-          <th>الرقم الوظيفي</th>
-          <th>الاسم</th>
-          <th>القسم</th>
-          <th>الفترة</th>
-          <th>ساعات العمل</th>
-          <th>الأيام</th>
-          <th>المتوقع</th>
-          <th>نقص/زيادة</th>
-          <th class="center">التفاصيل</th>
-        </tr>
-      </thead>
-      <tbody id="repTable">
-        <tr><td colspan="8" style="text-align:center;color:#777">لا توجد بيانات بعد.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 </div>
 
 <div id="settingsContent" class="tab-content">
@@ -1798,7 +2036,13 @@ function excelText(v){
 
 async function loadReport() {
   showLoader('repLoader');
-  $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
+  $('repTable').innerHTML = `
+    <tr>
+      <td colspan="9" style="text-align:center;color:#777;padding:40px;">
+        <div class="loader" style="display:inline-block;"></div>
+        <div style="margin-top:15px;">جاري تحميل البيانات...</div>
+      </td>
+    </tr>`;
 
   try {
     const period = $('repPeriod').value;
@@ -1830,10 +2074,18 @@ async function loadReport() {
     lastReport = data;
 
     $('repRange').textContent = data.range || "—";
+    $('recordCount').textContent = (data.rows || []).length;
 
     const rows = data.rows || [];
     if (!rows.length) {
-      $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">لا توجد سجلات ضمن هذه الفترة.</td></tr>`;
+      $('repTable').innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center;color:#777;padding:40px;">
+            <i class="fas fa-search" style="font-size:48px;color:#444;margin-bottom:15px;display:block;"></i>
+            لا توجد سجلات ضمن هذه الفترة.
+          </td>
+        </tr>`;
+      showToast('⚠️ لا توجد بيانات ضمن الفترة المحددة', 'warning');
       return;
     }
     
@@ -1844,30 +2096,43 @@ async function loadReport() {
       const diffMin = workedMin - expectedMin;
 
       const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
-      const diffText  = diffLabel + " " + fmtMin(diffMin);
+      const diffText  = diffLabel + " " + fmtMin(Math.abs(diffMin));
+      const diffClass = diffMin >= 0 ? "status-complete" : "status-incomplete";
+      
+      const percentage = expectedMin > 0 ? (workedMin / expectedMin * 100).toFixed(1) : 0;
+      const percentageClass = percentage >= 100 ? "status-complete" : 
+                             percentage >= 80 ? "status-acceptable" : "status-incomplete";
 
-      const btn = `<button class="btn-yellow" style="width:auto;" onclick="openReportDetails('${r.id}')">تفاصيل</button>`;
+      const btn = `<button class="btn-yellow" style="width:auto; padding:8px 16px; border-radius:8px;" onclick="openReportDetails('${r.id}')">
+        <i class="fas fa-eye"></i> عرض
+      </button>`;
 
       return `
         <tr>
-          <td>${r.id}</td>
-          <td>${r.name || ''}</td>
-          <td>${r.department || '-'}</td>
-          <td>${data.range || ''}</td>
-          <td>${r.totalHHMM || '00:00'}</td>
-          <td>${workedDays}</td>
-          <td>${fmtMin(expectedMin)}</td>
-          <td>${diffText}</td>
+          <td><span style="font-weight:700;color:#ffda41;">${r.id}</span></td>
+          <td style="text-align:right;font-weight:600;">${r.name || ''}</td>
+          <td><span style="color:#aaa;background:rgba(255,255,255,0.05);padding:4px 10px;border-radius:6px;">${r.department || '-'}</span></td>
+          <td><span style="color:#3b82f6;font-weight:600;">${data.range || ''}</span></td>
+          <td><span style="font-weight:700;color:#10b981;">${r.totalHHMM || '00:00'}</span></td>
+          <td><span style="background:rgba(59,130,246,0.1);padding:4px 10px;border-radius:6px;color:#3b82f6;">${workedDays}</span></td>
+          <td><span style="color:#8b5cf6;">${fmtMin(expectedMin)}</span></td>
+          <td><span class="${diffClass}" style="background:${diffMin >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'};padding:4px 10px;border-radius:6px;">${diffText}</span></td>
           <td style="text-align:center;">${btn}</td>
         </tr>
       `;
     }).join("");
 
-    showToast('تم تحميل التقرير بنجاح', 'success');
+    showToast(`✅ تم تحميل ${rows.length} سجل بنجاح`, 'success');
   } catch (err) {
     console.error(err);
-    $('repTable').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777">خطأ في تحميل التقرير</td></tr>`;
-    showToast('خطأ في تحميل التقرير', 'error');
+    $('repTable').innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center;color:#ef4444;padding:40px;">
+          <i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:15px;display:block;"></i>
+          خطأ في تحميل التقرير
+        </td>
+      </tr>`;
+    showToast('❌ خطأ في تحميل التقرير', 'error');
   } finally {
     hideLoader('repLoader');
   }
@@ -1900,58 +2165,216 @@ function openReportDetails(empId){
 
   const row = (lastReport.rows || []).find(x => String(x.id) === String(empId));
   const details = (lastReport.details[empId] || [])
-  .slice()
-  .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  const title = `تفاصيل الموظف: ${row?.name || ''} (${empId})`;
-  const meta  = `الفترة: ${lastReport.range || ''}`;
-
-  const rowsHtml = details.length
-    ? details.map(d => {
-        const dayWorkedMin = parseHHMM(d.dayHHMM || "00:00");
-        const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
-        const dayDiffMin = dayWorkedMin - dayExpectedMin;
-
-        const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
-        const dayDiffText  = dayDiffLabel + " " + fmtMin(dayDiffMin);
-
-        return `
-          <tr>
-            <td>${dateOnly(d.date)}</td>
-            <td>${d.pairsText || '—'}</td>
-            <td>${d.dayHHMM || '00:00'}</td>
-            <td>${fmtMin(dayExpectedMin)}</td>
-            <td>${dayDiffText}</td>
-          </tr>
-        `;
-      }).join("")
-    : `<tr><td colspan="5" style="text-align:center;color:#777">لا توجد تفاصيل.</td></tr>`;
+  const totalHours = row?.totalHHMM || '00:00';
+  const workedDays = row?.presentDays || 0;
+  const department = row?.department || '—';
 
   const html = `
-    <div style="margin-bottom:10px;">
-      <div style="color:#ffd24a;font-weight:800;font-size:16px;">${title}</div>
-      <div style="color:#aaa;margin-top:6px;">${meta}</div>
-    </div>
+    <div style="padding:20px;">
+      <div style="background:linear-gradient(135deg,#1a1a1a,#151515);padding:20px;border-radius:12px;margin-bottom:20px;border:1px solid #2a2a2a;">
+        <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;">
+          <div style="width:50px;height:50px;background:linear-gradient(135deg,#f6c21a,#ffda41);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#111;">
+            👤
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:800;color:#ffda41;">${row?.name || ''}</div>
+            <div style="color:#aaa;font-size:14px;">الرقم الوظيفي: ${empId}</div>
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:15px;margin-top:15px;">
+          <div style="background:rgba(59,130,246,0.1);padding:12px;border-radius:8px;border:1px solid rgba(59,130,246,0.2);">
+            <div style="color:#3b82f6;font-size:12px;margin-bottom:5px;"><i class="fas fa-building"></i> القسم</div>
+            <div style="font-weight:700;color:#fff;">${department}</div>
+          </div>
+          
+          <div style="background:rgba(16,185,129,0.1);padding:12px;border-radius:8px;border:1px solid rgba(16,185,129,0.2);">
+            <div style="color:#10b981;font-size:12px;margin-bottom:5px;"><i class="fas fa-clock"></i> إجمالي الساعات</div>
+            <div style="font-weight:700;color:#fff;">${totalHours}</div>
+          </div>
+          
+          <div style="background:rgba(139,92,246,0.1);padding:12px;border-radius:8px;border:1px solid rgba(139,92,246,0.2);">
+            <div style="color:#8b5cf6;font-size:12px;margin-bottom:5px;"><i class="fas fa-calendar-day"></i> عدد الأيام</div>
+            <div style="font-weight:700;color:#fff;">${workedDays}</div>
+          </div>
+          
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
+            <div style="color:#aaa;font-size:12px;margin-bottom:5px;"><i class="fas fa-calendar"></i> الفترة</div>
+            <div style="font-weight:700;color:#fff;">${lastReport.range || ''}</div>
+          </div>
+        </div>
+      </div>
 
-    <div style="overflow:auto; max-height:60vh;">
-      <table>
-        <thead>
-          <tr>
-            <th>التاريخ</th>
-            <th>الأزواج (دخول → خروج)</th>
-            <th>مجموع اليوم</th>
-            <th>المتوقع</th>
-            <th>نقص/زيادة</th>
-          </tr>
-        </thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
+      <div style="overflow:auto; max-height:60vh;">
+        <table style="width:100%;border-collapse:separate;border-spacing:0;background:#0f0f0f;border-radius:12px;overflow:hidden;">
+          <thead>
+            <tr style="background:linear-gradient(to bottom,#1a1a1a,#151515);">
+              <th style="padding:14px;color:#ffda41;font-weight:800;border-bottom:2px solid #f6c21a;white-space:nowrap;">التاريخ</th>
+              <th style="padding:14px;color:#ffda41;font-weight:800;border-bottom:2px solid #f6c21a;white-space:nowrap;">اليوم</th>
+              <th style="padding:14px;color:#ffda41;font-weight:800;border-bottom:2px solid #f6c21a;white-space:nowrap;">أوقات الدخول/الخروج</th>
+              <th style="padding:14px;color:#ffda41;font-weight:800;border-bottom:2px solid #f6c21a;white-space:nowrap;">مجموع اليوم</th>
+              <th style="padding:14px;color:#ffda41;font-weight:800;border-bottom:2px solid #f6c21a;white-space:nowrap;">المطلوب</th>
+              <th style="padding:14px;color:#ffda41;font-weight:800;border-bottom:2px solid #f6c21a;white-space:nowrap;">النقص/الزيادة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${details.length ? details.map(d => {
+              const date = new Date(d.date);
+              const dayWorkedMin = parseHHMM(d.dayHHMM || "00:00");
+              const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
+              const dayDiffMin = dayWorkedMin - dayExpectedMin;
+              const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+              const dayDiffText = dayDiffLabel + " " + fmtMin(Math.abs(dayDiffMin));
+              const diffClass = dayDiffMin >= 0 ? "status-complete" : "status-incomplete";
+              
+              return `
+                <tr style="border-bottom:1px solid #222;">
+                  <td style="padding:12px;text-align:center;color:#3b82f6;font-weight:600;">${formatEnglishDateOnly(date)}</td>
+                  <td style="padding:12px;text-align:center;color:#aaa;">${getEnglishDayName(date.getDay())}</td>
+                  <td style="padding:12px;text-align:center;color:#fff;font-family:monospace;">${d.pairsText || '—'}</td>
+                  <td style="padding:12px;text-align:center;color:#10b981;font-weight:700;">${d.dayHHMM || '00:00'}</td>
+                  <td style="padding:12px;text-align:center;color:#8b5cf6;">${fmtMin(dayExpectedMin)}</td>
+                  <td style="padding:12px;text-align:center;">
+                    <span class="${diffClass}" style="background:${dayDiffMin >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'};padding:6px 12px;border-radius:6px;font-weight:600;">
+                      ${dayDiffText}
+                    </span>
+                  </td>
+                </tr>
+              `;
+            }).join("") : `
+              <tr>
+                <td colspan="6" style="text-align:center;color:#777;padding:40px;">
+                  <i class="fas fa-info-circle" style="font-size:36px;margin-bottom:15px;display:block;"></i>
+                  لا توجد تفاصيل متاحة
+                </td>
+              </tr>
+            `}
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top:20px;text-align:center;">
+        <button class="btn-yellow" onclick="downloadEmployeeReport('${empId}')" style="padding:10px 20px;border-radius:8px;font-weight:700;">
+          <i class="fas fa-download"></i> تحميل تقرير الموظف
+        </button>
+      </div>
     </div>
   `;
 
+  document.getElementById('modalTitle').textContent = `تفاصيل الموظف: ${row?.name || ''}`;
+  
   openReportModal(html);
 }
 
+function downloadEmployeeReport(empId) {
+  if (!lastReport || !lastReport.details || !lastReport.details[empId]) {
+    showToast('لا توجد بيانات لهذا الموظف', 'warning');
+    return;
+  }
+
+  const empRow = lastReport.rows?.find(r => String(r.id) === empId);
+  const empName = empRow?.name || 'موظف';
+  const empDept = empRow?.department || '—';
+  
+  const details = lastReport.details[empId];
+  const sortedDetails = details.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  // رأس التقرير بالعربية مع تواريخ إنجليزية
+  const headerLines = [
+    `تقرير الموظف: ${empName}`,
+    `الرقم الوظيفي: ${empId}`,
+    `القسم: ${empDept}`,
+    `الفترة: ${lastReport.range || ''}`,
+    `تاريخ التقرير: ${new Date().toLocaleDateString('en-US')}`,
+    '==============================================',
+    '',
+  ];
+
+  const allRows = [];
+  
+  // رأس الجدول
+  allRows.push([
+    "التاريخ",
+    "اليوم",
+    "أوقات الدخول/الخروج",
+    "مجموع اليوم",
+    "المطلوب",
+    "النقص/الزيادة",
+    "النسبة %"
+  ]);
+
+  let totalWorkedHours = 0;
+  let totalDays = sortedDetails.length;
+  
+  sortedDetails.forEach(detail => {
+    const date = new Date(detail.date);
+    const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
+    const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
+    const dayDiffMin = dayWorkedMin - dayExpectedMin;
+    const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+    const dayDiffText = `${dayDiffLabel} ${fmtMin(Math.abs(dayDiffMin))}`;
+    const percentage = dayExpectedMin > 0 ? ((dayWorkedMin / dayExpectedMin) * 100).toFixed(1) : '0.0';
+    
+    totalWorkedHours += dayWorkedMin / 60;
+
+    allRows.push([
+      formatEnglishDateOnly(date),
+      getEnglishDayName(date.getDay()),
+      detail.pairsText || '—',
+      detail.dayHHMM || '00:00',
+      fmtMin(dayExpectedMin),
+      dayDiffText,
+      percentage + '%'
+    ]);
+  });
+
+  // إضافة ملخص
+  allRows.push([]);
+  allRows.push(['ملخص الموظف', '', '', '', '', '', '']);
+  allRows.push([
+    'إجمالي الأيام',
+    totalDays,
+    '',
+    `إجمالي الساعات: ${fmtMin(totalWorkedHours * 60)}`,
+    '',
+    '',
+    ''
+  ]);
+
+  const csvContent = headerLines.join('\n') + 
+    allRows.map(row => 
+      row.map(cell => {
+        const cellStr = String(cell || '');
+        if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"')) {
+          return '"' + cellStr.replace(/"/g, '""') + '"';
+        }
+        return cellStr;
+      }).join(',')
+    ).join('\n');
+
+  const BOM = "\ufeff";
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  
+  const fileName = `تقرير_${empName}_${empId}_${new Date().toISOString().slice(0, 10)}.csv`;
+  
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+
+  showToast(`تم تحميل تقرير الموظف ${empName}`, 'success');
+} 
 let editingEmployeeId = "";
 
 function openEditEmployee(emp) {
