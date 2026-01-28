@@ -963,7 +963,34 @@ body{
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-   
+
+@media (min-width: 768px) and (max-width: 1024px){
+
+  #reportsContent .report-header > .flex{
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)); /* period + 3 dates */
+    gap: 14px;
+    align-items: end;
+  }
+
+  #repEmpId { grid-column: 1 / span 2; }
+  #repDept  { grid-column: 3 / span 2; }
+
+  #reportsContent input[type="date"]{
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    height: 44px;
+    line-height: 44px;
+    padding: 10px 12px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  #reportsContent .report-header label{
+    white-space: nowrap;
+  }
+}  
   </style>
 </head>
 <body>
