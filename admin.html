@@ -640,7 +640,84 @@ body{
 .modal-overlay {
   background: rgba(0,0,0,0.8) !important;
   z-index: 999999 !important;
-}    
+}
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.report-main-btn {
+  flex: 1 1 200px;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.report-secondary-btns {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 auto;
+}
+
+.report-secondary-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  margin: 10px 0;
+  overflow: hidden;
+  display: none;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #ffda41);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 5px;
+}
+   
+@media (max-width: 768px) {
+  .report-actions {
+    flex-direction: column;
+  }
+  
+  .report-main-btn,
+  .report-secondary-btn {
+    width: 100%;
+    padding: 14px;
+  }
+  
+  .report-secondary-btns {
+    flex-direction: column;
+  }
+}   
   </style>
 </head>
 <body>
@@ -817,12 +894,27 @@ body{
   </div>
   </div>
 
-<div class="flex">
-  <button class="btn-yellow" id="btnLoadReport" style="flex:1">🔍 عرض التقرير</button>
-  <button class="btn-yellow" id="btnDlReportCsv" style="flex:0.5">⬇️ CSV عام</button>
-  <button class="btn-yellow" id="btnDlDetailedCsv" style="flex:0.5">📊 CSV تفصيلي</button>
+<div class="flex" style="gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+  <button class="btn-yellow" id="btnLoadReport" style="flex: 1 1 200px;">
+    <i class="fas fa-search"></i> عرض التقرير
+  </button>
+  <div class="flex" style="gap: 10px; flex: 1 1 auto;">
+    <button class="btn-yellow" id="btnDlReportCsv" style="flex: 1;">
+      <i class="fas fa-file-csv"></i> CSV ملخص
+    </button>
+    <button class="btn-yellow" id="btnDlDetailedCsv" style="flex: 1;">
+      <i class="fas fa-file-alt"></i> CSV تفصيلي
+    </button>
+    <button class="btn-yellow" id="btnDlXlsx" style="flex: 1;">
+      <i class="fas fa-file-excel"></i> Excel
+    </button>
+  </div>
 </div>
-
+   
+<div id="reportProgress" class="progress-bar" style="display: none;">
+  <div class="progress-fill" id="progressFill"></div>
+</div>
+<div id="progressText" class="progress-text"></div>
   <div class="loader" id="repLoader"></div>
 
   <div class="badge">النطاق: <span id="repRange">—</span></div>
@@ -1961,98 +2053,292 @@ function downloadReportCsv(){
 }
 
 function downloadDetailedReportCsv() {
-  if (!lastReport || !lastReport.details) {
+  if (!lastReport || !lastReport.details || Object.keys(lastReport.details).length === 0) {
     showToast('لا توجد بيانات تفصيلية للتنزيل', 'warning');
     return;
   }
 
-  const period = $('repPeriod').value;
-  const startDate = $('repStart').value || $('repDate').value;
-  const endDate = $('repEnd').value || $('repDate').value;
-  const dept = $('repDept').value || 'الكل';
+  showLoader('repLoader');
+  const toastId = 'detailed-csv-toast';
   
-  const headerLines = [
-    `التقرير التفصيلي للحضور`,
-    `الفترة: ${period}`,
-    `من: ${startDate || '—'} إلى: ${endDate || '—'}`,
-    `القسم: ${dept}`,
-    `تاريخ التصدير: ${new Date().toLocaleDateString('ar-AE')}`,
-    ''
-  ];
+  showToast('جاري إنشاء التقرير التفصيلي...', 'info', 5000);
 
-  const rows = [];
-  
-  rows.push([
-    "الرقم الوظيفي",
-    "اسم الموظف",
-    "القسم",
-    "التاريخ",
-    "أوقات الحضور (دخول → خروج)",
-    "مجموع ساعات اليوم",
-    "المتوقع",
-    "نقص/زيادة",
-    "ملاحظات"
-  ]);
+  try {
+    const period = $('repPeriod').value;
+    const startDate = $('repStart').value || $('repDate').value;
+    const endDate = $('repEnd').value || $('repDate').value;
+    const dept = $('repDept').value || 'الكل';
+    const empFilter = $('repEmpId').value ? ` (رقم الموظف: ${$('repEmpId').value})` : '';
+    
+    const headerLines = [
+      'تقرير الحضور التفصيلي - نظام إدارة الموارد البشرية',
+      'الإمارات العربية المتحدة',
+      '==============================================',
+      `الفترة: ${getPeriodLabel(period, startDate, endDate)}`,
+      `القسم: ${dept}${empFilter}`,
+      `عدد الموظفين: ${Object.keys(lastReport.details).length}`,
+      `تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-AE', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        weekday: 'long'
+      })}`,
+      `وقت الإنشاء: ${new Date().toLocaleTimeString('ar-AE')}`,
+      '==============================================',
+      '',
+      'ملاحظة: النسبة المئوية تحسب بناءً على ساعات العمل المطلوبة يومياً',
+      '',
+      ''
+    ];
 
-  Object.entries(lastReport.details).forEach(([empId, empDetails]) => {
-    const empRow = lastReport.rows?.find(r => String(r.id) === empId);
-    const empName = empRow?.name || '—';
-    const empDept = empRow?.department || '—';
-    
-    const sortedDetails = empDetails.slice().sort((a, b) => 
-      String(a.date).localeCompare(String(b.date))
-    );
-    
-    sortedDetails.forEach(detail => {
-      const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
-      const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
-      const dayDiffMin = dayWorkedMin - dayExpectedMin;
-      const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
-      const dayDiffText = dayDiffLabel + " " + fmtMin(dayDiffMin);
-      const expectedText = fmtMin(dayExpectedMin);
+    const allRows = [];
+    let totalEmployees = 0;
+    let totalDays = 0;
+    let totalWorkedHours = 0;
+    let totalExpectedHours = 0;
+
+    allRows.push([
+      "الرقم الوظيفي",
+      "اسم الموظف",
+      "القسم",
+      "التاريخ",
+      "اليوم",
+      "أوقات الدخول/الخروج",
+      "مجموع ساعات اليوم",
+      "الساعات المطلوبة",
+      "النقص/الزيادة",
+      "النسبة المئوية (%)",
+      "الحالة",
+      "ملاحظات"
+    ]);
+
+    Object.entries(lastReport.details).forEach(([empId, empDetails], empIndex) => {
+      const empRow = lastReport.rows?.find(r => String(r.id) === empId);
+      const empName = empRow?.name || '—';
+      const empDept = empRow?.department || '—';
+      const empTotalHHMM = empRow?.totalHHMM || '00:00';
       
-      rows.push([
-        empId,
-        empName,
-        empDept,
-        dateOnly(detail.date),
-        detail.pairsText || '—',
-        detail.dayHHMM || '00:00',
-        expectedText,
-        dayDiffText,
-        detail.notes || ''
+      totalEmployees++;
+      
+      allRows.push([]);
+      allRows.push([
+        `=== الموظف ${empIndex + 1}: ${empName} (رقم: ${empId}) ===`,
+        'القسم: ' + empDept,
+        'إجمالي الساعات في الفترة: ' + empTotalHHMM,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
       ]);
+
+      const sortedDetails = empDetails.slice().sort((a, b) => 
+        new Date(a.date) - new Date(b.date)
+      );
+
+      sortedDetails.forEach((detail, dayIndex) => {
+        const date = new Date(detail.date);
+        const dayName = getArabicDayName(date.getDay());
+        const formattedDate = formatArabicDate(date);
+        
+        const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
+        const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
+        const dayDiffMin = dayWorkedMin - dayExpectedMin;
+        
+        const dayWorkedHours = (dayWorkedMin / 60).toFixed(2);
+        const dayExpectedHours = (dayExpectedMin / 60).toFixed(2);
+        const dayDiffHours = Math.abs(dayDiffMin / 60).toFixed(2);
+        
+        const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+        const dayDiffText = `${dayDiffLabel} ${fmtMin(Math.abs(dayDiffMin))}`;
+        
+        let percentage = 0;
+        if (dayExpectedMin > 0) {
+          percentage = (dayWorkedMin / dayExpectedMin) * 100;
+        }
+        
+        let status = '—';
+        if (dayWorkedMin === 0) {
+          status = 'غياب';
+        } else if (percentage >= 100) {
+          status = 'مكتمل';
+        } else if (percentage >= 80) {
+          status = 'مقبول';
+        } else {
+          status = 'غير مكتمل';
+        }
+        
+        totalDays++;
+        totalWorkedHours += parseFloat(dayWorkedHours);
+        totalExpectedHours += parseFloat(dayExpectedHours);
+
+        allRows.push([
+          empId,
+          empName,
+          empDept,
+          formattedDate,
+          dayName,
+          detail.pairsText || '—',
+          detail.dayHHMM || '00:00',
+          fmtMin(dayExpectedMin),
+          dayDiffText,
+          percentage.toFixed(1) + '%',
+          status,
+          detail.notes || ''
+        ]);
+      });
+
+      const empTotalMin = parseHHMM(empTotalHHMM);
+      const empExpectedMin = sortedDetails.filter(d => parseHHMM(d.dayHHMM) > 0).length * requiredMinPerDay_();
+      const empDiffMin = empTotalMin - empExpectedMin;
+      const empDiffLabel = empDiffMin >= 0 ? "زيادة" : "نقص";
+      const empDiffText = `${empDiffLabel} ${fmtMin(Math.abs(empDiffMin))}`;
+      const empPercentage = empExpectedMin > 0 ? (empTotalMin / empExpectedMin * 100).toFixed(1) : '0.0';
+
+      allRows.push([
+        '',
+        '',
+        '',
+        '',
+        '',
+        'إجمالي الموظف:',
+        empTotalHHMM,
+        fmtMin(empExpectedMin),
+        empDiffText,
+        empPercentage + '%',
+        '',
+        ''
+      ]);
+      
+      allRows.push([]);
+    });
+
+    const percentage = totalExpectedHours > 0 ? (totalWorkedHours / totalExpectedHours * 100).toFixed(1) : '0.0';
+    
+    allRows.push([
+      '==============================================',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ]);
+    
+    allRows.push([
+      'ملخص التقرير',
+      `عدد الموظفين: ${totalEmployees}`,
+      `عدد الأيام: ${totalDays}`,
+      `إجمالي الساعات العمل: ${totalWorkedHours.toFixed(2)}`,
+      `إجمالي الساعات المطلوبة: ${totalExpectedHours.toFixed(2)}`,
+      `النسبة العامة: ${percentage}%`,
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ]);
+
+    const csvContent = headerLines.join('\n') + 
+      allRows.map(row => 
+        row.map(cell => {
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"') || cellStr.includes(';')) {
+            return '"' + cellStr.replace(/"/g, '""') + '"';
+          }
+          return cellStr;
+        }).join(',')
+      ).join('\n');
+
+    const BOM = "\ufeff";
+    const blob = new Blob([BOM + csvContent], { 
+      type: 'text/csv;charset=utf-8;' 
     });
     
-    rows.push([]);
-  });
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const deptName = dept === 'الكل' ? 'جميع الأقسام' : dept;
+    const fileName = `التقرير_التفصيلي_${deptName}_${period}_${timestamp}.csv`;
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
 
-  const csvContent = headerLines.join('\n') + 
-    rows.map(row => 
-      row.map(cell => {
-        const cellStr = String(cell || '');
-        if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"')) {
-          return '"' + cellStr.replace(/"/g, '""') + '"';
-        }
-        return cellStr;
-      }).join(',')
-    ).join('\n');
+    showToast(`✅ تم إنشاء التقرير التفصيلي بنجاح: ${totalEmployees} موظف، ${totalDays} يوم`, 'success');
+    
+    console.log('📊 تفاصيل التقرير:', {
+      موظفين: totalEmployees,
+      أيام: totalDays,
+      ساعات_عمل: totalWorkedHours.toFixed(2),
+      ساعات_مطلوبة: totalExpectedHours.toFixed(2),
+      نسبة: percentage + '%'
+    });
 
-  const BOM = "\ufeff";
-  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  } catch (error) {
+    console.error('❌ خطأ في إنشاء التقرير التفصيلي:', error);
+    showToast('❌ حدث خطأ في إنشاء التقرير التفصيلي', 'error');
+  } finally {
+    hideLoader('repLoader');
+  }
+}
+
+function getPeriodLabel(period, start, end) {
+  const labels = {
+    daily: 'يومي',
+    weekly: 'أسبوعي',
+    monthly: 'شهري',
+    range: 'فترة محددة'
+  };
   
-  const fileName = `التقرير_التفصيلي_${period}_${startDate || ''}_${endDate || ''}.csv`;
-  a.href = url;
-  a.download = fileName;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  let label = labels[period] || period;
   
-  showToast('تم تنزيل التقرير التفصيلي بنجاح', 'success');
+  if (period === 'range' && start && end) {
+    label += ` (${formatArabicDate(new Date(start))} إلى ${formatArabicDate(new Date(end))})`;
+  } else if (start) {
+    label += ` (${formatArabicDate(new Date(start))})`;
+  }
+  
+  return label;
+}
+
+function getArabicDayName(dayIndex) {
+  const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  return days[dayIndex] || '';
+}
+
+function formatArabicDate(date) {
+  if (!date || isNaN(date)) return '—';
+  
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    calendar: 'islamic-umalqura'
+  };
+  
+  try {
+    return date.toLocaleDateString('ar-SA', options);
+  } catch (e) {
+    return date.toISOString().split('T')[0];
+  }
 }
  
 if ($('btnLoadReport')) {
@@ -2123,63 +2409,136 @@ function safeFileName(text){
     .trim();
 }
 
-function downloadReportXLSX(){
+function downloadReportXLSX() {
   if (!lastReport || !lastReport.rows) {
     showToast('لا توجد بيانات بعد', 'warning');
     return;
   }
 
-  const data = [
-    [
-      "الرقم الوظيفي",
-      "الاسم",
-      "القسم",
-      "إجمالي الساعات",
-      "عدد الأيام",
-      "نقص/زيادة"
-    ]
-  ];
+  showLoader('repLoader');
+  
+  try {
+    const summaryData = [
+      ['تقرير الحضور الملخص', '', '', '', '', '', ''],
+      ['نظام إدارة الموارد البشرية - الإمارات العربية المتحدة', '', '', '', '', '', ''],
+      ['تاريخ الإنشاء:', new Date().toLocaleDateString('ar-AE'), '', '', '', '', ''],
+      ['الفترة:', lastReport.range || '—', '', '', '', '', ''],
+      ['عدد الموظفين:', lastReport.rows.length, '', '', '', '', ''],
+      ['', '', '', '', '', '', ''],
+      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'إجمالي الساعات', 'عدد الأيام', 'الساعات المطلوبة', 'النقص/الزيادة']
+    ];
 
-  lastReport.rows.forEach(r => {
-    const workedDays = Number(r.presentDays || 0);
-    const workedMin  = parseHHMM(r.totalHHMM || "00:00");
-    const expectedMin = workedDays * requiredMinPerDay_();
-    const diffMin = workedMin - expectedMin;
+    lastReport.rows.forEach(r => {
+      const workedDays = Number(r.presentDays || 0);
+      const workedMin = parseHHMM(r.totalHHMM || "00:00");
+      const expectedMin = workedDays * requiredMinPerDay_();
+      const diffMin = workedMin - expectedMin;
+      const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
+      const diffText = diffLabel + " " + fmtMin(diffMin);
 
-    const diffLabel = diffMin >= 0 ? "زيادة" : "نقص";
-    const diffText  = diffLabel + " " + fmtMin(diffMin);
+      summaryData.push([
+        r.id,
+        r.name,
+        r.department || "",
+        r.totalHHMM || "00:00",
+        workedDays,
+        fmtMin(expectedMin),
+        diffText
+      ]);
+    });
 
-    data.push([
-      r.id,
-      r.name,
-      r.department || "",
-      r.totalHHMM || "00:00",
-      workedDays,
-      diffText
-    ]);
-  });
+    const detailsData = [
+      ['التقرير التفصيلي للحضور'],
+      [''],
+      ['الرقم الوظيفي', 'اسم الموظف', 'القسم', 'التاريخ', 'اليوم', 'أوقات الدخول/الخروج', 'ساعات اليوم', 'المطلوب', 'النقص/الزيادة', 'النسبة %', 'الحالة']
+    ];
 
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws["!rtl"] = true;
-  ws["!cols"] = [
-    { wch: 15 },
-    { wch: 22 },
-    { wch: 20 },
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 12 },
-    { wch: 15 }
-  ];
+    if (lastReport.details) {
+      Object.entries(lastReport.details).forEach(([empId, empDetails]) => {
+        const empRow = lastReport.rows?.find(r => String(r.id) === empId);
+        const empName = empRow?.name || '—';
+        const empDept = empRow?.department || '—';
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
+        const sortedDetails = empDetails.slice().sort((a, b) =>
+          new Date(a.date) - new Date(b.date)
+        );
 
-  const dept = safeFileName($('repDept')?.value);
-  const fileName = dept
-    ? `تقرير الحضور إدارة ${dept}.xlsx`
-    : `تقرير الحضور.xlsx`;
+        sortedDetails.forEach(detail => {
+          const date = new Date(detail.date);
+          const dayName = getArabicDayName(date.getDay());
+          const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
+          const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
+          const dayDiffMin = dayWorkedMin - dayExpectedMin;
+          const dayDiffLabel = dayDiffMin >= 0 ? "زيادة" : "نقص";
+          const dayDiffText = `${dayDiffLabel} ${fmtMin(Math.abs(dayDiffMin))}`;
+          const percentage = dayExpectedMin > 0 ? ((dayWorkedMin / dayExpectedMin) * 100).toFixed(1) : '0.0';
+          
+          let status = '—';
+          if (dayWorkedMin === 0) status = 'غياب';
+          else if (percentage >= 100) status = 'مكتمل';
+          else if (percentage >= 80) status = 'مقبول';
+          else status = 'غير مكتمل';
 
-  XLSX.writeFile(wb, fileName);
+          detailsData.push([
+            empId,
+            empName,
+            empDept,
+            date.toISOString().split('T')[0],
+            dayName,
+            detail.pairsText || '—',
+            detail.dayHHMM || '00:00',
+            fmtMin(dayExpectedMin),
+            dayDiffText,
+            percentage + '%',
+            status
+          ]);
+        });
+        
+        detailsData.push([]);
+      });
+    }
+
+    const wb = XLSX.utils.book_new();
+    
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    wsSummary["!rtl"] = true;
+    wsSummary["!cols"] = [
+      { wch: 15 }, { wch: 25 }, { wch: 20 }, 
+      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }
+    ];
+    XLSX.utils.book_append_sheet(wb, wsSummary, "ملخص");
+
+    const wsDetails = XLSX.utils.aoa_to_sheet(detailsData);
+    wsDetails["!rtl"] = true;
+    wsDetails["!cols"] = [
+      { wch: 15 }, { wch: 25 }, { wch: 20 }, 
+      { wch: 12 }, { wch: 10 }, { wch: 30 }, 
+      { wch: 12 }, { wch: 12 }, { wch: 15 }, 
+      { wch: 10 }, { wch: 12 }
+    ];
+    XLSX.utils.book_append_sheet(wb, wsDetails, "تفاصيل");
+
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const dept = safeFileName($('repDept')?.value || 'الكل');
+    const fileName = `تقرير_الحضور_${dept}_${timestamp}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+    
+    showToast('تم تنزيل التقرير بصيغة Excel', 'success');
+  } catch (error) {
+    console.error('❌ خطأ في إنشاء Excel:', error);
+    showToast('❌ حدث خطأ في إنشاء ملف Excel', 'error');
+  } finally {
+    hideLoader('repLoader');
+  }
+}
+
+if ($('btnDlDetailedCsv')) {
+  $('btnDlDetailedCsv').onclick = downloadDetailedReportCsv;
+}
+
+if ($('btnDlXlsx')) {
+  $('btnDlXlsx').onclick = downloadReportXLSX;
 }
 
 async function saveSettings() {
