@@ -3114,6 +3114,35 @@ if ($('btnDlDetailedCsv')) {
 if ($('btnDlXlsx')) {
   $('btnDlXlsx').onclick = downloadReportXLSX;
 }
+function downloadEmployeesCSV() {
+  const table = document.getElementById('empTableContainer');
+  if (!table) {
+    showToast('لا يوجد جدول للتنزيل', 'warning');
+    return;
+  }
+
+  const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
+    Array.from(tr.querySelectorAll('th,td')).map(td => {
+      const text = (td.innerText || '').replace(/\r?\n|\r/g, ' ').trim();
+      return `"${text.replace(/"/g, '""')}"`;
+    }).slice(0, -1) // remove actions column
+  );
+
+  if (rows.length <= 1) {
+    showToast('لا توجد بيانات للتنزيل', 'warning');
+    return;
+  }
+
+  const csv = "\uFEFF" + rows.map(r => r.join(',')).join('\n'); // BOM for Arabic
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `employees_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 
 function downloadFormattedCSV() {
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
