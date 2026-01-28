@@ -1131,7 +1131,7 @@ body{
 
         <div class="col">
           <label><i class="fas fa-user-tag"></i> تصفية بالموظف</label>
-          <input id="repEmpId" placeholder="ID مثل: 1">
+          <input id="repEmpId" placeholder="الرقم الوظيفي أو الاسم">
         </div>
         <div class="col">
           <label><i class="fas fa-building"></i> تصفية بالقسم</label>
@@ -2073,7 +2073,7 @@ async function loadReport() {
     const payload = {
       period,
       includeDetails: true,
-      empId: ($('repEmpId').value || '').trim()
+      employeeFilter: ($('repEmpId').value || '').trim()
     };
     payload.department = ($('repDept').value || '').trim();
     const date = $('repDate').value;
