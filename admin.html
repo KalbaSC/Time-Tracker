@@ -1030,9 +1030,9 @@ body{
       <button class="btn-yellow add-employee-btn" onclick="console.log('Button clicked!'); openAddEmployeeModal()">
         <i class="fas fa-user-plus"></i> إضافة موظف جديد
       </button>
-     <button class="btn-green" onclick="downloadEmployeesCSV()">
-  <i class="fas fa-download"></i> تنزيل الموظفين (CSV)
-  </button>
+<button class="btn-green" onclick="downloadEmployeesXLSX()">
+  <i class="fas fa-file-excel"></i> تنزيل الموظفين (Excel)
+</button>
     </div>
     
     <div class="flex" style="align-items: center; gap: 15px;">
@@ -3145,6 +3145,55 @@ function downloadEmployeesCSV() {
   a.remove();
 }
 
+function downloadEmployeesXLSX() {
+  const table = document.getElementById('empTableContainer');
+  if (!table) return;
+
+  // Read table rows (remove last column: الإجراءات)
+  const rows = Array.from(table.querySelectorAll('tr'))
+    .map(tr => Array.from(tr.querySelectorAll('th,td'))
+      .map(td => (td.innerText || '').replace(/\r?\n|\r/g, ' ').trim())
+      .slice(0, -1)
+    );
+
+  if (!rows || rows.length <= 1) {
+    showToast('لا توجد بيانات للتنزيل بعد', 'warning');
+    return;
+  }
+
+  // Force contract dates to be TEXT so Excel never shows ######
+  // columns order in your table:
+  // 0 الاسم | 1 الرقم | 2 PIN | 3 القسم | 4 المسمى | 5 نوع الدوام | 6 بداية العقد | 7 نهاية العقد | 8 الراتب
+  for (let i = 1; i < rows.length; i++) {
+    rows[i][6] = rows[i][6] ? String(rows[i][6]) : "";
+    rows[i][7] = rows[i][7] ? String(rows[i][7]) : "";
+  }
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!rtl"] = true;
+
+  // Make columns wide enough (this prevents ######)
+  ws["!cols"] = [
+    { wch: 28 }, // الاسم
+    { wch: 12 }, // الرقم
+    { wch: 10 }, // PIN
+    { wch: 20 }, // القسم
+    { wch: 22 }, // المسمى
+    { wch: 12 }, // نوع الدوام
+    { wch: 14 }, // بداية العقد
+    { wch: 14 }, // نهاية العقد
+    { wch: 12 }, // الراتب
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, "Employees");
+
+  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb, `employees_${stamp}.xlsx`);
+
+  showToast('تم تنزيل الموظفين بصيغة Excel', 'success');
+}
+  
 function downloadFormattedCSV() {
   if (!lastReport || !lastReport.rows) return showToast('لا توجد بيانات بعد', 'warning');
 
