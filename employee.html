@@ -708,6 +708,7 @@ const ALLOWED_RADIUS_M = 400;
 
 let EXPECTED_DAY_SEC = 7 * 3600;
 let EXPECTED_WEEK_SEC = 5 * EXPECTED_DAY_SEC;
+let lastOptimisticPunch = null; 
 
 async function applySettings(){
   const res = await fetchSettings();
@@ -1257,13 +1258,15 @@ function updateTodayTableInstant(type, statusText = "✅ داخل") {
   const t = nowHHMM();
   const typeLabel = type === "IN" ? "دخول" : "خروج";
 
+  lastOptimisticPunch = { t, type, status: statusText };
+
   if (table.innerText.includes("لا يوجد سجلات")) {
     table.innerHTML = "";
   }
 
   table.insertAdjacentHTML(
     "beforeend",
-    `<tr><td>${t}</td><td>${typeLabel}</td><td>${statusText}</td></tr>`
+    `<tr data-opt="1"><td>${t}</td><td>${typeLabel}</td><td>${statusText}</td></tr>`
   );
 }
  
@@ -1372,7 +1375,6 @@ if (!confirmed) {
     msg.className = "msg ok";
     msg.style.display = "block";
     msg.textContent = `✔ تم تسجيل ${type === "IN" ? "الدخول" : "الخروج"} بنجاح`;
-   updateLastMovementInstant(type); 
     showToast('تم تسجيل البصمة بنجاح', 'success');
 setTimeout(() => {
   msg.style.display = "none";
@@ -1425,6 +1427,31 @@ async function refreshAll() {
       }).join("");
     }
 
+if (lastOptimisticPunch) {
+  const existsInCsv = todayRows.some(r => {
+    const t = (r[4] || "").slice(0, 5);
+    const ty = (r[3] || "").trim();
+    return t === lastOptimisticPunch.t && ty === lastOptimisticPunch.type;
+  });
+
+  if (!existsInCsv) {
+  const oldOpt = table.querySelector('tr[data-opt="1"]');
+  if (oldOpt) oldOpt.remove();
+
+  if (table.innerText.includes("لا يوجد سجلات")) table.innerHTML = "";
+
+  const typeLabel = lastOptimisticPunch.type === "IN" ? "دخول" : "خروج";
+  table.insertAdjacentHTML(
+    "beforeend",
+    `<tr data-opt="1"><td>${lastOptimisticPunch.t}</td><td>${typeLabel}</td><td>${lastOptimisticPunch.status}</td></tr>`
+  );
+  } else {
+    lastOptimisticPunch = null;
+    const oldOpt = table.querySelector('tr[data-opt="1"]');
+    if (oldOpt) oldOpt.remove();
+  }
+}
+
     let workedToday = 0;
     let lastIn = null;
     
@@ -1454,7 +1481,7 @@ async function refreshAll() {
     const todayPercent = Math.min(100, Math.round((workedToday / EXPECTED_DAY_SEC) * 100));
     $("todayProgress").textContent = `${todayPercent}% من الوقت المطلوب`;
 
-const csv = await (await fetch(PUNCH_CSV)).text();
+const csv = await (await fetch(PUNCH_CSV, { cache: "no-store" })).text();
 const rows = parseCSVText(csv);
 const mine = rows.filter(r => String(r[1]).trim() == window.currentID);
 
