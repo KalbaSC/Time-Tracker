@@ -1249,6 +1249,23 @@ function updateLastMovementInstant(type){
   document.getElementById("lastType").textContent =
     type === "IN" ? "دخول" : "خروج";
 }
+
+function updateTodayTableInstant(type, statusText = "✅ داخل") {
+  const table = document.getElementById("todayTable");
+  if (!table) return;
+
+  const t = nowHHMM();
+  const typeLabel = type === "IN" ? "دخول" : "خروج";
+
+  if (table.innerText.includes("لا يوجد سجلات")) {
+    table.innerHTML = "";
+  }
+
+  table.insertAdjacentHTML(
+    "beforeend",
+    `<tr><td>${t}</td><td>${typeLabel}</td><td>${statusText}</td></tr>`
+  );
+}
  
 function canPunch(type, todayRows) {
   if (todayRows.length === 0) {
@@ -1322,6 +1339,9 @@ async function punch(type) {
         }
       })
     });
+   
+updateLastMovementInstant(type);
+updateTodayTableInstant(type, "✅ داخل");
 
 let afterRows = [];
 let confirmed = false;
