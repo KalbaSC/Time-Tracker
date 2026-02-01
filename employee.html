@@ -1243,6 +1243,13 @@ async function getTodayRows() {
     .sort((a, b) => timeToSec((a[4] || "").slice(0, 5)) - timeToSec((b[4] || "").slice(0, 5)));
 }
 
+function updateLastMovementInstant(type){
+  const timeNow = nowHHMM();
+  document.getElementById("sLast").textContent = timeNow;
+  document.getElementById("lastType").textContent =
+    type === "IN" ? "دخول" : "خروج";
+}
+ 
 function canPunch(type, todayRows) {
   if (todayRows.length === 0) {
     if (type === "OUT") return { ok: false, error: "❌ لا يمكن تسجيل خروج قبل تسجيل دخول." };
@@ -1345,6 +1352,7 @@ if (!confirmed) {
     msg.className = "msg ok";
     msg.style.display = "block";
     msg.textContent = `✔ تم تسجيل ${type === "IN" ? "الدخول" : "الخروج"} بنجاح`;
+   updateLastMovementInstant(type); 
     showToast('تم تسجيل البصمة بنجاح', 'success');
 setTimeout(() => {
   msg.style.display = "none";
