@@ -1573,7 +1573,7 @@ function loadEmployees() {
 
         $('empTable').innerHTML =
           html || '<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد بيانات.</td></tr>';
-        $('userCount').textContent = rows.length;
+        updateFilteredUserCount_();
 
         document.querySelectorAll('.delRowBtn').forEach(btn => {
           btn.onclick = async () => {
@@ -1833,14 +1833,27 @@ async function setLeaveStatus(row, status) {
   }
 }
 
+function updateFilteredUserCount_(){
+  const tbody = $('empTable');
+  const countEl = $('userCount');
+  if (!tbody || !countEl) return;
+
+  const allRows = Array.from(tbody.querySelectorAll('tr[data-empid]'));
+
+  const visibleRows = allRows.filter(r => r.style.display !== 'none');
+  countEl.textContent = visibleRows.length;
+}
+  
 $('searchEmployee')?.addEventListener('input', function(e) {
   const searchTerm = e.target.value.toLowerCase();
-  const rows = $('empTable').querySelectorAll('tr');
+  const rows = $('empTable').querySelectorAll('tr[data-empid]');
 
   rows.forEach(row => {
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(searchTerm) ? '' : 'none';
   });
+
+  updateFilteredUserCount_();
 });
 
 function openAddEmployeeModal() {
@@ -2321,7 +2334,6 @@ function downloadEmployeeReport(empId) {
   const details = lastReport.details[empId];
   const sortedDetails = details.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
   
-  // رأس التقرير بالعربية مع تواريخ إنجليزية
   const headerLines = [
     `تقرير الموظف: ${empName}`,
     `الرقم الوظيفي: ${empId}`,
@@ -2334,7 +2346,6 @@ function downloadEmployeeReport(empId) {
 
   const allRows = [];
   
-  // رأس الجدول
   allRows.push([
     "التاريخ",
     "اليوم",
@@ -2370,7 +2381,6 @@ function downloadEmployeeReport(empId) {
     ]);
   });
 
-  // إضافة ملخص
   allRows.push([]);
   allRows.push(['ملخص الموظف', '', '', '', '', '', '']);
   allRows.push([
@@ -2772,7 +2782,6 @@ function formatEnglishDateOnly(date) {
   return `${year}-${month}-${day} (${dayName})`;
 }
 
-// دالة لعلامة الفترة بالعربية لكن مع تواريخ إنجليزية
 function getPeriodLabelArabic(period, start, end) {
   const labels = {
     daily: 'يومي',
@@ -2986,7 +2995,7 @@ function downloadReportXLSX() {
     const summaryData = [
       ['تقرير الحضور الملخص', '', '', '', '', '', ''],
       ['نظام إدارة الموارد البشرية - الإمارات العربية المتحدة', '', '', '', '', '', ''],
-      ['تاريخ الإنشاء:', new Date().toLocaleDateString('en-US'), '', '', '', '', ''], // التاريخ بالإنجليزية
+      ['تاريخ الإنشاء:', new Date().toLocaleDateString('en-US'), '', '', '', '', ''],
       ['الفترة:', lastReport.range || '—', '', '', '', '', ''],
       ['عدد الموظفين:', lastReport.rows.length, '', '', '', '', ''],
       ['', '', '', '', '', '', ''],
@@ -3030,7 +3039,7 @@ function downloadReportXLSX() {
 
         sortedDetails.forEach(detail => {
           const date = new Date(detail.date);
-          const dayName = getEnglishDayName(date.getDay()); // اسم اليوم بالإنجليزية
+          const dayName = getEnglishDayName(date.getDay()); 
           const dayWorkedMin = parseHHMM(detail.dayHHMM || "00:00");
           const dayExpectedMin = dayWorkedMin > 0 ? requiredMinPerDay_() : 0;
           const dayDiffMin = dayWorkedMin - dayExpectedMin;
@@ -3048,8 +3057,8 @@ function downloadReportXLSX() {
             empId,
             empName,
             empDept,
-            date.toISOString().split('T')[0] + ` (${getEnglishDayShort(date.getDay())})`, // التاريخ بالإنجليزية
-            dayName, // اسم اليوم بالإنجليزية
+            date.toISOString().split('T')[0] + ` (${getEnglishDayShort(date.getDay())})`, 
+            dayName, 
             detail.pairsText || '—',
             detail.dayHHMM || '00:00',
             fmtMin(dayExpectedMin),
@@ -3126,7 +3135,7 @@ function downloadEmployeesCSV() {
     Array.from(tr.querySelectorAll('th,td')).map(td => {
       const text = (td.innerText || '').replace(/\r?\n|\r/g, ' ').trim();
       return `"${text.replace(/"/g, '""')}"`;
-    }).slice(0, -1) // remove actions column
+    }).slice(0, -1) 
   );
 
   if (rows.length <= 1) {
@@ -3134,7 +3143,7 @@ function downloadEmployeesCSV() {
     return;
   }
 
-  const csv = "\uFEFF" + rows.map(r => r.join(',')).join('\n'); // BOM for Arabic
+  const csv = "\uFEFF" + rows.map(r => r.join(',')).join('\n'); 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 
   const a = document.createElement('a');
@@ -3149,7 +3158,6 @@ function downloadEmployeesXLSX() {
   const table = document.getElementById('empTableContainer');
   if (!table) return;
 
-  // Read table rows (remove last column: الإجراءات)
   const rows = Array.from(table.querySelectorAll('tr'))
     .map(tr => Array.from(tr.querySelectorAll('th,td'))
       .map(td => (td.innerText || '').replace(/\r?\n|\r/g, ' ').trim())
@@ -3161,9 +3169,6 @@ function downloadEmployeesXLSX() {
     return;
   }
 
-  // Force contract dates to be TEXT so Excel never shows ######
-  // columns order in your table:
-  // 0 الاسم | 1 الرقم | 2 PIN | 3 القسم | 4 المسمى | 5 نوع الدوام | 6 بداية العقد | 7 نهاية العقد | 8 الراتب
   for (let i = 1; i < rows.length; i++) {
     rows[i][6] = rows[i][6] ? String(rows[i][6]) : "";
     rows[i][7] = rows[i][7] ? String(rows[i][7]) : "";
@@ -3173,7 +3178,6 @@ function downloadEmployeesXLSX() {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws["!rtl"] = true;
 
-  // Make columns wide enough (this prevents ######)
   ws["!cols"] = [
     { wch: 28 }, // الاسم
     { wch: 12 }, // الرقم
