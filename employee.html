@@ -562,6 +562,15 @@
         سنوات الخدمة: <span id="employeeService">—</span>
       </p>
         </div>
+             <div id="contractAlertBox"
+           style="display:none; margin-top:10px; padding:10px 14px;
+                  border-radius:12px;
+                  background:rgba(245,158,11,.12);
+                  border:1px solid rgba(245,158,11,.35);
+                  color:#fbbf24; font-weight:700;">
+        ⚠️ <span id="contractAlertText">تنبيه العقد</span>
+      </div>
+
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> تسجيل خروج
         </button>
@@ -1178,6 +1187,9 @@ async function login() {
     window.employeePin = pin;
     window.employeeDept = (data.department || '').trim();
    window.employeeService = data.serviceText || "—";
+   window.contractAlertText = data.contractAlertText || "";
+   window.hasContractAlert = !!data.hasContractAlert;
+   window.contractDaysLeft = data.contractDaysLeft;
     saveSession_();
 
    if (!data.lastPinChange) {
@@ -1190,7 +1202,13 @@ async function login() {
     $('employeeId').textContent = id;
    $('employeeService').textContent = window.employeeService;
     $('leaveEmpId').value = id;
+const alertBox = $('contractAlertBox');
+const alertText = $('contractAlertText');
 
+if (data.hasContractAlert && data.contractAlertText) {
+  if (alertText) alertText.textContent = data.contractAlertText;
+  if (alertBox) alertBox.style.display = 'block';
+}
     const deptEl = $('employeeDept');
     if (deptEl) deptEl.textContent = window.employeeDept || '—';
 
@@ -1199,6 +1217,11 @@ async function login() {
     $("uaeHeader").style.display = "flex";
 
     showToast(`مرحباً ${window.employeeName}`, 'success');
+     if (window.hasContractAlert && window.contractAlertText) {
+     setTimeout(() => {
+     showToast(window.contractAlertText, 'warning');
+     }, 800);
+    }
     resetPunchUI();
     await refreshAll();
     checkLocationStatus();
