@@ -570,7 +570,12 @@
                   color:#fbbf24; font-weight:700;">
         ⚠️ <span id="contractAlertText">تنبيه العقد</span>
       </div>
-
+<div class="section">
+    <h3><i class="fas fa-sticky-note"></i> ملاحظات الإدارة</h3>
+    <div id="employeeNotesBox">
+      <div style="color:#777;">لا توجد ملاحظات.</div>
+    </div>
+  </div>
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> تسجيل خروج
         </button>
@@ -1036,7 +1041,46 @@ async function handleDayRollover_() {
     loadMyLeaves();
   }
 }  
+async function loadEmployeeNotes() {
+  if (!window.currentID) return;
 
+  const box = $('employeeNotesBox');
+  if (!box) return;
+
+  box.innerHTML = `<div style="color:#777;">جاري تحميل الملاحظات...</div>`;
+
+  try {
+    const url = `${SCRIPT_URL}?action=getEmployeeNotes&id=${encodeURIComponent(window.currentID)}`;
+    const data = await jsonp(url);
+
+    if (!data.ok) throw new Error(data.error || "Server error");
+
+    const notes = data.notes || [];
+   const latestNote = notes[0]; 
+const lastSeen = localStorage.getItem("lastSeenNoteTime");
+
+if (latestNote && latestNote.createdAt !== lastSeen) {
+  showToast("📩 لديك ملاحظة جديدة من الإدارة", "warning");
+
+  localStorage.setItem("lastSeenNoteTime", latestNote.createdAt);
+}
+    if (!notes.length) {
+      box.innerHTML = `<div style="color:#777;">لا توجد ملاحظات.</div>`;
+      return;
+    }
+
+    box.innerHTML = notes.map(n => `
+      <div style="margin-bottom:12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.03);">
+        <div style="font-weight:800; color:var(--accent); margin-bottom:6px;">${n.createdBy || "الإدارة"}</div>
+        <div style="margin-bottom:8px;">${n.note || "—"}</div>
+        <div style="font-size:12px; color:var(--muted);">${n.createdAt || "—"}</div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+    box.innerHTML = `<div style="color:#777;">تعذر تحميل الملاحظات.</div>`;
+  }
+}
 async function changeMyPin(){
   if (!window.currentID) return;
 
@@ -1226,7 +1270,7 @@ if (data.hasContractAlert && data.contractAlertText) {
     await refreshAll();
     checkLocationStatus();
     loadMyLeaves();
-
+loadEmployeeNotes();
     const today = ymd(new Date());
     const leaveFrom = $('#leaveFrom');
     const leaveTo = $('#leaveTo');
@@ -1832,6 +1876,7 @@ function initialize() {
       refreshAll();
       checkLocationStatus();
       handleDayRollover_();
+     loadEmployeeNotes();
     }
   });
 }
