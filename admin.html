@@ -1287,6 +1287,25 @@ body{
       <button class="modal-close" onclick="closeEditEmployee()">✕</button>
     </div>
 
+    <div id="employeeNoteModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3>إرسال ملاحظة للموظف</h3>
+
+    <p style="margin-bottom:8px;">
+      الموظف: <b id="noteEmpName">—</b>
+    </p>
+
+    <textarea id="noteMessage"
+      placeholder="اكتب الملاحظة هنا..."
+      style="width:100%; min-height:120px; border-radius:12px; padding:12px;"></textarea>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+      <button class="btn-secondary" onclick="closeEmployeeNoteModal()">إلغاء</button>
+      <button class="btn-warning" onclick="sendEmployeeNoteFromAdmin()">إرسال</button>
+    </div>
+  </div>
+</div>
+    
     <div class="modal-body">
       <label>الاسم الكامل</label>
       <input id="editEmpName">
@@ -1628,6 +1647,9 @@ function loadEmployees() {
                 <button class="btn-danger delRowBtn" data-id="${id}">
                   🗑️ حذف
                 </button>
+                <button class="btn-warning" onclick="openEmployeeNoteModal('${emp.id}', '${(emp.name || '').replace(/'/g, "\\'")}')">
+  📝 إرسال ملاحظة
+</button>
               </td>
             </tr>
           `;
@@ -1694,6 +1716,62 @@ openEditEmployee({
   });
 }
 
+  let noteTargetEmployeeId = "";
+let noteTargetEmployeeName = "";
+
+function openEmployeeNoteModal(id, name) {
+  noteTargetEmployeeId = String(id || "");
+  noteTargetEmployeeName = String(name || "");
+
+  $('noteEmpName').textContent = noteTargetEmployeeName || "—";
+  $('noteMessage').value = "";
+  $('employeeNoteModal').style.display = "flex";
+}
+
+function closeEmployeeNoteModal() {
+  noteTargetEmployeeId = "";
+  noteTargetEmployeeName = "";
+  $('noteMessage').value = "";
+  $('employeeNoteModal').style.display = "none";
+}
+
+async function sendEmployeeNoteFromAdmin() {
+  const note = $('noteMessage').value.trim();
+  if (!note) {
+    showToast("اكتب الملاحظة أولاً", "warning");
+    return;
+  }
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "sendEmployeeNote",
+        payload: {
+          id: noteTargetEmployeeId,
+          employeeName: noteTargetEmployeeName,
+          note: note,
+          createdBy: "HR Admin"
+        }
+      })
+    });
+
+    const text = await res.text();
+    let data = {};
+    try { data = JSON.parse(text); } catch(e) {}
+
+    if (!data.ok) {
+      showToast(data.error || "فشل إرسال الملاحظة", "error");
+      return;
+    }
+
+    showToast("تم إرسال الملاحظة", "success");
+    closeEmployeeNoteModal();
+  } catch (e) {
+    showToast("خطأ في الإرسال", "error");
+  }
+}
+  
 function changePasswordRaw_(q) {
   try {
     const sh = SpreadsheetApp.getActive().getSheetByName("Employees");
