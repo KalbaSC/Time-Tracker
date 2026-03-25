@@ -558,6 +558,9 @@
           <h1 style="color: var(--accent); margin: 0;">مرحباً <span id="employeeName">...</span></h1>
           <p style="color: var(--muted); margin-top: 5px;">الرقم الوظيفي: <span id="employeeId">...</span></p>
          <p style="color: var(--muted); margin-top: 5px;">القسم: <span id="employeeDept">—</span></p>
+               <p style="color: var(--muted); margin-top: 5px;">
+        سنوات الخدمة: <span id="employeeService">—</span>
+      </p>
         </div>
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> تسجيل خروج
@@ -1174,6 +1177,7 @@ async function login() {
     window.employeeName = (data.name || 'موظف').trim();
     window.employeePin = pin;
     window.employeeDept = (data.department || '').trim();
+   window.employeeService = data.serviceText || "—";
     saveSession_();
 
    if (!data.lastPinChange) {
@@ -1184,6 +1188,7 @@ async function login() {
    }
     $('employeeName').textContent = window.employeeName;
     $('employeeId').textContent = id;
+   $('employeeService').textContent = window.employeeService;
     $('leaveEmpId').value = id;
 
     const deptEl = $('employeeDept');
