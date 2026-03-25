@@ -1024,6 +1024,14 @@ body{
     <div id="employeesContent" class="tab-content active">
 <div class="card">
   <h2>👥 إدارة الموظفين</h2>
+  <div id="contractAlertsBox"
+     style="display:none; margin:12px 0 18px; padding:14px; border-radius:14px;
+            background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.35);">
+  <div style="color:#fbbf24; font-weight:800; margin-bottom:8px;">
+    ⚠️ تنبيهات العقود
+  </div>
+  <div id="contractAlertsList" style="color:#fff; line-height:1.9;"></div>
+</div>
 
   <div class="header-actions">
     <div class="top-buttons">
@@ -1520,7 +1528,57 @@ function formatDateCell(v){
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   return s;
 }
- 
+
+function daysUntilContractEnd_(contractEnd) {
+  if (!contractEnd) return null;
+
+  const end = new Date(contractEnd);
+  if (isNaN(end)) return null;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  end.setHours(0,0,0,0);
+
+  return Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+}
+
+function renderContractAlerts_(employees) {
+  const box = $('contractAlertsBox');
+  const list = $('contractAlertsList');
+  if (!box || !list) return;
+
+  const alerts = (employees || [])
+    .map(emp => {
+      const daysLeft = daysUntilContractEnd_(emp.contractEnd);
+      if (daysLeft === null) return null;
+
+      if (daysLeft < 0) {
+        return `<span style="color:#ef4444;">🚨 الموظف <b>${emp.name}</b> (الرقم ${emp.id}) انتهى عقده منذ ${Math.abs(daysLeft)} يوم</span>`;
+      }
+
+      if (daysLeft <= 30) {
+        return `⚠️ الموظف <b>${emp.name}</b> (الرقم ${emp.id}) سينتهي عقده خلال <b>${daysLeft}</b> يوم`;
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+
+  if (!alerts.length) {
+    box.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+
+  box.style.display = 'block';
+  list.innerHTML = alerts.map(a => `<div>${a}</div>`).join('');
+
+  const activeTab = document.querySelector('.tab-btn.active')?.textContent || '';
+  if (activeTab.includes('الموظفين')) {
+    showToast(`يوجد ${alerts.length} تنبيه لعقود الموظفين`, 'warning', 5000);
+  }
+}
+  
 function loadEmployees() {
   showLoader('empLoader');
 
@@ -1534,6 +1592,7 @@ function loadEmployees() {
         if (!data || !data.ok) throw new Error(data?.error || "Bad response");
 
         const rows = data.employees || [];
+        renderContractAlerts_(rows);
         let html = "";
 
         rows.forEach(emp => {
