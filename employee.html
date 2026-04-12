@@ -1084,14 +1084,18 @@ box.innerHTML = notes.map(n => `
   </div>
 `).join("");
 
-    try {
-      await jsonp(`${SCRIPT_URL}?action=markEmployeeNotesRead&id=${encodeURIComponent(window.currentID)}`);
-      setTimeout(() => {
-        box.innerHTML = `<div style="color:#777;">لا توجد ملاحظات.</div>`;
-      }, 1500);
-    } catch (err) {
-      console.error("Failed to mark notes as read:", err);
-    }
+if (window.noteReadTimer) {
+  clearTimeout(window.noteReadTimer);
+}
+
+window.noteReadTimer = setTimeout(async () => {
+  try {
+    await jsonp(`${SCRIPT_URL}?action=markEmployeeNotesRead&id=${encodeURIComponent(window.currentID)}`);
+    box.innerHTML = `<div style="color:#777;">لا توجد ملاحظات.</div>`;
+  } catch (err) {
+    console.error("Failed to mark notes as read:", err);
+  }
+}, 5 * 60 * 1000);
 
   } catch (e) {
     console.error(e);
