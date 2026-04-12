@@ -1055,15 +1055,16 @@ async function loadEmployeeNotes() {
 
     if (!data.ok) throw new Error(data.error || "Server error");
 
-   const notes = (data.notes || []).filter(n => String(n.isRead || "0") !== "1");
-   const latestNote = notes[0]; 
-const lastSeen = localStorage.getItem("lastSeenNoteTime");
+    const notes = (data.notes || []).filter(n => String(n.isRead || "0") !== "1");
 
-if (latestNote && latestNote.createdAt !== lastSeen) {
-  showToast("📩 لديك ملاحظة جديدة من الإدارة", "warning");
+    const latestNote = notes[0];
+    const lastSeen = localStorage.getItem("lastSeenNoteTime");
 
-  localStorage.setItem("lastSeenNoteTime", latestNote.createdAt);
-}
+    if (latestNote && latestNote.createdAt !== lastSeen) {
+      showToast("📩 لديك ملاحظة جديدة من الإدارة", "warning");
+      localStorage.setItem("lastSeenNoteTime", latestNote.createdAt);
+    }
+
     if (!notes.length) {
       box.innerHTML = `<div style="color:#777;">لا توجد ملاحظات.</div>`;
       return;
@@ -1077,17 +1078,21 @@ if (latestNote && latestNote.createdAt !== lastSeen) {
       </div>
     `).join("");
 
-   try {
-  await jsonp(`${SCRIPT_URL}?action=markEmployeeNotesRead&id=${encodeURIComponent(window.currentID)}`);
-} catch (err) {
-  console.error("Failed to mark notes as read:", err);
-}
-   
+    try {
+      await jsonp(`${SCRIPT_URL}?action=markEmployeeNotesRead&id=${encodeURIComponent(window.currentID)}`);
+      setTimeout(() => {
+        box.innerHTML = `<div style="color:#777;">لا توجد ملاحظات.</div>`;
+      }, 1500);
+    } catch (err) {
+      console.error("Failed to mark notes as read:", err);
+    }
+
   } catch (e) {
     console.error(e);
     box.innerHTML = `<div style="color:#777;">تعذر تحميل الملاحظات.</div>`;
   }
 }
+ 
 async function changeMyPin(){
   if (!window.currentID) return;
 
