@@ -1070,13 +1070,19 @@ async function loadEmployeeNotes() {
       return;
     }
 
-    box.innerHTML = notes.map(n => `
-      <div style="margin-bottom:12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.03);">
-        <div style="font-weight:800; color:var(--accent); margin-bottom:6px;">${n.createdBy || "الإدارة"}</div>
-        <div style="margin-bottom:8px;">${n.note || "—"}</div>
-        <div style="font-size:12px; color:var(--muted);">${n.createdAt || "—"}</div>
-      </div>
-    `).join("");
+box.innerHTML = notes.map(n => `
+  <div style="margin-bottom:12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.03);">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px;">
+      <div style="font-weight:800; color:var(--accent);">${n.createdBy || "الإدارة"}</div>
+      ${String(n.isRead || "0") !== "1"
+        ? `<span style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.35); padding:3px 8px; border-radius:999px; font-size:12px; font-weight:700;">● جديد</span>`
+        : ``
+      }
+    </div>
+    <div style="margin-bottom:8px;">${n.note || "—"}</div>
+    <div style="font-size:12px; color:var(--muted);">${n.createdAt || "—"}</div>
+  </div>
+`).join("");
 
     try {
       await jsonp(`${SCRIPT_URL}?action=markEmployeeNotesRead&id=${encodeURIComponent(window.currentID)}`);
