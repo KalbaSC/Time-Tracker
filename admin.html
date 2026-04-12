@@ -1020,7 +1020,29 @@ body{
   <button class="tab-btn" onclick="showTab('reports')">📊 التقارير</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
 </div>
+<div class="card">
+  <h2>📝 سجل ملاحظات الموظفين</h2>
+  <button class="btn-yellow" onclick="loadAllEmployeeNotes()">تحميل الملاحظات</button>
 
+  <div style="overflow-x:auto; margin-top:15px;">
+    <table>
+      <thead>
+        <tr>
+          <th>الموظف</th>
+          <th>الملاحظة</th>
+          <th>من</th>
+          <th>وقت الإرسال</th>
+          <th>الحالة</th>
+          <th>وقت القراءة</th>
+          <th>قُرئت بواسطة</th>
+        </tr>
+      </thead>
+      <tbody id="allEmployeeNotesTable">
+        <tr><td colspan="7">لا توجد بيانات</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
     <div id="employeesContent" class="tab-content active">
 <div class="card">
   <h2>👥 إدارة الموظفين</h2>
@@ -3479,6 +3501,41 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   });
+}
+  async function loadAllEmployeeNotes() {
+  const tbody = document.getElementById('allEmployeeNotesTable');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="7">جاري التحميل...</td></tr>`;
+
+  try {
+    const data = await jsonp(`${SCRIPT_URL}?action=getAllEmployeeNotes`);
+
+    if (!data.ok) throw new Error(data.error || "Server error");
+
+    const notes = data.notes || [];
+
+    if (!notes.length) {
+      tbody.innerHTML = `<tr><td colspan="7">لا توجد ملاحظات</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = notes.map(n => `
+      <tr>
+        <td>${n.employeeName || n.employeeId}</td>
+        <td>${n.note}</td>
+        <td>${n.createdBy}</td>
+        <td>${n.createdAt}</td>
+        <td>${n.isRead === "1" ? "✔ تمت القراءة" : "⏳ غير مقروءة"}</td>
+        <td>${n.readAt || "-"}</td>
+        <td>${n.readBy || "-"}</td>
+      </tr>
+    `).join("");
+
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="7">خطأ</td></tr>`;
+  }
 }
 </script>
 
