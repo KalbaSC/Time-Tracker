@@ -1523,7 +1523,26 @@ function showLoader(id) {
   const loader = $(id);
   if (loader) loader.style.display = 'block';
 }
+  
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "cb_" + Math.random().toString(36).substr(2, 9);
 
+    window[callbackName] = function (data) {
+      resolve(data);
+      delete window[callbackName];
+      script.remove();
+    };
+
+    const script = document.createElement("script");
+    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + callbackName;
+
+    script.onerror = reject;
+
+    document.body.appendChild(script);
+  });
+}
+  
 function hideLoader(id) {
   const loader = $(id);
   if (loader) loader.style.display = 'none';
