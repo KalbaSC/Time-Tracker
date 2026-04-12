@@ -1055,7 +1055,7 @@ async function loadEmployeeNotes() {
 
     if (!data.ok) throw new Error(data.error || "Server error");
 
-    const notes = data.notes || [];
+   const notes = (data.notes || []).filter(n => String(n.isRead || "0") !== "1");
    const latestNote = notes[0]; 
 const lastSeen = localStorage.getItem("lastSeenNoteTime");
 
@@ -1076,6 +1076,13 @@ if (latestNote && latestNote.createdAt !== lastSeen) {
         <div style="font-size:12px; color:var(--muted);">${n.createdAt || "—"}</div>
       </div>
     `).join("");
+
+   try {
+  await jsonp(`${SCRIPT_URL}?action=markEmployeeNotesRead&id=${encodeURIComponent(window.currentID)}`);
+} catch (err) {
+  console.error("Failed to mark notes as read:", err);
+}
+   
   } catch (e) {
     console.error(e);
     box.innerHTML = `<div style="color:#777;">تعذر تحميل الملاحظات.</div>`;
