@@ -2096,7 +2096,9 @@ function initialize() {
 }
 
 window.onload = initialize;
- let userName = '';
+let userName = '';
+let waitingForContact = false;
+let lastUserMessage = "";
 let tooltipDismissed = false;
 
 function chatAddMessage(content, isUser = false) {
@@ -2189,24 +2191,45 @@ function showMainButtons() {
 
 function submitUserMessage() {
   const input = document.getElementById("userMessage");
-  const msg = input?.value.trim();
+  const msg = input ? input.value.trim() : "";
   if (!msg) return;
 
-  chatAddMessage(msg, true);
+  addMessage(msg, true);
 
-  fetch('https://script.google.com/macros/s/AKfycbxTb9_7bVSNPqkErv5NFNpMk55MdVkzfdMxrRGSaeIeKl-Shv3WP82UybUX8IEzPVGw/exec', {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: userName, message: msg })
-  }).finally(() => {
-    chatAddMessage("شكراً على تواصلك، سيتم الرد عليك في أقرب وقت.", false);
-  });
+  if (!waitingForContact) {
+    lastUserMessage = msg;
+    waitingForContact = true;
+
+    setTimeout(() => {
+      addMessage("شكراً لرسالتك 🙏 يرجى تزويدنا برقم هاتفك أو بريدك الإلكتروني للتواصل معك.", false);
+    }, 400);
+  } 
+  else {
+    const contact = msg;
+
+    fetch('https://script.google.com/macros/s/AKfycbxTb9_7bVSNPqkErv5NFNpMk55MdVkzfdMxrRGSaeIeKl-Shv3WP82UybUX8IEzPVGw/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: userName,
+        message: lastUserMessage,
+        contact: contact,
+        token: "KSC_SECRET_123"
+      })
+    })
+    .finally(() => {
+      addMessage("تم استلام بياناتك ✅ سيتم التواصل معك قريباً.", false);
+    });
+
+    waitingForContact = false;
+    lastUserMessage = "";
+  }
 
   input.value = '';
 }
 
-function reply(option) {
+ function reply(option) {
   let userText = '';
   if (option === 'training') userText = 'مواعيد التدريبات';
   else if (option === 'register') userText = 'التسجيل في النادي';
