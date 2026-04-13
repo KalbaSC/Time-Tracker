@@ -1079,6 +1079,7 @@ body{
   <button class="tab-btn active" onclick="showTab('employees')">👥 الموظفين</button>
   <button class="tab-btn" onclick="showTab('leaves')">📋 الإجازات</button>
   <button class="tab-btn" onclick="showTab('reports')">📊 التقارير</button>
+  <button class="tab-btn" onclick="showTab('tafreegh')">🚗 طلبات التفريغ</button>
   <button class="tab-btn" onclick="showTab('documents')">📁 إدارة العقود والوثائق</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
 </div>
@@ -1351,6 +1352,47 @@ body{
           <tr>
             <td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td>
           </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="tafreeghContent" class="tab-content">
+  <div class="card">
+    <h2>🚗 طلبات التفريغ</h2>
+
+    <div class="leave-toolbar">
+      <div class="leave-filters">
+        <button class="btn-yellow leave-btn" onclick="loadTafreeghRequests('all')">الكل</button>
+        <button class="btn-yellow leave-btn" onclick="loadTafreeghRequests('pending')">قيد الانتظار</button>
+        <button class="btn-yellow leave-btn" onclick="loadTafreeghRequests('approved')">المقبولة</button>
+        <button class="btn-yellow leave-btn" onclick="loadTafreeghRequests('rejected')">المرفوضة</button>
+      </div>
+
+      <button class="btn-yellow leave-refresh" onclick="loadTafreeghRequests()">🔄 تحديث</button>
+    </div>
+
+    <div class="loader" id="tafreeghAdminLoader"></div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>الموظف</th>
+            <th>الرقم</th>
+            <th>التاريخ</th>
+            <th>المكان</th>
+            <th>السبب</th>
+            <th>الملاحظات</th>
+            <th>المرفق</th>
+            <th>الحالة</th>
+            <th>ملاحظة الإدارة</th>
+            <th>الإجراء</th>
+          </tr>
+        </thead>
+        <tbody id="tafreeghAdminTable">
+          <tr><td colspan="10" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1672,6 +1714,9 @@ function showTab(tabName) {
   document.getElementById(`${tabName}Content`).classList.add('active');
 
   currentTab = tabName;
+  if (tabName === 'tafreegh') {
+  loadTafreeghRequests();
+}
   if (tabName === 'documents') {
     loadEmployeeDocumentsAdmin();
   }
@@ -2138,7 +2183,6 @@ async function loadLeaves(filter = 'all') {
       return;
     }
 
-    // fetch balances for all unique employees in this list
     const uniqueEmployees = [...new Map(
       leaves.map(lv => [String(lv.id || "").trim(), { id: lv.id, name: lv.name }])
     ).values()];
@@ -2255,6 +2299,119 @@ async function setLeaveStatus(row, status) {
   }
 }
 
+async function loadTafreeghRequests(filter = 'all') {
+  showLoader('tafreeghAdminLoader');
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getTafreeghAll",
+        payload: {}
+      })
+    });
+
+    const text = await res.text();
+    const data = JSON.parse(text);
+
+    if (!data.ok || !data.requests) {
+      $('tafreeghAdminTable').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>';
+      return;
+    }
+
+    let rows = data.requests || [];
+
+    if (filter !== 'all') {
+      rows = rows.filter(r => String(r.status || '').toLowerCase() === filter);
+    }
+
+    if (!rows.length) {
+      $('tafreeghAdminTable').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#777">لا يوجد طلبات</td></tr>';
+      return;
+    }
+
+    let html = '';
+
+    rows.forEach(r => {
+      let statusClass = '';
+      switch (r.status) {
+        case 'Pending': statusClass = 'status-pending'; break;
+        case 'Approved': statusClass = 'status-approved'; break;
+        case 'Rejected': statusClass = 'status-rejected'; break;
+      }
+
+      const attachHtml = r.fileUrl
+        ? `<a href="${r.fileUrl}" target="_blank" style="color:#ffd21f;text-decoration:underline;">📎 عرض</a>`
+        : `<span style="color:#777">—</span>`;
+
+      const noteBox = (r.status === "Pending")
+        ? `<textarea id="tafreegh_note_${r.row}" placeholder="ملاحظة / سبب الرفض ..." style="width:100%;min-height:38px;border-radius:10px;padding:8px;"></textarea>`
+        : `<span style="color:#777">${r.adminNote || "—"}</span>`;
+
+      let actionsHtml = '';
+      if (r.status === "Pending") {
+        actionsHtml = `
+          <div class="actions-cell">
+            <button class="btn-success" onclick="setTafreeghStatus(${r.row}, 'Approved')">✔ قبول</button>
+            <button class="btn-danger" onclick="setTafreeghStatus(${r.row}, 'Rejected')">✖ رفض</button>
+          </div>
+        `;
+      } else {
+        actionsHtml = `<span style="color:#888">—</span>`;
+      }
+
+      html += `
+        <tr>
+          <td>${r.name || "-"}</td>
+          <td>${r.id || "-"}</td>
+          <td>${onlyDate(r.workDate)}</td>
+          <td>${r.workPlace || "-"}</td>
+          <td>${r.reason || "-"}</td>
+          <td>${r.notes || "-"}</td>
+          <td>${attachHtml}</td>
+          <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+          <td>${noteBox}</td>
+          <td>${actionsHtml}</td>
+        </tr>
+      `;
+    });
+
+    $('tafreeghAdminTable').innerHTML = html;
+  } catch (e) {
+    console.error(e);
+    $('tafreeghAdminTable').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
+  } finally {
+    hideLoader('tafreeghAdminLoader');
+  }
+}
+
+async function setTafreeghStatus(row, status) {
+  if (!confirm(`هل تريد ${status === 'Approved' ? 'قبول' : 'رفض'} هذا الطلب؟`)) return;
+
+  showLoader('tafreeghAdminLoader');
+
+  try {
+    const noteEl = document.getElementById(`tafreegh_note_${row}`);
+    const note = noteEl ? noteEl.value.trim() : '';
+
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updateTafreeghStatus",
+        payload: { row, status, note }
+      })
+    });
+
+    showToast(`تم ${status === 'Approved' ? 'قبول' : 'رفض'} الطلب`, 'success');
+    await loadTafreeghRequests();
+  } catch (e) {
+    console.error(e);
+    showToast('خطأ في تحديث حالة الطلب', 'error');
+  } finally {
+    hideLoader('tafreeghAdminLoader');
+  }
+}
+  
 function updateFilteredUserCount_(){
   const tbody = $('empTable');
   const countEl = $('userCount');
