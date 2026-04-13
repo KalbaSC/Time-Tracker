@@ -1122,6 +1122,7 @@ body{
               <th>نوع الإجازة</th>
               <th>من</th>
               <th>إلى</th>
+              <th>الرصيد</th>
               <th>المرفق</th>
               <th>الحالة</th>
               <th>الملاحظة / سبب الرفض</th>
@@ -1895,6 +1896,75 @@ async function handleChangePassword(){
     hideLoader('cpLoader');
   }
 }
+
+function leaveDaysBetween_(fromDate, toDate) {
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  const diff = Math.round((end - start) / (1000 * 60 * 60 * 24));
+  return diff + 1;
+}
+
+function getLeaveTypeBalance_(balance, leaveType) {
+  if (!balance) return { entitled: 0, remaining: 0, label: "غير معروف" };
+
+  if (leaveType === "سنوية") {
+    return {
+      entitled: Number(balance.annualEntitled || 30),
+      remaining: Number(balance.annualRemaining || 0),
+      label: "سنوية"
+    };
+  }
+
+  if (leaveType === "مرضية") {
+    return {
+      entitled: Number(balance.sickEntitled || 15),
+      remaining: Number(balance.sickRemaining || 0),
+      label: "مرضية"
+    };
+  }
+
+  if (leaveType === "أخرى") {
+    return {
+      entitled: Number(balance.otherEntitled || 5),
+      remaining: Number(balance.otherRemaining || 0),
+      label: "أخرى"
+    };
+  }
+
+  if (leaveType === "بدون راتب") {
+    return {
+      entitled: 0,
+      remaining: 999999,
+      label: "بدون راتب"
+    };
+  }
+
+  return { entitled: 0, remaining: 0, label: leaveType || "غير معروف" };
+}
+
+function renderLeaveBalanceCell_(balance, leaveType, fromDate, toDate) {
+  const days = leaveDaysBetween_(fromDate, toDate);
+  const b = getLeaveTypeBalance_(balance, leaveType);
+
+  if (leaveType === "بدون راتب") {
+    return {
+      html: `<span style="color:#aaa;">بدون خصم (${days} يوم)</span>`,
+      canApprove: true
+    };
+  }
+
+  const enough = b.remaining >= days;
+
+  return {
+    html: enough
+      ? `<span style="color:#22c55e; font-weight:700;">${b.remaining} / ${b.entitled} (المطلوب ${days})</span>`
+      : `<span style="color:#ef4444; font-weight:800;">${b.remaining} / ${b.entitled} (المطلوب ${days})</span>`,
+    canApprove: enough
+  };
+}
   
 async function loadLeaves(filter = 'all') {
   showLoader('leaveLoader');
@@ -1914,28 +1984,50 @@ async function loadLeaves(filter = 'all') {
       data = JSON.parse(text);
     } catch (e) {
       console.error('JSON parse error:', e);
-      $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
+      $('leaveTable').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
       return;
     }
 
     if (!data.ok || !data.leaves) {
-      $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>';
+      $('leaveTable').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#777">لا يوجد بيانات</td></tr>';
       return;
     }
 
     let leaves = data.leaves;
 
     if (filter !== 'all') {
-      leaves = leaves.filter(lv => lv.status.toLowerCase() === filter);
+      leaves = leaves.filter(lv => String(lv.status || "").toLowerCase() === filter);
     }
 
     if (!leaves.length) {
-      $('leaveTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا يوجد طلبات ${filter === 'all' ? '' : `(${filter})`}</td></tr>`;
+      $('leaveTable').innerHTML = `<tr><td colspan="10" style="text-align:center;color:#777">لا يوجد طلبات ${filter === 'all' ? '' : `(${filter})`}</td></tr>`;
       return;
     }
 
+    // fetch balances for all unique employees in this list
+    const uniqueEmployees = [...new Map(
+      leaves.map(lv => [String(lv.id || "").trim(), { id: lv.id, name: lv.name }])
+    ).values()];
+
+    const balanceMap = {};
+
+    await Promise.all(uniqueEmployees.map(async emp => {
+      try {
+        const result = await jsonp(
+          `${SCRIPT_URL}?action=getLeaveBalance&id=${encodeURIComponent(emp.id)}&name=${encodeURIComponent(emp.name || "")}`
+        );
+        if (result && result.ok) {
+          balanceMap[String(emp.id).trim()] = result.balance || {};
+        }
+      } catch (err) {
+        console.error("Balance fetch failed for employee:", emp.id, err);
+        balanceMap[String(emp.id).trim()] = null;
+      }
+    }));
+
     let html = "";
-    leaves.forEach((lv, index) => {
+
+    leaves.forEach((lv) => {
       let statusClass = '';
       switch (lv.status) {
         case 'Pending': statusClass = 'status-pending'; break;
@@ -1943,14 +2035,26 @@ async function loadLeaves(filter = 'all') {
         case 'Rejected': statusClass = 'status-rejected'; break;
       }
 
+      const balance = balanceMap[String(lv.id || "").trim()];
+      const balanceInfo = renderLeaveBalanceCell_(balance, lv.type, lv.fromDate, lv.toDate);
+
       let actionsHtml = "";
       if (lv.status === "Pending") {
-        actionsHtml = `
-          <div class="actions-cell">
-            <button class="btn-success" onclick="setLeaveStatus(${lv.row}, 'Approved')">✔ قبول</button>
-            <button class="btn-danger" onclick="setLeaveStatus(${lv.row}, 'Rejected')">✖ رفض</button>
-          </div>
-        `;
+        if (balanceInfo.canApprove) {
+          actionsHtml = `
+            <div class="actions-cell">
+              <button class="btn-success" onclick="setLeaveStatus(${lv.row}, 'Approved')">✔ قبول</button>
+              <button class="btn-danger" onclick="setLeaveStatus(${lv.row}, 'Rejected')">✖ رفض</button>
+            </div>
+          `;
+        } else {
+          actionsHtml = `
+            <div class="actions-cell">
+              <button class="btn-success" disabled style="opacity:.5; cursor:not-allowed;">✔ قبول</button>
+              <button class="btn-danger" onclick="setLeaveStatus(${lv.row}, 'Rejected')">✖ رفض</button>
+            </div>
+          `;
+        }
       } else {
         actionsHtml = `<span style="color:#888">—</span>`;
       }
@@ -1970,6 +2074,7 @@ async function loadLeaves(filter = 'all') {
           <td>${lv.type}</td>
           <td>${onlyDate(lv.fromDate)}</td>
           <td>${onlyDate(lv.toDate)}</td>
+          <td>${balanceInfo.html}</td>
           <td>${attachHtml}</td>
           <td><span class="status-badge ${statusClass}">${lv.status}</span></td>
           <td>${noteBox}</td>
@@ -1982,7 +2087,7 @@ async function loadLeaves(filter = 'all') {
 
   } catch (error) {
     console.error('Load leaves error:', error);
-    $('leaveTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
+    $('leaveTable').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#777">خطأ في تحميل البيانات</td></tr>';
     showToast('خطأ في تحميل طلبات الإجازة', 'error');
   } finally {
     hideLoader('leaveLoader');
