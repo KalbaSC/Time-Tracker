@@ -2268,6 +2268,18 @@ function renderProfileCompletion(docs) {
   fill.className = `leave-balance-fill ${getProfileCompletionClass(percent)}`;
   fill.style.width = `${percent}%`;
   text.textContent = `${percent}%`;
+   if (window.currentID) {
+    const lastPromptKey = `profilePrompt_${window.currentID}`;
+    const alreadyPrompted = sessionStorage.getItem(lastPromptKey);
+
+    if (percent < 100 && !alreadyPrompted) {
+      setTimeout(() => {
+        showToast("⚠️ يرجى إكمال الملف الوظيفي برفع الهوية والجواز والعقد", "warning", 5000);
+      }, 800);
+
+      sessionStorage.setItem(lastPromptKey, "1");
+    }
+  }
 
   if (percent === 100) {
     note.textContent = "الملف مكتمل بالكامل";
