@@ -2762,7 +2762,7 @@ async function loadEmployeeBalance(empId) {
       <div style="padding:12px; border:1px solid #2a2a2a; border-radius:12px; background:#111; margin-bottom:10px;">
         <div style="font-weight:800; color:#f6c21a; margin-bottom:8px;">📊 رصيد الإجازات</div>
         <div>السنوية: <b>${b.annualRemaining ?? 0} / ${b.annualEntitled ?? 30}</b></div>
-        <div style="color:${Number(b.sickRemaining) <= 0 ? '#ef4444' : '#22c55e'};">
+        <div style="color:${Number(b.sickRemaining) <= 2 ? '#ef4444' : '#22c55e'};">
           المرضية: <b>${b.sickRemaining ?? 0} / ${b.sickEntitled ?? 15}</b>
         </div>
         <div>أخرى: <b>${b.otherRemaining ?? 0} / ${b.otherEntitled ?? 5}</b></div>
