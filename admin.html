@@ -2758,15 +2758,35 @@ async function loadEmployeeBalance(empId) {
 
     const b = data.balance || {};
 
+    const annual = Number(b.annualRemaining ?? 0);
+    const sick = Number(b.sickRemaining ?? 0);
+    const other = Number(b.otherRemaining ?? 0);
+
+    function getColor(val) {
+      if (val <= 2) return '#ef4444';
+      if (val <= 5) return '#f59e0b';
+      return '#22c55e';
+    }
+
     box.innerHTML = `
       <div style="padding:12px; border:1px solid #2a2a2a; border-radius:12px; background:#111; margin-bottom:10px;">
         <div style="font-weight:800; color:#f6c21a; margin-bottom:8px;">📊 رصيد الإجازات</div>
-        <div>السنوية: <b>${b.annualRemaining ?? 0} / ${b.annualEntitled ?? 30}</b></div>
-        <div style="color:${Number(b.sickRemaining) <= 2 ? '#ef4444' : '#22c55e'};">
-          المرضية: <b>${b.sickRemaining ?? 0} / ${b.sickEntitled ?? 15}</b>
+
+        <div style="color:${getColor(annual)};">
+          السنوية: <b>${annual} / ${b.annualEntitled ?? 30}</b>
         </div>
-        <div>أخرى: <b>${b.otherRemaining ?? 0} / ${b.otherEntitled ?? 5}</b></div>
-        <div>بدون راتب المستخدمة: <b>${b.unpaidUsed ?? 0}</b></div>
+
+        <div style="color:${getColor(sick)};">
+          المرضية: <b>${sick} / ${b.sickEntitled ?? 15}</b>
+        </div>
+
+        <div style="color:${getColor(other)};">
+          أخرى: <b>${other} / ${b.otherEntitled ?? 5}</b>
+        </div>
+
+        <div style="color:#9ca3af;">
+          بدون راتب المستخدمة: <b>${b.unpaidUsed ?? 0}</b>
+        </div>
       </div>
     `;
   } catch (e) {
