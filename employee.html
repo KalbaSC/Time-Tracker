@@ -2194,14 +2194,14 @@ function submitUserMessage() {
   const msg = input ? input.value.trim() : "";
   if (!msg) return;
 
-  addMessage(msg, true);
+  chatAddMessage(msg, true);
 
   if (!waitingForContact) {
     lastUserMessage = msg;
     waitingForContact = true;
 
     setTimeout(() => {
-      addMessage("شكراً لرسالتك 🙏 يرجى تزويدنا برقم هاتفك أو بريدك الإلكتروني للتواصل معك.", false);
+      chatAddMessage("شكراً لرسالتك 🙏 يرجى تزويدنا برقم هاتفك أو بريدك الإلكتروني للتواصل معك.", false);
     }, 400);
   } 
   else {
@@ -2219,7 +2219,7 @@ function submitUserMessage() {
       })
     })
     .finally(() => {
-      addMessage("تم استلام بياناتك ✅ سيتم التواصل معك قريباً.", false);
+      chatAddMessage("تم استلام بياناتك ✅ سيتم التواصل معك قريباً.", false);
     });
 
     waitingForContact = false;
