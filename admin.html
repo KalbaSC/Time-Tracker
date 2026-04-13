@@ -2737,6 +2737,7 @@ function openEditEmployee(emp) {
   $('editEmpSalary').value = emp.salary || "";
 
   $('editEmployeeModal').style.display = "flex";
+  loadEmployeeBalance(emp.id);
 }
 
 function closeEditEmployee() {
