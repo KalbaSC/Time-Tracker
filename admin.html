@@ -1079,6 +1079,7 @@ body{
   <button class="tab-btn active" onclick="showTab('employees')">👥 الموظفين</button>
   <button class="tab-btn" onclick="showTab('leaves')">📋 الإجازات</button>
   <button class="tab-btn" onclick="showTab('reports')">📊 التقارير</button>
+  <button class="tab-btn" onclick="showTab('documents')">📁 إدارة العقود والوثائق</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
 </div>
 <div class="card">
@@ -1311,6 +1312,51 @@ body{
   </div>
 </div>
 
+<div id="documentsContent" class="tab-content">
+  <div class="card">
+    <h2>📁 إدارة العقود والوثائق</h2>
+
+    <div class="header-actions">
+      <div class="top-buttons">
+        <button class="btn-yellow" onclick="loadEmployeeDocumentsAdmin()">
+          <i class="fas fa-rotate"></i> تحميل الوثائق
+        </button>
+      </div>
+
+      <div class="flex" style="align-items:center; gap:15px;">
+        <span class="badge">عدد الملفات: <span id="documentsCount">0</span></span>
+        <div class="search-box" style="width:300px;">
+          <input type="text" id="searchDocuments" placeholder="🔍 بحث عن موظف أو رقم...">
+        </div>
+      </div>
+    </div>
+
+    <div class="loader" id="documentsLoader"></div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>الرقم</th>
+            <th>الموظف</th>
+            <th>الهوية</th>
+            <th>الجواز</th>
+            <th>العقد</th>
+            <th>الصورة</th>
+            <th>نسبة الاكتمال</th>
+            <th>آخر تحديث</th>
+          </tr>
+        </thead>
+        <tbody id="documentsTable">
+          <tr>
+            <td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+    
 <div id="settingsContent" class="tab-content">
   <div class="card">
     <h2>⚙️ الإعدادات</h2>
@@ -1626,7 +1672,9 @@ function showTab(tabName) {
   document.getElementById(`${tabName}Content`).classList.add('active');
 
   currentTab = tabName;
-
+  if (tabName === 'documents') {
+    loadEmployeeDocumentsAdmin();
+  }
   if (tabName === 'reports' && !lastReport) {
     loadReport();
   }
@@ -2902,6 +2950,111 @@ async function loadEmployeeBalance(empId) {
     console.error(e);
     box.innerHTML = "خطأ في تحميل الرصيد";
   }
+}
+
+async function loadEmployeeDocumentsAdmin() {
+  showLoader('documentsLoader');
+
+  try {
+    const data = await jsonp(`${SCRIPT_URL}?action=getAllEmployeeDocuments&_=${Date.now()}`);
+
+    if (!data.ok) {
+      $('documentsTable').innerHTML = `
+        <tr><td colspan="8" style="text-align:center;color:#777">تعذر تحميل الوثائق</td></tr>
+      `;
+      return;
+    }
+
+    const rows = data.documents || [];
+
+    if (!rows.length) {
+      $('documentsTable').innerHTML = `
+        <tr><td colspan="8" style="text-align:center;color:#777">لا توجد وثائق مرفوعة.</td></tr>
+      `;
+      $('documentsCount').textContent = 0;
+      return;
+    }
+
+    function linkCell(url, label) {
+      if (!url) return `<span style="color:#777">—</span>`;
+      return `<a href="${url}" target="_blank" style="color:#ffd21f;text-decoration:underline;">${label}</a>`;
+    }
+
+    function calcCompletion(row) {
+      let percent = 0;
+      if (row.idCardUrl) percent += 34;
+      if (row.passportUrl) percent += 33;
+      if (row.contractUrl) percent += 33;
+      if (percent > 100) percent = 100;
+      return percent;
+    }
+
+    function barClass(percent) {
+      if (percent < 100) return percent <= 40 ? 'bad' : 'warn';
+      return 'good';
+    }
+
+    $('documentsTable').innerHTML = rows.map(r => {
+      const percent = calcCompletion(r);
+      const cls = barClass(percent);
+
+      return `
+        <tr data-docid="${String(r.employeeId || '').trim()}">
+          <td>${r.employeeId || '-'}</td>
+          <td>${r.employeeName || '-'}</td>
+          <td>${linkCell(r.idCardUrl, 'عرض')}</td>
+          <td>${linkCell(r.passportUrl, 'عرض')}</td>
+          <td>${linkCell(r.contractUrl, 'عرض')}</td>
+          <td>${linkCell(r.photoUrl, 'عرض')}</td>
+          <td>
+            <div style="min-width:160px;">
+              <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:6px;">
+                <span style="font-weight:800;">${percent}%</span>
+                <span style="color:#aaa;">${percent === 100 ? 'مكتمل' : 'غير مكتمل'}</span>
+              </div>
+              <div class="leave-balance-track" style="height:8px;">
+                <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
+              </div>
+            </div>
+          </td>
+          <td>${r.updatedAt || '-'}</td>
+        </tr>
+      `;
+    }).join('');
+
+    $('documentsCount').textContent = rows.length;
+    attachDocumentsSearch_();
+
+  } catch (e) {
+    console.error(e);
+    $('documentsTable').innerHTML = `
+      <tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل الوثائق</td></tr>
+    `;
+  } finally {
+    hideLoader('documentsLoader');
+  }
+}
+
+function attachDocumentsSearch_() {
+  const input = $('searchDocuments');
+  if (!input || input.dataset.bound === "1") return;
+
+  input.addEventListener('input', function () {
+    const term = this.value.toLowerCase().trim();
+    const rows = $('documentsTable').querySelectorAll('tr[data-docid]');
+
+    let visible = 0;
+    rows.forEach(row => {
+      const txt = row.textContent.toLowerCase();
+      const show = txt.includes(term);
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    $('documentsCount').textContent = visible;
+  });
+
+  input.dataset.bound = "1";
 }
   
 function closeEditEmployee() {
