@@ -2111,11 +2111,64 @@ async function loadLeaveBalance() {
 
     const b = data.balance || {};
 
+    const annualEntitled = Number(b.annualEntitled ?? 30);
+    const annualRemaining = Number(b.annualRemaining ?? 0);
+
+    const sickEntitled = Number(b.sickEntitled ?? 15);
+    const sickRemaining = Number(b.sickRemaining ?? 0);
+
+    const otherEntitled = Number(b.otherEntitled ?? 5);
+    const otherRemaining = Number(b.otherRemaining ?? 0);
+
+    const unpaidUsed = Number(b.unpaidUsed ?? 0);
+
+    function getBarClass(remaining, entitled) {
+      const ratio = entitled > 0 ? (remaining / entitled) : 0;
+      if (ratio <= 0.2) return "bad";
+      if (ratio <= 0.5) return "warn";
+      return "good";
+    }
+
+    function getPercent(remaining, entitled) {
+      if (!entitled || entitled <= 0) return 0;
+      return Math.max(0, Math.min(100, (remaining / entitled) * 100));
+    }
+
+    function rowHtml(label, remaining, entitled) {
+      const percent = getPercent(remaining, entitled);
+      const cls = getBarClass(remaining, entitled);
+
+      return `
+        <div class="leave-balance-item">
+          <div class="leave-balance-head">
+            <span class="leave-balance-name">${label}</span>
+            <span class="leave-balance-numbers">${remaining} / ${entitled}</span>
+          </div>
+          <div class="leave-balance-track">
+            <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
+          </div>
+          <div class="leave-balance-foot">المتبقي ${Math.round(percent)}%</div>
+        </div>
+      `;
+    }
+
     box.innerHTML = `
-      <div>الإجازة السنوية: <b>${b.annualRemaining ?? 0}</b> / ${b.annualEntitled ?? 30}</div>
-      <div>الإجازة المرضية: <b>${b.sickRemaining ?? 0}</b> / ${b.sickEntitled ?? 15}</div>
-      <div>إجازات أخرى: <b>${b.otherRemaining ?? 0}</b> / ${b.otherEntitled ?? 5}</div>
-      <div>بدون راتب المستخدمة: <b>${b.unpaidUsed ?? 0}</b></div>
+      <div class="leave-balance-bars">
+        ${rowHtml("الإجازة السنوية", annualRemaining, annualEntitled)}
+        ${rowHtml("الإجازة المرضية", sickRemaining, sickEntitled)}
+        ${rowHtml("إجازات أخرى", otherRemaining, otherEntitled)}
+
+        <div class="leave-balance-item">
+          <div class="leave-balance-head">
+            <span class="leave-balance-name">بدون راتب المستخدمة</span>
+            <span class="leave-balance-numbers">${unpaidUsed} يوم</span>
+          </div>
+          <div class="leave-balance-track">
+            <div class="leave-balance-fill warn" style="width:${Math.min(unpaidUsed * 10, 100)}%;"></div>
+          </div>
+          <div class="leave-balance-foot">للعرض فقط</div>
+        </div>
+      </div>
     `;
   } catch (e) {
     console.error("loadLeaveBalance error:", e);
