@@ -1908,28 +1908,33 @@ function leaveDaysBetween_(fromDate, toDate) {
 }
 
 function getLeaveTypeBalance_(balance, leaveType) {
-  if (!balance) return { entitled: 0, remaining: 0, label: "غير معروف" };
+  if (!balance) {
+    return { entitled: 0, used: 0, remaining: 0, label: "غير معروف" };
+  }
 
   if (leaveType === "سنوية") {
     return {
-      entitled: Number(balance.annualEntitled || 30),
-      remaining: Number(balance.annualRemaining || 0),
+      entitled: Number(balance.annualEntitled ?? 30),
+      used: Number(balance.annualUsed ?? 0),
+      remaining: Number(balance.annualRemaining ?? 0),
       label: "سنوية"
     };
   }
 
   if (leaveType === "مرضية") {
     return {
-      entitled: Number(balance.sickEntitled || 15),
-      remaining: Number(balance.sickRemaining || 0),
+      entitled: Number(balance.sickEntitled ?? 15),
+      used: Number(balance.sickUsed ?? 0),
+      remaining: Number(balance.sickRemaining ?? 0),
       label: "مرضية"
     };
   }
 
   if (leaveType === "أخرى") {
     return {
-      entitled: Number(balance.otherEntitled || 5),
-      remaining: Number(balance.otherRemaining || 0),
+      entitled: Number(balance.otherEntitled ?? 5),
+      used: Number(balance.otherUsed ?? 0),
+      remaining: Number(balance.otherRemaining ?? 0),
       label: "أخرى"
     };
   }
@@ -1937,12 +1942,13 @@ function getLeaveTypeBalance_(balance, leaveType) {
   if (leaveType === "بدون راتب") {
     return {
       entitled: 0,
+      used: Number(balance.unpaidUsed ?? 0),
       remaining: 999999,
       label: "بدون راتب"
     };
   }
 
-  return { entitled: 0, remaining: 0, label: leaveType || "غير معروف" };
+  return { entitled: 0, used: 0, remaining: 0, label: leaveType || "غير معروف" };
 }
 
 function renderLeaveBalanceCell_(balance, leaveType, fromDate, toDate) {
@@ -1960,8 +1966,8 @@ function renderLeaveBalanceCell_(balance, leaveType, fromDate, toDate) {
 
   return {
     html: enough
-      ? `<span style="color:#22c55e; font-weight:700;">${b.remaining} / ${b.entitled} (المطلوب ${days})</span>`
-      : `<span style="color:#ef4444; font-weight:800;">${b.remaining} / ${b.entitled} (المطلوب ${days})</span>`,
+      ? `<span style="color:#22c55e; font-weight:800;">${b.remaining} / ${b.entitled} <span style="color:#aaa;">(المطلوب ${days})</span></span>`
+      : `<span style="color:#ef4444; font-weight:900;">${b.remaining} / ${b.entitled} <span style="color:#ef4444;">(المطلوب ${days})</span></span>`,
     canApprove: enough
   };
 }
