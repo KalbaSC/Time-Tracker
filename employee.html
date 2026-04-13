@@ -2509,12 +2509,12 @@ loadMyLeaves();
 loadLeaveBalance();
 loadEmployeeDocuments();
 
-    setInterval(checkLocationStatus, 30000);
+    setInterval(checkLocationStatus, 60000);
     setInterval(() => {
       if (window.currentID) refreshAll();
-    }, 60000);
+    }, 120000);
 
-    setInterval(loadMyLeaves, 30000);
+    setInterval(loadMyLeaves, 90000);
   } else {
     $("dash").style.display = "none";
     $("uaeHeader").style.display = "none";
