@@ -957,6 +957,66 @@
 </div>
  
       </div>
+
+    <div class="section">
+  <h3><i class="fas fa-briefcase"></i> طلب تفريغ</h3>
+
+  <div class="leave-status">
+    <h4><i class="fas fa-info-circle"></i> معلومات طلب التفريغ</h4>
+    <p style="color: var(--muted); font-size: 14px;">
+      استخدم هذا الطلب عندما يكون العمل خارج مقر النادي ويتطلب اعتماد الموارد البشرية.
+    </p>
+  </div>
+
+  <form id="tafreeghForm" onsubmit="return submitTafreeghForm(event);">
+    <label><i class="fas fa-calendar-day"></i> تاريخ العمل الخارجي</label>
+    <input id="tafreeghDate" type="date" required>
+
+    <label><i class="fas fa-location-dot"></i> مكان العمل</label>
+    <input id="tafreeghPlace" placeholder="مثال: الاتحاد / ملعب خارجي / فعالية خارجية" required>
+
+    <label><i class="fas fa-comment-alt"></i> سبب التفريغ</label>
+    <input id="tafreeghReason" placeholder="اكتب السبب" required>
+
+    <label><i class="fas fa-note-sticky"></i> ملاحظات إضافية</label>
+    <input id="tafreeghNotes" placeholder="اختياري">
+
+    <label><i class="fas fa-paperclip"></i> مرفق (اختياري)</label>
+    <input type="file" id="tafreeghFile" accept=".pdf,.jpg,.jpeg,.png">
+
+    <button type="submit" class="btn-yellow" id="submitTafreeghBtn">
+      <i class="fas fa-paper-plane"></i> إرسال طلب التفريغ
+    </button>
+  </form>
+
+  <div class="loader" id="tafreeghLoader"></div>
+  <div id="tafreeghMsg" class="msg"></div>
+
+  <hr style="margin:18px 0;border:0;border-top:1px solid var(--line);">
+
+  <h4 style="margin-bottom:10px;color:var(--accent);font-weight:900;">
+    <i class="fas fa-clipboard-list"></i> طلبات التفريغ السابقة
+  </h4>
+
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>المكان</th>
+          <th>السبب</th>
+          <th>الحالة</th>
+          <th>ملاحظة الإدارة</th>
+        </tr>
+      </thead>
+      <tbody id="myTafreeghTable">
+        <tr><td colspan="5" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+     
 <div class="section">
   <h3><i class="fas fa-folder-open"></i> ملف الموظف</h3>
 
@@ -1605,6 +1665,7 @@ if (data.hasContractAlert && data.contractAlertText) {
     checkLocationStatus();
 loadMyLeaves();
 loadLeaveBalance();
+loadMyTafreegh();
 loadEmployeeNotes();
 loadEmployeeDocuments();
     const today = ymd(new Date());
@@ -2147,6 +2208,124 @@ async function loadMyLeaves(){
   }
 }
 
+async function submitTafreeghForm(event) {
+  event.preventDefault();
+
+  if (!window.currentID) {
+    showToast('يرجى تسجيل الدخول أولاً', 'error');
+    return false;
+  }
+
+  const workDate = $('tafreeghDate')?.value || '';
+  const workPlace = $('tafreeghPlace')?.value.trim() || '';
+  const reason = $('tafreeghReason')?.value.trim() || '';
+  const notes = $('tafreeghNotes')?.value.trim() || '';
+  const file = $('tafreeghFile')?.files?.[0] || null;
+
+  if (!workDate || !workPlace || !reason) {
+    showToast('يرجى تعبئة جميع الحقول المطلوبة', 'error');
+    return false;
+  }
+
+  const btn = $('submitTafreeghBtn');
+  const loader = $('tafreeghLoader');
+  const msg = $('tafreeghMsg');
+
+  if (btn) btn.disabled = true;
+  if (loader) loader.style.display = 'block';
+  if (msg) {
+    msg.style.display = 'none';
+    msg.className = 'msg';
+  }
+
+  try {
+    const payload = {
+      id: String(window.currentID),
+      name: String(window.employeeName || ''),
+      workDate,
+      workPlace,
+      reason,
+      notes
+    };
+
+    if (file) {
+      payload.fileData = await readFileAsBase64_(file);
+      payload.fileName = file.name;
+      payload.fileType = file.type || "application/octet-stream";
+    }
+
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "requestTafreegh",
+        payload
+      })
+    });
+
+    if (msg) {
+      msg.className = 'msg ok';
+      msg.style.display = 'block';
+      msg.textContent = '✔ تم إرسال طلب التفريغ بنجاح';
+    }
+
+    showToast('تم إرسال طلب التفريغ بنجاح', 'success');
+    $('tafreeghForm')?.reset();
+
+    setTimeout(() => {
+      loadMyTafreegh();
+    }, 1500);
+
+  } catch (e) {
+    console.error(e);
+    if (msg) {
+      msg.className = 'msg err';
+      msg.style.display = 'block';
+      msg.textContent = '❌ حدث خطأ أثناء إرسال الطلب';
+    }
+    showToast('حدث خطأ أثناء إرسال الطلب', 'error');
+  } finally {
+    if (loader) loader.style.display = 'none';
+    if (btn) btn.disabled = false;
+  }
+
+  return false;
+}
+
+async function loadMyTafreegh() {
+  if (!window.currentID) return;
+
+  const tbody = $('myTafreeghTable');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
+
+  try {
+    const data = await jsonp(`${SCRIPT_URL}?action=getTafreeghByEmployee&id=${encodeURIComponent(window.currentID)}`);
+
+    if (!data.ok) throw new Error(data.error || "Server error");
+
+    const rows = data.requests || [];
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">لا يوجد طلبات.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${onlyDate(r.workDate)}</td>
+        <td>${r.workPlace || '—'}</td>
+        <td>${r.reason || '—'}</td>
+        <td>${statusBadgeHtml_(r.status)}</td>
+        <td>${r.adminNote || '—'}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777">تعذر تحميل الطلبات.</td></tr>`;
+  }
+}
+ 
 async function loadLeaveBalance() {
   if (!window.currentID) return;
 
@@ -2507,6 +2686,7 @@ refreshAll();
 checkLocationStatus();
 loadMyLeaves();
 loadLeaveBalance();
+   loadMyTafreegh();
 loadEmployeeDocuments();
 
     setInterval(checkLocationStatus, 60000);
