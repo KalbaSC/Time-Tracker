@@ -2026,11 +2026,28 @@ function renderLeaveBalanceCell_(balance, leaveType, fromDate, toDate) {
   }
 
   const enough = b.remaining >= days;
+  const entitled = Number(b.entitled || 0);
+  const remaining = Number(b.remaining || 0);
+  const percent = entitled > 0 ? Math.max(0, Math.min(100, (remaining / entitled) * 100)) : 0;
+
+  let cls = "good";
+  if (percent <= 20) cls = "bad";
+  else if (percent <= 50) cls = "warn";
 
   return {
-    html: enough
-      ? `<span style="color:#22c55e; font-weight:800;">${b.remaining} / ${b.entitled} <span style="color:#aaa;">(المطلوب ${days})</span></span>`
-      : `<span style="color:#ef4444; font-weight:900;">${b.remaining} / ${b.entitled} <span style="color:#ef4444;">(المطلوب ${days})</span></span>`,
+    html: `
+      <div style="min-width:170px;">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:6px;">
+          <span style="color:${enough ? '#22c55e' : '#ef4444'};font-weight:800;">
+            ${remaining} / ${entitled}
+          </span>
+          <span style="color:${enough ? '#aaa' : '#ef4444'};">المطلوب ${days}</span>
+        </div>
+        <div class="leave-balance-track" style="height:8px;">
+          <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
+        </div>
+      </div>
+    `,
     canApprove: enough
   };
 }
@@ -2819,34 +2836,65 @@ async function loadEmployeeBalance(empId) {
 
     const b = data.balance || {};
 
-    const annual = Number(b.annualRemaining ?? 0);
-    const sick = Number(b.sickRemaining ?? 0);
-    const other = Number(b.otherRemaining ?? 0);
+    const annualEntitled = Number(b.annualEntitled ?? 30);
+    const annualRemaining = Number(b.annualRemaining ?? 0);
 
-    function getColor(val) {
-      if (val <= 2) return '#ef4444';
-      if (val <= 5) return '#f59e0b';
-      return '#22c55e';
+    const sickEntitled = Number(b.sickEntitled ?? 15);
+    const sickRemaining = Number(b.sickRemaining ?? 0);
+
+    const otherEntitled = Number(b.otherEntitled ?? 5);
+    const otherRemaining = Number(b.otherRemaining ?? 0);
+
+    const unpaidUsed = Number(b.unpaidUsed ?? 0);
+
+    function getBarClass(remaining, entitled) {
+      const ratio = entitled > 0 ? (remaining / entitled) : 0;
+      if (ratio <= 0.2) return "bad";
+      if (ratio <= 0.5) return "warn";
+      return "good";
+    }
+
+    function getPercent(remaining, entitled) {
+      if (!entitled || entitled <= 0) return 0;
+      return Math.max(0, Math.min(100, (remaining / entitled) * 100));
+    }
+
+    function rowHtml(label, remaining, entitled) {
+      const percent = getPercent(remaining, entitled);
+      const cls = getBarClass(remaining, entitled);
+
+      return `
+        <div class="leave-balance-item">
+          <div class="leave-balance-head">
+            <span class="leave-balance-name">${label}</span>
+            <span class="leave-balance-numbers">${remaining} / ${entitled}</span>
+          </div>
+          <div class="leave-balance-track">
+            <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
+          </div>
+          <div class="leave-balance-foot">المتبقي ${Math.round(percent)}%</div>
+        </div>
+      `;
     }
 
     box.innerHTML = `
       <div style="padding:12px; border:1px solid #2a2a2a; border-radius:12px; background:#111; margin-bottom:10px;">
-        <div style="font-weight:800; color:#f6c21a; margin-bottom:8px;">📊 رصيد الإجازات</div>
+        <div style="font-weight:800; color:#f6c21a; margin-bottom:10px;">📊 رصيد الإجازات</div>
+        <div class="leave-balance-bars">
+          ${rowHtml("السنوية", annualRemaining, annualEntitled)}
+          ${rowHtml("المرضية", sickRemaining, sickEntitled)}
+          ${rowHtml("أخرى", otherRemaining, otherEntitled)}
 
-        <div style="color:${getColor(annual)};">
-          السنوية: <b>${annual} / ${b.annualEntitled ?? 30}</b>
-        </div>
-
-        <div style="color:${getColor(sick)};">
-          المرضية: <b>${sick} / ${b.sickEntitled ?? 15}</b>
-        </div>
-
-        <div style="color:${getColor(other)};">
-          أخرى: <b>${other} / ${b.otherEntitled ?? 5}</b>
-        </div>
-
-        <div style="color:#9ca3af;">
-          بدون راتب المستخدمة: <b>${b.unpaidUsed ?? 0}</b>
+          <div class="leave-balance-item">
+            <div class="leave-balance-head">
+              <span class="leave-balance-name">بدون راتب المستخدمة</span>
+              <span class="leave-balance-numbers">${unpaidUsed} يوم</span>
+            </div>
+            <div class="leave-balance-track">
+              <div class="leave-balance-fill warn" style="width:${Math.min(unpaidUsed * 10, 100)}%;"></div>
+            </div>
+            <div class="leave-balance-foot">للعرض فقط</div>
+          </div>
         </div>
       </div>
     `;
