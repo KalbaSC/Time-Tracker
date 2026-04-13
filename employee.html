@@ -2207,17 +2207,17 @@ function submitUserMessage() {
   else {
     const contact = msg;
 
-    fetch('https://script.google.com/macros/s/AKfycbxTb9_7bVSNPqkErv5NFNpMk55MdVkzfdMxrRGSaeIeKl-Shv3WP82UybUX8IEzPVGw/exec', {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: userName,
-        message: lastUserMessage,
-        contact: contact,
-        token: "KSC_SECRET_123"
-      })
-    })
+fetch('https://script.google.com/macros/s/AKfycbxTb9_7bVSNPqkErv5NFNpMk55MdVkzfdMxrRGSaeIeKl-Shv3WP82UybUX8IEzPVGw/exec', {
+  method: 'POST',
+  mode: 'no-cors',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    action: "saveContactMessage",
+    name: userName,
+    message: lastUserMessage,
+    contact: contact
+  })
+})
     .finally(() => {
       chatAddMessage("تم استلام بياناتك ✅ سيتم التواصل معك قريباً.", false);
     });
