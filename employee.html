@@ -1002,6 +1002,11 @@
   <div class="leave-status" style="margin-top:18px;">
     <h4><i class="fas fa-paperclip"></i> الملفات المرفوعة</h4>
     <div id="employeeDocsList" style="color:var(--muted);">جاري التحميل...</div>
+   <div style="margin-top:12px;">
+  <button type="button" class="btn-yellow" id="editDocsBtn" style="display:none;" onclick="toggleEmployeeDocsEdit(true)">
+    <i class="fas fa-pen"></i> تعديل الملف
+  </button>
+</div>
   </div>
 </div>
      
@@ -2245,12 +2250,28 @@ function getProfileCompletionClass(percent) {
   return "good";
 }
 
+function toggleEmployeeDocsEdit(showForm) {
+  const form = $("employeeDocsForm");
+  const editBtn = $("editDocsBtn");
+
+  if (!form || !editBtn) return;
+
+  if (showForm) {
+    form.style.display = "block";
+    editBtn.style.display = "none";
+  } else {
+    form.style.display = "none";
+    editBtn.style.display = "block";
+  }
+}
+ 
 function renderProfileCompletion(docs) {
   const fill = $("profileCompletionFill");
   const text = $("profileCompletionText");
   const note = $("profileCompletionNote");
   const list = $("employeeDocsList");
-
+const form = $("employeeDocsForm");
+const editBtn = $("editDocsBtn");
   if (!fill || !text || !note || !list) return;
 
   const hasId = !!docs.idCardUrl;
@@ -2268,6 +2289,18 @@ function renderProfileCompletion(docs) {
   fill.className = `leave-balance-fill ${getProfileCompletionClass(percent)}`;
   fill.style.width = `${percent}%`;
   text.textContent = `${percent}%`;
+   if (percent === 100) {
+      if (editBtn) {
+    editBtn.innerHTML = percent === 100
+      ? `<i class="fas fa-pen"></i> تعديل الملف`
+      : `<i class="fas fa-upload"></i> إكمال الملف`;
+  }
+    if (form) form.style.display = "none";
+    if (editBtn) editBtn.style.display = "block";
+  } else {
+    if (form) form.style.display = "block";
+    if (editBtn) editBtn.style.display = "none";
+  }
    if (window.currentID) {
     const lastPromptKey = `profilePrompt_${window.currentID}`;
     const alreadyPrompted = sessionStorage.getItem(lastPromptKey);
