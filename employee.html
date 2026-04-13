@@ -819,7 +819,12 @@
 
       <div class="section">
         <h3><i class="fas fa-calendar-plus"></i> طلب إجازة</h3>
-        
+        <div class="leave-status" id="leaveBalanceBox">
+  <h4><i class="fas fa-wallet"></i> رصيد الإجازات</h4>
+  <div id="leaveBalanceContent" style="color: var(--muted); line-height: 1.9;">
+    جاري تحميل الرصيد...
+  </div>
+</div>
         <div class="leave-status">
           <h4><i class="fas fa-info-circle"></i> معلومات الإجازة</h4>
           <p style="color: var(--muted); font-size: 14px;">
@@ -1483,7 +1488,8 @@ if (data.hasContractAlert && data.contractAlertText) {
     resetPunchUI();
     await refreshAll();
     checkLocationStatus();
-    loadMyLeaves();
+loadMyLeaves();
+loadLeaveBalance();
 loadEmployeeNotes();
     const today = ymd(new Date());
     const leaveFrom = $('#leaveFrom');
@@ -1933,8 +1939,12 @@ await fetch(SCRIPT_URL, {
     if (fromElement) fromElement.min = today;
     if (toElement) toElement.min = today;
 
-    loadMyLeaves();
-setTimeout(loadMyLeaves, 2000);
+loadMyLeaves();
+loadLeaveBalance();
+setTimeout(() => {
+  loadMyLeaves();
+  loadLeaveBalance();
+}, 2000);
 
   } catch (error) {
     console.error('Form submission error:', error);
@@ -2021,6 +2031,35 @@ async function loadMyLeaves(){
   }
 }
 
+async function loadLeaveBalance() {
+  if (!window.currentID) return;
+
+  const box = document.getElementById("leaveBalanceContent");
+  if (!box) return;
+
+  box.innerHTML = "جاري تحميل الرصيد...";
+
+  try {
+    const data = await jsonp(
+      `${SCRIPT_URL}?action=getLeaveBalance&id=${encodeURIComponent(window.currentID)}&name=${encodeURIComponent(window.employeeName || "")}`
+    );
+
+    if (!data.ok) throw new Error(data.error || "Server error");
+
+    const b = data.balance || {};
+
+    box.innerHTML = `
+      <div>الإجازة السنوية: <b>${b.annualRemaining ?? 0}</b> / ${b.annualEntitled ?? 30}</div>
+      <div>الإجازة المرضية: <b>${b.sickRemaining ?? 0}</b> / ${b.sickEntitled ?? 15}</div>
+      <div>إجازات أخرى: <b>${b.otherRemaining ?? 0}</b> / ${b.otherEntitled ?? 5}</div>
+      <div>بدون راتب المستخدمة: <b>${b.unpaidUsed ?? 0}</b></div>
+    `;
+  } catch (e) {
+    console.error("loadLeaveBalance error:", e);
+    box.innerHTML = "تعذر تحميل رصيد الإجازات.";
+  }
+}
+ 
 function readFileAsBase64_(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -2057,9 +2096,10 @@ function initialize() {
     $("uaeHeader").style.display = "flex";
 
     resetPunchUI();
-    refreshAll();
-    checkLocationStatus();
-    loadMyLeaves();
+refreshAll();
+checkLocationStatus();
+loadMyLeaves();
+loadLeaveBalance();
 
     setInterval(checkLocationStatus, 30000);
     setInterval(() => {
