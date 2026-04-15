@@ -264,6 +264,35 @@
       .topbar-left h2{font-size:20px}
       .chart-wrap{height:300px}
     }
+    /* Skeleton Loading */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #1a1a1a;
+  border-radius: 10px;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  height: 100%;
+  width: 150%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 204, 0, 0.2),
+    transparent
+  );
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 100%;
+  }
+}
   </style>
 </head>
 <body>
@@ -616,11 +645,23 @@ async function getDepartmentEmployeesCount(department){
     String(emp.department || "").trim() === String(department || "").trim()
   ).length;
 }
+
+function setLoadingState(){
+  const ids = ["sumEmployees","sumAttended","sumDays","sumHours","sumCompletion"];
+
+  ids.forEach(id => {
+    const el = $(id);
+    el.textContent = "";
+    el.classList.add("skeleton");
+    el.style.height = "24px";
+  });
+}
   
 async function loadDirectorReport(){
   if (!currentDirector) return;
 
   $("loader").style.display = "block";
+  setLoadingState();
   $("reportTable").innerHTML = `<tr><td colspan="9" style="color:#777;padding:30px">جاري التحميل...</td></tr>`;
 
   try{
@@ -674,6 +715,14 @@ function getStatusMeta(row){
 }
 
 function renderSummary(rows){
+  const ids = ["sumEmployees","sumAttended","sumDays","sumHours","sumCompletion"];
+
+  ids.forEach(id => {
+    const el = $(id);
+    el.classList.remove("skeleton");
+    el.style.height = "auto";
+  });
+
   const totalEmployees = Number(window.departmentEmployeeCount || 0);
   const attendedEmployees = rows.length;
   const totalDays = rows.reduce((a,b) => a + Number(b.presentDays || 0), 0);
