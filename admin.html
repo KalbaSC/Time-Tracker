@@ -1826,14 +1826,21 @@ function showTab(tabName) {
   document.getElementById(`${tabName}Content`).classList.add('active');
 
   currentTab = tabName;
+
   if (tabName === 'tafreegh') {
-  loadTafreeghRequests();
-}
+    loadTafreeghRequests();
+  }
+
   if (tabName === 'documents') {
     loadEmployeeDocumentsAdmin();
   }
+
   if (tabName === 'reports' && !lastReport) {
     loadReport();
+  }
+
+  if (tabName === 'payroll') {
+    loadPendingAdjustments();
   }
 }
 
