@@ -637,9 +637,10 @@ async function loadDirectorReport(){
     if (!data.ok) throw new Error(data.error || "Failed to load report");
 
     lastRows = Array.isArray(data.rows) ? data.rows : [];
+    window.departmentEmployeeCount = Number(data.departmentEmployeeCount || 0);
     $("rangeChip").textContent = "النطاق: " + (data.range || "—");
 
-    await renderSummary(lastRows);
+    renderSummary(lastRows);
     renderTable(lastRows);
     renderHoursChart(lastRows);
     renderStatusChart(lastRows);
@@ -665,8 +666,8 @@ function getStatusMeta(row){
   return { text: "منخفض", cls: "s-bad", bucket: "bad" };
 }
 
-async function renderSummary(rows){
-  const totalEmployees = await getDepartmentEmployeesCount(currentDirector.department);
+function renderSummary(rows){
+  const totalEmployees = Number(window.departmentEmployeeCount || 0);
   const attendedEmployees = rows.length;
   const totalDays = rows.reduce((a,b) => a + Number(b.presentDays || 0), 0);
   const totalSec = rows.reduce((a,b) => a + Number(b.totalSec || 0), 0);
