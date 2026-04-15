@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة المدير - حضور الإدارة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --card:#111213;
+      --card-2:#171717;
+      --accent:#f6c21a;
+      --accent-2:#ffda41;
+      --text:#f4f4f4;
+      --muted:#a9a9a9;
+      --line:#262626;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --info:#3b82f6;
+      --radius:18px;
+      --shadow:0 10px 28px rgba(0,0,0,.28);
+      font-family:"Tajawal",sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:20px;
+    }
+    .container{max-width:1400px;margin:auto}
+    .card{
+      background:linear-gradient(180deg,#151515,#101010);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .login-box{
+      max-width:480px;
+      margin:55px auto;
+      padding:24px;
+    }
+    .brand{
+      text-align:center;
+      margin-bottom:20px;
+    }
+    .brand .logo{
+      width:68px;height:68px;border-radius:18px;
+      margin:0 auto 12px;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      color:#111;font-size:28px;
+      box-shadow:0 12px 30px rgba(246,194,26,.18);
+    }
+    .brand h1{
+      color:var(--accent);
+      font-size:26px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+    .brand p{color:var(--muted);font-size:14px}
+    label{
+      display:block;
+      margin:12px 0 6px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:700;
+    }
+    input,select{
+      width:100%;
+      background:#0e0e0e;
+      color:var(--text);
+      border:1px solid #2c2c2c;
+      border-radius:12px;
+      padding:13px 14px;
+      font-size:15px;
+      outline:none;
+      transition:.2s;
+    }
+    input:focus,select:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(246,194,26,.08);
+    }
+    .btn{
+      width:100%;
+      border:none;
+      border-radius:14px;
+      padding:15px 18px;
+      font-weight:900;
+      font-size:16px;
+      cursor:pointer;
+      transition:.2s;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:8px;
+      text-decoration:none;
+    }
+    .btn-primary{
+      background:var(--accent);
+      color:#111;
+      margin-top:18px;
+    }
+    .btn-primary:hover{background:var(--accent-2);transform:translateY(-1px)}
+    .btn-ghost{
+      background:#1a1a1a;color:var(--text);border:1px solid #2c2c2c;
+    }
+    .btn-ghost:hover{background:#202020}
+    .msg{
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:12px;
+      font-size:14px;
+      font-weight:700;
+    }
+    .msg.show{display:block}
+    .msg.error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#ff8c8c}
+    .msg.success{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);color:#7de2bf}
+    .topbar{
+      display:none;
+      margin-bottom:18px;
+      padding:16px 18px;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .topbar-left h2{
+      color:var(--accent);
+      font-size:24px;
+      font-weight:900;
+      margin-bottom:5px;
+    }
+    .topbar-left p{
+      color:var(--muted);
+      font-size:14px;
+    }
+    .topbar-right{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    }
+    .chip{
+      background:#191919;
+      border:1px solid #2a2a2a;
+      color:var(--muted);
+      padding:10px 14px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+    }
+    #dashboard{display:none}
+    .filters{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:14px;
+      padding:18px;
+      margin-bottom:18px;
+    }
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .summary-card{
+      padding:18px;
+      text-align:center;
+    }
+    .summary-card .icon{
+      width:46px;height:46px;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 12px;
+      font-size:18px;
+      color:#111;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    }
+    .summary-card .label{color:var(--muted);font-size:13px;font-weight:700}
+    .summary-card .value{font-size:28px;font-weight:900;margin-top:8px}
+    .charts{
+      display:grid;
+      grid-template-columns:1.4fr 1fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+    .chart-card{padding:18px}
+    .chart-head{
+      display:flex;justify-content:space-between;align-items:center;gap:8px;
+      margin-bottom:12px;flex-wrap:wrap;
+    }
+    .chart-head h3{
+      color:var(--accent);
+      font-size:18px;
+      font-weight:900;
+    }
+    .chart-wrap{position:relative;height:340px}
+    .table-card{padding:18px}
+    .table-head{
+      display:flex;justify-content:space-between;align-items:center;gap:8px;
+      margin-bottom:14px;flex-wrap:wrap;
+    }
+    .table-head h3{
+      color:var(--accent);font-size:18px;font-weight:900;
+    }
+    .table-wrap{
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#0f0f0f;
+    }
+    table{width:100%;border-collapse:collapse;min-width:900px}
+    th,td{
+      padding:13px 12px;
+      border-bottom:1px solid #222;
+      text-align:center;
+      white-space:nowrap;
+      font-size:14px;
+    }
+    th{
+      background:#161616;
+      color:var(--accent);
+      font-weight:800;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .status{
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      display:inline-block;
+    }
+    .s-ok{background:rgba(16,185,129,.16);color:#78e2be}
+    .s-warn{background:rgba(245,158,11,.16);color:#f8c567}
+    .s-bad{background:rgba(239,68,68,.16);color:#ff9999}
+    .loader{
+      display:none;
+      text-align:center;
+      padding:24px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    @media (max-width:1100px){
+      .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .charts{grid-template-columns:1fr}
+    }
+    @media (max-width:640px){
+      body{padding:12px}
+      .filters{grid-template-columns:1fr}
+      .summary{grid-template-columns:1fr}
+      .topbar{padding:14px}
+      .topbar-left h2{font-size:20px}
+      .chart-wrap{height:300px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loginBox" class="card login-box">
+      <div class="brand">
+        <div class="logo"><i class="fas fa-chart-line"></i></div>
+        <h1>لوحة المدير</h1>
+        <p>عرض حضور القسم والرسوم البيانية فقط</p>
+      </div>
+
+      <label>اسم المدير</label>
+      <input id="directorName" placeholder="مثال: مدير الخدمات المساندة">
+
+      <label>القسم</label>
+      <select id="directorDept">
+        <option value="">اختر القسم</option>
+        <option value="الخدمات المساندة">الخدمات المساندة</option>
+        <option value="الالعاب الفردية">الالعاب الفردية</option>
+        <option value="الالعاب الجماعية">الالعاب الجماعية</option>
+        <option value="امانة السر">امانة السر</option>
+        <option value="الاتصال المؤسسي">الاتصال المؤسسي</option>
+        <option value="الاستراتيجية">الاستراتيجية</option>
+        <option value="إدارة الفعاليات">إدارة الفعاليات</option>
+      </select>
+
+      <label>رمز الدخول</label>
+      <input id="directorPass" type="password" placeholder="أدخل رمز الدخول">
+
+      <button class="btn btn-primary" onclick="loginDirector()">
+        <i class="fas fa-sign-in-alt"></i> دخول
+      </button>
+
+      <div id="loginMsg" class="msg"></div>
+      <div class="note">
+        لتشغيل الصفحة بسرعة، عدّل بيانات المدراء داخل المتغير <b>DIRECTOR_ACCOUNTS</b> في أسفل الملف.
+      </div>
+    </div>
+
+    <div id="topbar" class="card topbar">
+      <div class="topbar-left">
+        <h2 id="pageTitle">لوحة حضور القسم</h2>
+        <p>القسم: <span id="deptLabel">—</span> | المدير: <span id="dirLabel">—</span></p>
+      </div>
+      <div class="topbar-right">
+        <div class="chip" id="uaeTime">وقت الإمارات: --:--</div>
+        <button class="btn btn-ghost" style="width:auto;padding:11px 16px" onclick="logoutDirector()">
+          <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+        </button>
+      </div>
+    </div>
+
+    <div id="dashboard">
+      <div class="card filters">
+        <div>
+          <label>الفترة</label>
+          <select id="period" onchange="togglePeriodFields()">
+            <option value="daily">يومي</option>
+            <option value="weekly" selected>أسبوعي</option>
+            <option value="monthly">شهري</option>
+            <option value="range">فترة محددة</option>
+          </select>
+        </div>
+        <div>
+          <label>التاريخ الأساسي</label>
+          <input id="reportDate" type="date">
+        </div>
+        <div id="startWrap" style="display:none">
+          <label>من تاريخ</label>
+          <input id="startDate" type="date">
+        </div>
+        <div id="endWrap" style="display:none">
+          <label>إلى تاريخ</label>
+          <input id="endDate" type="date">
+        </div>
+        <div style="display:flex;align-items:end">
+          <button class="btn btn-primary" onclick="loadDirectorReport()">
+            <i class="fas fa-chart-bar"></i> عرض البيانات
+          </button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="card summary-card">
+          <div class="icon"><i class="fas fa-users"></i></div>
+          <div class="label">عدد الموظفين الظاهرين</div>
+          <div id="sumEmployees" class="value">0</div>
+        </div>
+        <div class="card summary-card">
+          <div class="icon"><i class="fas fa-user-check"></i></div>
+          <div class="label">إجمالي أيام الحضور</div>
+          <div id="sumDays" class="value">0</div>
+        </div>
+        <div class="card summary-card">
+          <div class="icon"><i class="fas fa-clock"></i></div>
+          <div class="label">إجمالي ساعات العمل</div>
+          <div id="sumHours" class="value">00:00</div>
+        </div>
+        <div class="card summary-card">
+          <div class="icon"><i class="fas fa-bullseye"></i></div>
+          <div class="label">متوسط الإنجاز</div>
+          <div id="sumCompletion" class="value">0%</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="card chart-card">
+          <div class="chart-head">
+            <h3><i class="fas fa-chart-column"></i> ساعات العمل لكل موظف</h3>
+            <span class="chip" id="rangeChip">النطاق: —</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="hoursChart"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head">
+            <h3><i class="fas fa-chart-pie"></i> حالة الالتزام</h3>
+            <span class="chip">مكتمل / متوسط / منخفض</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="table-head">
+          <h3><i class="fas fa-table"></i> جدول حضور القسم</h3>
+          <div class="chip">يظهر هذا الجدول قسم المدير فقط</div>
+        </div>
+
+        <div id="loader" class="loader">جاري تحميل التقرير...</div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم الوظيفي</th>
+                <th>الاسم</th>
+                <th>القسم</th>
+                <th>إجمالي الساعات</th>
+                <th>أيام الحضور</th>
+                <th>المطلوب</th>
+                <th>فرق الساعات</th>
+                <th>متوسط اليوم</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="reportTable">
+              <tr><td colspan="9" style="color:#777;padding:30px">لا توجد بيانات بعد.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ8MafycAGqEwMuKBVEddTYBLd3Z4kyYTSgfBzI_HOl5wyaixuJWxGSM6_tAT_hKIh/exec";
+const UAE_TIMEZONE = "Asia/Dubai";
+
+/*
+  عدّل هذه البيانات بحيث يكون لكل مدير حسابه وقسمه.
+  هذا حل واجهة أمامية سريع.
+  إذا أردت حماية فعلية، أضف تحقق من الخلفية عبر Apps Script / Council sheet.
+*/
+const DIRECTOR_ACCOUNTS = [
+  { name: "مدير الخدمات المساندة", username: "Binhaider", password: "1234", department: "الخدمات المساندة" },
+  { name: "مدير الالعاب الفردية", username: "individual", password: "1234", department: "الالعاب الفردية" },
+  { name: "مدير الالعاب الجماعية", username: "team", password: "1234", department: "الالعاب الجماعية" },
+  { name: "مدير امانة السر", username: "secretary", password: "1234", department: "امانة السر" },
+  { name: "مدير الاتصال المؤسسي", username: "media", password: "1234", department: "الاتصال المؤسسي" },
+  { name: "مدير الاستراتيجية", username: "strategy", password: "1234", department: "الاستراتيجية" },
+  { name: "مدير إدارة الفعاليات", username: "events", password: "1234", department: "إدارة الفعاليات" }
+];
+
+let currentDirector = null;
+let hoursChart = null;
+let statusChart = null;
+let lastRows = [];
+
+const $ = (id) => document.getElementById(id);
+
+function updateTime(){
+  const now = new Date();
+  const t = now.toLocaleString("ar-AE", {
+    timeZone: UAE_TIMEZONE,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+  const el = $("uaeTime");
+  if (el) el.textContent = "وقت الإمارات: " + t;
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+function todayYMD(){
+  const d = new Date();
+  return d.toLocaleDateString("en-CA", { timeZone: UAE_TIMEZONE });
+}
+
+function setDefaultDates(){
+  const today = todayYMD();
+  $("reportDate").value = today;
+  $("startDate").value = today;
+  $("endDate").value = today;
+}
+setDefaultDates();
+
+function showMsg(text, type){
+  const msg = $("loginMsg");
+  msg.className = "msg show " + type;
+  msg.textContent = text;
+}
+
+function clearMsg(){
+  const msg = $("loginMsg");
+  msg.className = "msg";
+  msg.textContent = "";
+}
+
+function loginDirector(){
+  clearMsg();
+
+  const enteredName = ($("directorName").value || "").trim();
+  const selectedDept = ($("directorDept").value || "").trim();
+  const password = ($("directorPass").value || "").trim();
+
+  const director = DIRECTOR_ACCOUNTS.find(acc =>
+    acc.department === selectedDept &&
+    acc.password === password &&
+    (!enteredName || acc.name === enteredName || acc.username === enteredName)
+  );
+
+  if (!director){
+    showMsg("بيانات الدخول غير صحيحة", "error");
+    return;
+  }
+
+  currentDirector = director;
+  sessionStorage.setItem("directorSession", JSON.stringify(director));
+
+  $("loginBox").style.display = "none";
+  $("topbar").style.display = "flex";
+  $("dashboard").style.display = "block";
+  $("deptLabel").textContent = director.department;
+  $("dirLabel").textContent = director.name;
+  $("pageTitle").textContent = "لوحة حضور " + director.department;
+
+  loadDirectorReport();
+}
+
+function restoreSession(){
+  try{
+    const raw = sessionStorage.getItem("directorSession");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || !data.department) return;
+    currentDirector = data;
+    $("loginBox").style.display = "none";
+    $("topbar").style.display = "flex";
+    $("dashboard").style.display = "block";
+    $("deptLabel").textContent = data.department;
+    $("dirLabel").textContent = data.name;
+    $("pageTitle").textContent = "لوحة حضور " + data.department;
+    loadDirectorReport();
+  }catch(e){}
+}
+restoreSession();
+
+function logoutDirector(){
+  sessionStorage.removeItem("directorSession");
+  currentDirector = null;
+  $("dashboard").style.display = "none";
+  $("topbar").style.display = "none";
+  $("loginBox").style.display = "block";
+  clearMsg();
+}
+
+function togglePeriodFields(){
+  const mode = $("period").value;
+  const showRange = mode === "range";
+  $("startWrap").style.display = showRange ? "block" : "none";
+  $("endWrap").style.display = showRange ? "block" : "none";
+}
+
+function secToHHMM(sec){
+  sec = Math.max(0, Math.floor(Number(sec || 0)));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+}
+
+function hhmmToMinutes(hhmm){
+  const p = String(hhmm || "00:00").split(":").map(Number);
+  return (p[0] || 0) * 60 + (p[1] || 0);
+}
+
+function signedHHMM(sec){
+  const sign = sec < 0 ? "-" : "+";
+  sec = Math.abs(Math.floor(sec));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return sign + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+}
+
+function jsonp(url){
+  return new Promise((resolve, reject) => {
+    const callbackName = "cb_" + Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
+
+    window[callbackName] = (data) => {
+      delete window[callbackName];
+      script.remove();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      delete window[callbackName];
+      script.remove();
+      reject(new Error("JSONP request failed"));
+    };
+
+    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + callbackName + "&_=" + Date.now();
+    document.body.appendChild(script);
+  });
+}
+
+async function loadDirectorReport(){
+  if (!currentDirector) return;
+
+  $("loader").style.display = "block";
+  $("reportTable").innerHTML = `<tr><td colspan="9" style="color:#777;padding:30px">جاري التحميل...</td></tr>`;
+
+  try{
+    const period = $("period").value;
+    const params = new URLSearchParams();
+    params.set("action", "getReport");
+    params.set("period", period);
+    params.set("department", currentDirector.department);
+    params.set("includeDetails", "1");
+
+    if (period === "range"){
+      params.set("start", $("startDate").value);
+      params.set("end", $("endDate").value);
+    } else {
+      params.set("date", $("reportDate").value || todayYMD());
+    }
+
+    const url = SCRIPT_URL + "?" + params.toString();
+    const data = await jsonp(url);
+
+    if (!data.ok) throw new Error(data.error || "Failed to load report");
+
+    lastRows = Array.isArray(data.rows) ? data.rows : [];
+    $("rangeChip").textContent = "النطاق: " + (data.range || "—");
+
+    renderSummary(lastRows);
+    renderTable(lastRows);
+    renderHoursChart(lastRows);
+    renderStatusChart(lastRows);
+  }catch(err){
+    console.error(err);
+    $("reportTable").innerHTML = `<tr><td colspan="9" style="color:#ef4444;padding:30px">خطأ في تحميل التقرير</td></tr>`;
+  }finally{
+    $("loader").style.display = "none";
+  }
+}
+
+function getCompletionPercent(row){
+  const total = Number(row.totalSec || 0);
+  const required = Number(row.presentDays || 0) * 7 * 3600;
+  if (!required) return 0;
+  return Math.min(100, Math.round((total / required) * 100));
+}
+
+function getStatusMeta(row){
+  const pct = getCompletionPercent(row);
+  if (pct >= 100) return { text: "مكتمل", cls: "s-ok", bucket: "ok" };
+  if (pct >= 75) return { text: "متوسط", cls: "s-warn", bucket: "warn" };
+  return { text: "منخفض", cls: "s-bad", bucket: "bad" };
+}
+
+function renderSummary(rows){
+  const employees = rows.length;
+  const days = rows.reduce((a,b) => a + Number(b.presentDays || 0), 0);
+  const totalSec = rows.reduce((a,b) => a + Number(b.totalSec || 0), 0);
+  const avgPct = rows.length
+    ? Math.round(rows.reduce((a,b)=>a + getCompletionPercent(b),0) / rows.length)
+    : 0;
+
+  $("sumEmployees").textContent = employees;
+  $("sumDays").textContent = days;
+  $("sumHours").textContent = secToHHMM(totalSec);
+  $("sumCompletion").textContent = avgPct + "%";
+}
+
+function renderTable(rows){
+  if (!rows.length){
+    $("reportTable").innerHTML = `<tr><td colspan="9" style="color:#777;padding:30px">لا توجد سجلات لهذا القسم في الفترة المحددة.</td></tr>`;
+    return;
+  }
+
+  $("reportTable").innerHTML = rows.map(row => {
+    const requiredSec = Number(row.presentDays || 0) * 7 * 3600;
+    const diffSec = Number(row.totalSec || 0) - requiredSec;
+    const meta = getStatusMeta(row);
+
+    return `
+      <tr>
+        <td>${row.id || "—"}</td>
+        <td>${row.name || "—"}</td>
+        <td>${row.department || "—"}</td>
+        <td>${row.totalHHMM || "00:00"}</td>
+        <td>${row.presentDays || 0}</td>
+        <td>${secToHHMM(requiredSec)}</td>
+        <td>${signedHHMM(diffSec)}</td>
+        <td>${row.avgPerDayHHMM || "00:00"}</td>
+        <td><span class="status ${meta.cls}">${meta.text}</span></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function destroyChart(chart){
+  if (chart && typeof chart.destroy === "function") chart.destroy();
+}
+
+function renderHoursChart(rows){
+  destroyChart(hoursChart);
+  const ctx = $("hoursChart").getContext("2d");
+
+  hoursChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: rows.map(r => r.name || r.id),
+      datasets: [{
+        label: "ساعات العمل",
+        data: rows.map(r => Math.round((Number(r.totalSec || 0) / 3600) * 100) / 100),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: "#f4f4f4", font: { family: "Tajawal" } } }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#d0d0d0", font: { family: "Tajawal" } },
+          grid: { color: "rgba(255,255,255,.05)" }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: "#d0d0d0", font: { family: "Tajawal" } },
+          grid: { color: "rgba(255,255,255,.06)" }
+        }
+      }
+    }
+  });
+}
+
+function renderStatusChart(rows){
+  destroyChart(statusChart);
+
+  const counts = { ok:0, warn:0, bad:0 };
+  rows.forEach(r => {
+    counts[getStatusMeta(r).bucket]++;
+  });
+
+  const ctx = $("statusChart").getContext("2d");
+  statusChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["مكتمل", "متوسط", "منخفض"],
+      datasets: [{
+        data: [counts.ok, counts.warn, counts.bad],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#f4f4f4", font: { family: "Tajawal" }, padding: 18 }
+        }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
