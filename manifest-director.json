@@ -1,7 +1,7 @@
 {
   "name": Director",
-  "short_name": "Admin",
-  "start_url": "./admin.html",
+  "short_name": "Director",
+  "start_url": "./director.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0b0b0b",
