@@ -347,16 +347,23 @@
       </div>
 
       <div class="summary">
-        <div class="card summary-card">
-          <div class="icon"><i class="fas fa-users"></i></div>
-          <div class="label">عدد الموظفين الظاهرين</div>
-          <div id="sumEmployees" class="value">0</div>
-        </div>
-        <div class="card summary-card">
-          <div class="icon"><i class="fas fa-user-check"></i></div>
-          <div class="label">إجمالي أيام الحضور</div>
-          <div id="sumDays" class="value">0</div>
-        </div>
+<div class="card summary-card">
+  <div class="icon"><i class="fas fa-users"></i></div>
+  <div class="label">إجمالي موظفي القسم</div>
+  <div id="sumEmployees" class="value">0</div>
+</div>
+
+<div class="card summary-card">
+  <div class="icon"><i class="fas fa-user-check"></i></div>
+  <div class="label">عدد الموظفين الذين حضروا</div>
+  <div id="sumAttended" class="value">0</div>
+</div>
+
+<div class="card summary-card">
+  <div class="icon"><i class="fas fa-calendar-check"></i></div>
+  <div class="label">إجمالي أيام الحضور</div>
+  <div id="sumDays" class="value">0</div>
+</div>
         <div class="card summary-card">
           <div class="icon"><i class="fas fa-clock"></i></div>
           <div class="label">إجمالي ساعات العمل</div>
@@ -598,6 +605,28 @@ function jsonp(url){
   });
 }
 
+async function getDepartmentEmployeesCount(department){
+  const url = SCRIPT_URL + "?action=getEmployees";
+  const data = await jsonp(url);
+
+  if (!data || !data.ok || !Array.isArray(data.employees)) return 0;
+
+  return data.employees.filter(emp =>
+    String(emp.department || "").trim() === String(department || "").trim()
+  ).length;
+}
+  
+async function getDepartmentEmployeesCount(department){
+  const url = SCRIPT_URL + "?action=getEmployees";
+  const data = await jsonp(url);
+
+  if (!data || !data.ok || !Array.isArray(data.employees)) return 0;
+
+  return data.employees.filter(emp =>
+    String(emp.department || "").trim() === String(department || "").trim()
+  ).length;
+}
+  
 async function loadDirectorReport(){
   if (!currentDirector) return;
 
@@ -627,7 +656,7 @@ async function loadDirectorReport(){
     lastRows = Array.isArray(data.rows) ? data.rows : [];
     $("rangeChip").textContent = "النطاق: " + (data.range || "—");
 
-    renderSummary(lastRows);
+    await renderSummary(lastRows);
     renderTable(lastRows);
     renderHoursChart(lastRows);
     renderStatusChart(lastRows);
@@ -653,20 +682,22 @@ function getStatusMeta(row){
   return { text: "منخفض", cls: "s-bad", bucket: "bad" };
 }
 
-function renderSummary(rows){
-  const employees = rows.length;
-  const days = rows.reduce((a,b) => a + Number(b.presentDays || 0), 0);
+async function renderSummary(rows){
+  const totalEmployees = await getDepartmentEmployeesCount(currentDirector.department);
+  const attendedEmployees = rows.length;
+  const totalDays = rows.reduce((a,b) => a + Number(b.presentDays || 0), 0);
   const totalSec = rows.reduce((a,b) => a + Number(b.totalSec || 0), 0);
   const avgPct = rows.length
     ? Math.round(rows.reduce((a,b)=>a + getCompletionPercent(b),0) / rows.length)
     : 0;
 
-  $("sumEmployees").textContent = employees;
-  $("sumDays").textContent = days;
+  $("sumEmployees").textContent = totalEmployees;
+  $("sumAttended").textContent = attendedEmployees;
+  $("sumDays").textContent = totalDays;
   $("sumHours").textContent = secToHHMM(totalSec);
   $("sumCompletion").textContent = avgPct + "%";
 }
-
+  
 function renderTable(rows){
   if (!rows.length){
     $("reportTable").innerHTML = `<tr><td colspan="9" style="color:#777;padding:30px">لا توجد سجلات لهذا القسم في الفترة المحددة.</td></tr>`;
