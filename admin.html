@@ -4284,7 +4284,48 @@ function downloadFormattedCSV() {
   
   showToast('تم تنزيل التقرير بصيغة CSV', 'success');
 }
- 
+
+async function loadPendingAdjustments() {
+  const tbody = document.getElementById("adjustmentsApprovalTable");
+
+  tbody.innerHTML = `<tr><td colspan="8">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getPendingAdjustments"
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok || !data.rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8">لا توجد طلبات.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.rows.map(r => `
+      <tr>
+        <td>${r.empId}</td>
+        <td>${r.month}</td>
+        <td>${r.year}</td>
+        <td>${r.type === "ADD" ? "إضافة" : "خصم"}</td>
+        <td>${r.amount}</td>
+        <td>${r.reason}</td>
+        <td>${r.status}</td>
+        <td>
+          <button class="btn-success" onclick="approveAdjustment('${r.id}')">✔</button>
+          <button class="btn-danger" onclick="rejectAdjustment('${r.id}')">✖</button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">خطأ في التحميل</td></tr>`;
+  }
+}
+  
 async function saveSettings() {
   const settings = {
     annualLeaveDays: $('annualLeaveDays').value,
