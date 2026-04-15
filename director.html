@@ -275,7 +275,7 @@
         <p>عرض حضور القسم والرسوم البيانية فقط</p>
       </div>
 
-      <label>اسم المدير</label>
+      <label>اسم المستخدم</label>
       <input id="directorName" placeholder="مثال: مدير الخدمات المساندة">
 
       <label>القسم</label>
@@ -435,13 +435,13 @@ const UAE_TIMEZONE = "Asia/Dubai";
 
 
 const DIRECTOR_ACCOUNTS = [
-  { name: "Binhaider", username: "Binhaider", password: "1234", department: "الخدمات المساندة" },
-  { name: "alblooshi", username: "individual", password: "1234", department: "الالعاب الفردية" },
-  { name: "alshehhi", username: "team", password: "1234", department: "الالعاب الجماعية" },
-  { name: "aldarmaki", username: "secretary", password: "1234", department: "امانة السر" },
-  { name: "almatroushi", username: "media", password: "1234", department: "الاتصال المؤسسي" },
-  { name: "almatroushi", username: "strategy", password: "1234", department: "الاستراتيجية" },
-  { name: "binhuwaiden", username: "events", password: "1234", department: "إدارة الفعاليات" }
+  { name: "مدير إدارة الخدمات المساندة", username: "binhaider", password: "1234", department: "الخدمات المساندة" },
+  { name: "مدير إدارة الألعاب الفردية", username: "individual", password: "1234", department: "الالعاب الفردية" },
+  { name: "مدير إدارة الألعاب الجماعية", username: "team", password: "1234", department: "الالعاب الجماعية" },
+  { name: "أمانة السر", username: "secretary", password: "1234", department: "امانة السر" },
+  { name: "مدير إدارة الاستراتيجية والتميز المؤسسي", username: "media", password: "1234", department: "الاتصال المؤسسي" },
+  { name: "مدير إدارة الاستراتيجية والتميز المؤسسي", username: "strategy", password: "1234", department: "الاستراتيجية" },
+  { name: "مدير إدارة الثقافية والمجتمعية", username: "events", password: "1234", department: "إدارة الفعاليات" }
 ];
 
 let currentDirector = null;
@@ -601,17 +601,6 @@ function jsonp(url){
   });
 }
 
-async function getDepartmentEmployeesCount(department){
-  const url = SCRIPT_URL + "?action=getEmployees";
-  const data = await jsonp(url);
-
-  if (!data || !data.ok || !Array.isArray(data.employees)) return 0;
-
-  return data.employees.filter(emp =>
-    String(emp.department || "").trim() === String(department || "").trim()
-  ).length;
-}
-  
 async function getDepartmentEmployeesCount(department){
   const url = SCRIPT_URL + "?action=getEmployees";
   const data = await jsonp(url);
