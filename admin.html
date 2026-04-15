@@ -4340,6 +4340,9 @@ async function loadPendingAdjustments() {
 
 async function updateAdjustmentStatusUI(id, status) {
   try {
+    const month = Number($('payrollMonth').value);
+    const year = Number($('payrollYear').value);
+
     const res = await fetch(SCRIPT_URL, {
       method: "POST",
       body: JSON.stringify({
@@ -4355,8 +4358,20 @@ async function updateAdjustmentStatusUI(id, status) {
       return;
     }
 
+    if (status === 'Approved' && month && year) {
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "createPayrollForMonth",
+          payload: { month, year }
+        })
+      });
+    }
+
     showToast('تم تحديث الحالة', 'success');
     loadPendingAdjustments();
+    loadPayrollForMonthUI();
+
   } catch (e) {
     console.error(e);
     showToast('خطأ في التحديث', 'error');
