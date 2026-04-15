@@ -1081,6 +1081,7 @@ body{
   <button class="tab-btn" onclick="showTab('reports')">📊 التقارير</button>
   <button class="tab-btn" onclick="showTab('tafreegh')">🚗 طلبات التفريغ</button>
   <button class="tab-btn" onclick="showTab('documents')">📁 إدارة العقود والوثائق</button>
+  <button class="tab-btn" onclick="showTab('payroll')">💰 الرواتب</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
 </div>
 <div class="card">
@@ -1313,6 +1314,88 @@ body{
   </div>
 </div>
 
+ <div id="payrollContent" class="tab-content">
+  <div class="card">
+    <h2>💰 إدارة الرواتب</h2>
+
+    <div class="flex">
+      <div class="col">
+        <label>الشهر</label>
+        <input type="number" id="payrollMonth" min="1" max="12" placeholder="مثال: 4">
+      </div>
+      <div class="col">
+        <label>السنة</label>
+        <input type="number" id="payrollYear" placeholder="مثال: 2026">
+      </div>
+    </div>
+
+    <div class="flex" style="margin-top:10px;">
+      <button class="btn-yellow" onclick="createPayrollForMonthUI()">إنشاء كشف الرواتب</button>
+      <button class="btn-yellow" onclick="loadPayrollForMonthUI()">عرض كشف الرواتب</button>
+    </div>
+
+    <hr style="margin:20px 0; border:0; border-top:1px solid #2a2a2a;">
+
+    <h3 style="margin-bottom:10px;">إضافة بدل / خصم</h3>
+
+    <div class="flex">
+      <div class="col">
+        <label>رقم الموظف</label>
+        <input id="adjEmpId" placeholder="رقم الموظف">
+      </div>
+      <div class="col">
+        <label>النوع</label>
+        <select id="adjType">
+          <option value="ADD">إضافة</option>
+          <option value="DEDUCT">خصم</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>المبلغ</label>
+        <input id="adjAmount" type="number" placeholder="المبلغ">
+      </div>
+    </div>
+
+    <label>السبب</label>
+    <input id="adjReason" placeholder="سبب الإضافة أو الخصم">
+
+    <div class="flex">
+      <div class="col">
+        <label>الشهر</label>
+        <input type="number" id="adjMonth" min="1" max="12">
+      </div>
+      <div class="col">
+        <label>السنة</label>
+        <input type="number" id="adjYear">
+      </div>
+    </div>
+
+    <button class="btn-success" onclick="addPayrollAdjustmentUI()">حفظ البدل / الخصم</button>
+
+    <div class="loader" id="payrollLoader"></div>
+
+    <div style="overflow-x:auto; margin-top:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الموظف</th>
+            <th>الشهر</th>
+            <th>السنة</th>
+            <th>الراتب الأساسي</th>
+            <th>الإضافات</th>
+            <th>الخصومات</th>
+            <th>الصافي</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody id="payrollTable">
+          <tr><td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+    
 <div id="documentsContent" class="tab-content">
   <div class="card">
     <h2>📁 إدارة العقود والوثائق</h2>
@@ -2791,6 +2874,143 @@ function onlyDate(val){
   return d.toISOString().slice(0, 10);
 }
 
+async function createPayrollForMonthUI() {
+  const month = Number($('payrollMonth').value);
+  const year = Number($('payrollYear').value);
+
+  if (!month || !year) {
+    showToast('أدخل الشهر والسنة', 'warning');
+    return;
+  }
+
+  showLoader('payrollLoader');
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "createPayrollForMonth",
+        payload: { month, year }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast(data.error || 'فشل إنشاء كشف الرواتب', 'error');
+      return;
+    }
+
+    showToast('تم إنشاء كشف الرواتب بنجاح', 'success');
+    loadPayrollForMonthUI();
+  } catch (e) {
+    showToast('خطأ في إنشاء كشف الرواتب', 'error');
+  } finally {
+    hideLoader('payrollLoader');
+  }
+}
+
+async function addPayrollAdjustmentUI() {
+  const empId = $('adjEmpId').value.trim();
+  const type = $('adjType').value;
+  const amount = Number($('adjAmount').value);
+  const reason = $('adjReason').value.trim();
+  const month = Number($('adjMonth').value);
+  const year = Number($('adjYear').value);
+
+  if (!empId || !type || !amount || !reason || !month || !year) {
+    showToast('أكمل جميع الحقول', 'warning');
+    return;
+  }
+
+  showLoader('payrollLoader');
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "addPayrollAdjustment",
+        payload: {
+          empId,
+          type,
+          amount,
+          reason,
+          month,
+          year,
+          approvedBy: "HR",
+          status: "Pending"
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast(data.error || 'فشل حفظ البدل / الخصم', 'error');
+      return;
+    }
+
+    showToast('تم حفظ البدل / الخصم', 'success');
+  } catch (e) {
+    showToast('خطأ في الحفظ', 'error');
+  } finally {
+    hideLoader('payrollLoader');
+  }
+}
+
+async function loadPayrollForMonthUI() {
+  const month = Number($('payrollMonth').value);
+  const year = Number($('payrollYear').value);
+
+  if (!month || !year) {
+    showToast('أدخل الشهر والسنة', 'warning');
+    return;
+  }
+
+  showLoader('payrollLoader');
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getPayrollForMonth",
+        payload: { month, year }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast(data.error || 'فشل تحميل الرواتب', 'error');
+      return;
+    }
+
+    const rows = data.rows || [];
+
+    if (!rows.length) {
+      $('payrollTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>`;
+      return;
+    }
+
+    $('payrollTable').innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.empId || ''}</td>
+        <td>${r.month || ''}</td>
+        <td>${r.year || ''}</td>
+        <td>${r.basicSalary || 0}</td>
+        <td>${r.totalAdd || 0}</td>
+        <td>${r.totalDeduct || 0}</td>
+        <td>${r.netSalary || 0}</td>
+        <td>${r.status || ''}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showToast('خطأ في تحميل الرواتب', 'error');
+  } finally {
+    hideLoader('payrollLoader');
+  }
+}
+  
 function openReportDetails(empId){
   if (!lastReport || !lastReport.details) return;
 
