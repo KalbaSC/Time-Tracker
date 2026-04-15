@@ -327,15 +327,15 @@
         </div>
         <div>
           <label>التاريخ الأساسي</label>
-          <input id="reportDate" type="date">
+          <input id="reportDate" type="text" placeholder="DD/MM/YYYY">
         </div>
         <div id="startWrap" style="display:none">
           <label>من تاريخ</label>
-          <input id="startDate" type="date">
+          <input id="startDate" type="text" placeholder="DD/MM/YYYY">
         </div>
         <div id="endWrap" style="display:none">
           <label>إلى تاريخ</label>
-          <input id="endDate" type="date">
+          <input id="endDate" type="text" placeholder="DD/MM/YYYY">
         </div>
         <div style="display:flex;align-items:end">
           <button class="btn btn-primary" onclick="loadDirectorReport()">
@@ -523,6 +523,13 @@ function loginDirector(){
   loadDirectorReport();
 }
 
+function parseDateInput(val){
+  if (!val) return "";
+  const parts = val.split("/");
+  if (parts.length !== 3) return "";
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+  
 function restoreSession(){
   try{
     const raw = sessionStorage.getItem("directorSession");
@@ -625,10 +632,10 @@ async function loadDirectorReport(){
     params.set("includeDetails", "1");
 
     if (period === "range"){
-      params.set("start", $("startDate").value);
-      params.set("end", $("endDate").value);
+      params.set("start", parseDateInput($("startDate").value));
+      params.set("end", parseDateInput($("endDate").value));
     } else {
-      params.set("date", $("reportDate").value || todayYMD());
+      params.set("date", parseDateInput($("reportDate").value) || todayYMD());
     }
 
     const url = SCRIPT_URL + "?" + params.toString();
