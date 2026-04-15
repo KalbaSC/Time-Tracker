@@ -1830,15 +1830,12 @@ function showTab(tabName) {
   if (tabName === 'tafreegh') {
     loadTafreeghRequests();
   }
-
   if (tabName === 'documents') {
     loadEmployeeDocumentsAdmin();
   }
-
   if (tabName === 'reports' && !lastReport) {
     loadReport();
   }
-
   if (tabName === 'payroll') {
     loadPendingAdjustments();
   }
@@ -4293,12 +4290,13 @@ function downloadFormattedCSV() {
 }
 
 async function loadPendingAdjustments() {
-  const tbody = document.getElementById("adjustmentsApprovalTable");
+  const tbody = $('adjustmentsApprovalTable');
+  if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="8">جاري التحميل...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">جاري التحميل...</td></tr>`;
 
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch(SCRIPT_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "getPendingAdjustments"
@@ -4307,29 +4305,61 @@ async function loadPendingAdjustments() {
 
     const data = await res.json();
 
-    if (!data.ok || !data.rows.length) {
-      tbody.innerHTML = `<tr><td colspan="8">لا توجد طلبات.</td></tr>`;
+    if (!data.ok) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">خطأ في التحميل</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = data.rows.map(r => `
+    const rows = data.rows || [];
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا توجد طلبات.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
       <tr>
         <td>${r.empId}</td>
         <td>${r.month}</td>
         <td>${r.year}</td>
-        <td>${r.type === "ADD" ? "إضافة" : "خصم"}</td>
+        <td>${r.type === 'ADD' ? 'إضافة' : 'خصم'}</td>
         <td>${r.amount}</td>
         <td>${r.reason}</td>
         <td>${r.status}</td>
         <td>
-          <button class="btn-success" onclick="approveAdjustment('${r.id}')">✔</button>
-          <button class="btn-danger" onclick="rejectAdjustment('${r.id}')">✖</button>
+          <button class="btn-success" onclick="updateAdjustmentStatusUI('${r.id}','Approved')">✔ اعتماد</button>
+          <button class="btn-danger" onclick="updateAdjustmentStatusUI('${r.id}','Rejected')">✖ رفض</button>
         </td>
       </tr>
-    `).join("");
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">خطأ في التحميل</td></tr>`;
+  }
+}
 
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8">خطأ في التحميل</td></tr>`;
+async function updateAdjustmentStatusUI(id, status) {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updateAdjustmentStatus",
+        payload: { id, status }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast('فشل التحديث', 'error');
+      return;
+    }
+
+    showToast('تم تحديث الحالة', 'success');
+    loadPendingAdjustments();
+  } catch (e) {
+    console.error(e);
+    showToast('خطأ في التحديث', 'error');
   }
 }
   
