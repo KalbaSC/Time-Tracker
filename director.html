@@ -433,19 +433,15 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ8MafycAGqEwMuKBVEddTYBLd3Z4kyYTSgfBzI_HOl5wyaixuJWxGSM6_tAT_hKIh/exec";
 const UAE_TIMEZONE = "Asia/Dubai";
 
-/*
-  عدّل هذه البيانات بحيث يكون لكل مدير حسابه وقسمه.
-  هذا حل واجهة أمامية سريع.
-  إذا أردت حماية فعلية، أضف تحقق من الخلفية عبر Apps Script / Council sheet.
-*/
+
 const DIRECTOR_ACCOUNTS = [
-  { name: "مدير الخدمات المساندة", username: "Binhaider", password: "1234", department: "الخدمات المساندة" },
-  { name: "مدير الالعاب الفردية", username: "individual", password: "1234", department: "الالعاب الفردية" },
-  { name: "مدير الالعاب الجماعية", username: "team", password: "1234", department: "الالعاب الجماعية" },
-  { name: "مدير امانة السر", username: "secretary", password: "1234", department: "امانة السر" },
-  { name: "مدير الاتصال المؤسسي", username: "media", password: "1234", department: "الاتصال المؤسسي" },
-  { name: "مدير الاستراتيجية", username: "strategy", password: "1234", department: "الاستراتيجية" },
-  { name: "مدير إدارة الفعاليات", username: "events", password: "1234", department: "إدارة الفعاليات" }
+  { name: "Binhaider", username: "Binhaider", password: "1234", department: "الخدمات المساندة" },
+  { name: "alblooshi", username: "individual", password: "1234", department: "الالعاب الفردية" },
+  { name: "alshehhi", username: "team", password: "1234", department: "الالعاب الجماعية" },
+  { name: "aldarmaki", username: "secretary", password: "1234", department: "امانة السر" },
+  { name: "almatroushi", username: "media", password: "1234", department: "الاتصال المؤسسي" },
+  { name: "almatroushi", username: "strategy", password: "1234", department: "الاستراتيجية" },
+  { name: "binhuwaiden", username: "events", password: "1234", department: "إدارة الفعاليات" }
 ];
 
 let currentDirector = null;
