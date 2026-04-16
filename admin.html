@@ -1387,6 +1387,7 @@ body{
             <th>الخصومات</th>
             <th>الصافي</th>
             <th>الحالة</th>
+            <th>إجراء</th>
           </tr>
         </thead>
         <tbody id="payrollTable">
@@ -3037,6 +3038,9 @@ $('payrollTable').innerHTML = rows.map(r => `
     <td>${r.totalDeduct || 0}</td>
     <td>${r.netSalary || 0}</td>
     <td>${r.status || ''}</td>
+<td>
+  ${renderPayrollActions(r)}
+</td>
   </tr>
 `).join('');
     
@@ -3809,6 +3813,40 @@ function formatEnglishDateOnly(date) {
   return `${year}-${month}-${day} (${dayName})`;
 }
 
+  function renderPayrollActions(r) {
+  if (r.status === "Draft") {
+    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Reviewed')" class="btn-yellow">Review</button>`;
+  }
+
+  if (r.status === "Reviewed") {
+    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Approved')" class="btn-green">Approve</button>`;
+  }
+
+  if (r.status === "Approved") {
+    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Paid')" class="btn-blue">Mark Paid</button>`;
+  }
+
+  return "✔️ Done";
+}
+
+  function changePayrollStatus(empId, month, year, status) {
+  fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "updatePayrollStatus",
+      payload: { empId, month, year, status }
+    })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res.ok) {
+      loadPayrollForMonthUI(); 
+    } else {
+      alert(res.error);
+    }
+  });
+}
+  
 function getPeriodLabelArabic(period, start, end) {
   const labels = {
     daily: 'يومي',
