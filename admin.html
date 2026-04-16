@@ -3830,7 +3830,7 @@ function formatEnglishDateOnly(date) {
 }
 
   function changePayrollStatus(empId, month, year, status) {
-  fetch(scriptURL, {
+  fetch(SCRIPT_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "updatePayrollStatus",
