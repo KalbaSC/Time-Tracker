@@ -3825,15 +3825,15 @@ function formatEnglishDateOnly(date) {
 
   function renderPayrollActions(r) {
   if (r.status === "Draft") {
-    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Reviewed')" class="btn-yellow">Review</button>`;
+    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Reviewed')" class="btn-yellow">تم المراجعة</button>`;
   }
 
   if (r.status === "Reviewed") {
-    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Approved')" class="btn-green">Approve</button>`;
+    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Approved')" class="btn-green">تم الاعتماد</button>`;
   }
 
   if (r.status === "Approved") {
-    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Paid')" class="btn-blue">Mark Paid</button>`;
+    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Paid')" class="btn-blue">تم التحويل</button>`;
   }
 
   return "✔️ Done";
