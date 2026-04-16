@@ -1382,6 +1382,7 @@ body{
             <th>الشهر</th>
             <th>السنة</th>
             <th>الراتب الأساسي</th>
+            <th>التذكرة</th>
             <th>الإضافات</th>
             <th>الخصومات</th>
             <th>الصافي</th>
@@ -3025,18 +3026,20 @@ async function loadPayrollForMonthUI() {
       return;
     }
 
-    $('payrollTable').innerHTML = rows.map(r => `
-      <tr>
-        <td>${r.empId || ''}</td>
-        <td>${r.month || ''}</td>
-        <td>${r.year || ''}</td>
-        <td>${r.basicSalary || 0}</td>
-        <td>${r.totalAdd || 0}</td>
-        <td>${r.totalDeduct || 0}</td>
-        <td>${r.netSalary || 0}</td>
-        <td>${r.status || ''}</td>
-      </tr>
-    `).join('');
+$('payrollTable').innerHTML = rows.map(r => `
+  <tr>
+    <td>${r.empId || ''}</td>
+    <td>${r.month || ''}</td>
+    <td>${r.year || ''}</td>
+    <td>${r.basicSalary || 0}</td>
+    <td>${r.ticket || 0}</td>
+    <td>${r.totalAdd || 0}</td>
+    <td>${r.totalDeduct || 0}</td>
+    <td>${r.netSalary || 0}</td>
+    <td>${r.status || ''}</td>
+  </tr>
+`).join('');
+    
   } catch (e) {
     showToast('خطأ في تحميل الرواتب', 'error');
   } finally {
