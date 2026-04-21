@@ -1622,6 +1622,75 @@ body{
 <label>الراتب</label>
 <input id="editEmpSalary">
 
+<hr style="margin:20px 0; border:0; border-top:1px solid #2a2a2a;">
+
+<h3 style="margin-bottom:10px; color: var(--accent);">الإضافات والخصومات الثابتة السنوية</h3>
+
+<div class="flex">
+  <div class="col">
+    <label>النوع</label>
+    <select id="fixedType">
+      <option value="ADD">إضافة</option>
+      <option value="DEDUCT">خصم</option>
+    </select>
+  </div>
+
+  <div class="col">
+    <label>السبب</label>
+    <input id="fixedReason" placeholder="بدل سكن / خصم تأمين">
+  </div>
+</div>
+
+<div class="flex">
+  <div class="col">
+    <label>المبلغ</label>
+    <input id="fixedAmount" type="number">
+  </div>
+
+  <div class="col">
+    <label>السنة</label>
+    <input id="fixedYear" type="number">
+  </div>
+</div>
+
+<div class="flex">
+  <div class="col">
+    <label>الحالة</label>
+    <select id="fixedStatus">
+      <option value="Pending">قيد الانتظار</option>
+      <option value="Approved">معتمد</option>
+      <option value="Rejected">مرفوض</option>
+    </select>
+  </div>
+
+  <div class="col">
+    <label>نشط</label>
+    <select id="fixedActive">
+      <option value="true">نعم</option>
+      <option value="false">لا</option>
+    </select>
+  </div>
+</div>
+
+<button type="button" class="btn-blue" onclick="addFixedPayrollItemUI()">+ إضافة</button>
+
+<table style="margin-top:15px;">
+  <thead>
+    <tr>
+      <th>النوع</th>
+      <th>السبب</th>
+      <th>المبلغ</th>
+      <th>السنة</th>
+      <th>الحالة</th>
+      <th>نشط</th>
+      <th>حذف</th>
+    </tr>
+  </thead>
+  <tbody id="fixedPayrollTable">
+    <tr><td colspan="7" style="text-align:center;">لا يوجد بيانات</td></tr>
+  </tbody>
+</table>      
+
 <div id="employeeLeaveBalance" style="margin-top:15px;"></div>
       
       <div class="flex" style="margin-top:10px;">
@@ -2044,7 +2113,94 @@ openEditEmployee({
   });
 }
 
-  let noteTargetEmployeeId = "";
+async function loadFixedPayrollItems(empId) {
+  const tbody = document.getElementById('fixedPayrollTable');
+  tbody.innerHTML = `<tr><td colspan="7">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getFixedPayrollItemsByEmployee",
+        payload: { empId }
+      })
+    });
+
+    const data = await res.json();
+    currentFixedPayrollItems = data.items || [];
+
+    renderFixedPayrollItems();
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7">خطأ</td></tr>`;
+  }
+}
+
+function renderFixedPayrollItems() {
+  const tbody = document.getElementById('fixedPayrollTable');
+
+  if (!currentFixedPayrollItems.length) {
+    tbody.innerHTML = `<tr><td colspan="7">لا يوجد بيانات</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = currentFixedPayrollItems.map(i => `
+    <tr>
+      <td>${i.type === 'ADD' ? 'إضافة' : 'خصم'}</td>
+      <td>${i.reason}</td>
+      <td>${i.amount}</td>
+      <td>${i.year}</td>
+      <td>${i.status}</td>
+      <td>${i.active ? 'نعم' : 'لا'}</td>
+      <td>
+        <button onclick="deleteFixedPayrollItemUI('${i.id}')">حذف</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function addFixedPayrollItemUI() {
+  const empId = document.getElementById('editEmpId').value;
+  const type = document.getElementById('fixedType').value;
+  const reason = document.getElementById('fixedReason').value;
+  const amount = document.getElementById('fixedAmount').value;
+  const year = document.getElementById('fixedYear').value;
+  const status = document.getElementById('fixedStatus').value;
+  const active = document.getElementById('fixedActive').value === 'true';
+
+  if (!reason || !amount || !year) {
+    alert("أكمل البيانات");
+    return;
+  }
+
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "addFixedPayrollItem",
+      payload: { empId, type, reason, amount, year, status, active }
+    })
+  });
+
+  loadFixedPayrollItems(empId);
+}
+
+async function deleteFixedPayrollItemUI(id) {
+  if (!confirm("حذف؟")) return;
+
+  const empId = document.getElementById('editEmpId').value;
+
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "deleteFixedPayrollItem",
+      payload: { id }
+    })
+  });
+
+  loadFixedPayrollItems(empId);
+}
+  
+let noteTargetEmployeeId = "";
 let noteTargetEmployeeName = "";
 
 function openEmployeeNoteModal(id, name) {
@@ -2765,6 +2921,7 @@ setInterval(() => {
 }, 90000);
 
 let lastReport = null;
+let currentFixedPayrollItems = [];
 let editMode = false;
 let editIdLocked = "";  
 
@@ -3291,6 +3448,7 @@ function openEditEmployee(emp) {
 
   $('editEmployeeModal').style.display = "flex";
   loadEmployeeBalance(emp.id);
+  loadFixedPayrollItems(emp.id);
 }
 
 async function loadEmployeeBalance(empId) {
