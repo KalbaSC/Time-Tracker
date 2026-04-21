@@ -1387,18 +1387,20 @@ body{
     <div style="overflow-x:auto; margin-top:20px;">
       <table>
         <thead>
-          <tr>
-            <th>رقم الموظف</th>
-            <th>الشهر</th>
-            <th>السنة</th>
-            <th>الراتب الأساسي</th>
-            <th>التذكرة</th>
-            <th>الإضافات</th>
-            <th>الخصومات</th>
-            <th>الصافي</th>
-            <th>الحالة</th>
-            <th>إجراء</th>
-          </tr>
+<tr>
+  <th>رقم الموظف</th>
+  <th>الشهر</th>
+  <th>السنة</th>
+  <th>الراتب الأساسي</th>
+  <th>التذكرة</th>
+  <th>الإضافات الثابتة</th>
+  <th>الإضافات اليدوية</th>
+  <th>الخصومات الثابتة</th>
+  <th>الخصومات اليدوية</th>
+  <th>الصافي</th>
+  <th>الحالة</th>
+  <th>إجراء</th>
+</tr>
         </thead>
         <tbody id="payrollTable">
           <tr><td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>
@@ -3190,7 +3192,7 @@ async function loadPayrollForMonthUI() {
     const rows = data.rows || [];
 
     if (!rows.length) {
-      $('payrollTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>`;
+      $('payrollTable').innerHTML = `<tr><td colspan="12" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>`;
       return;
     }
 
@@ -3201,13 +3203,13 @@ $('payrollTable').innerHTML = rows.map(r => `
     <td>${r.year || ''}</td>
     <td>${r.basicSalary || 0}</td>
     <td>${r.ticket || 0}</td>
-    <td>${r.totalAdd || 0}</td>
-    <td>${r.totalDeduct || 0}</td>
+    <td>${r.fixedAdd || 0}</td>
+    <td>${r.manualAdd || 0}</td>
+    <td>${r.fixedDeduct || 0}</td>
+    <td>${r.manualDeduct || 0}</td>
     <td>${r.netSalary || 0}</td>
     <td>${r.status || ''}</td>
-<td>
-  ${renderPayrollActions(r)}
-</td>
+    <td>${renderPayrollActions(r)}</td>
   </tr>
 `).join('');
     
