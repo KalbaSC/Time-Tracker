@@ -1344,6 +1344,11 @@ body{
       <button class="btn-yellow" onclick="loadPayrollForMonthUI()">عرض كشف الرواتب</button>
     </div>
 
+    <div class="flex" style="margin-top:10px;">
+  <button class="btn-green" onclick="exportPayrollExcel()">تنزيل الرواتب Excel</button>
+  <button class="btn-blue" onclick="exportPayrollCsv()">تنزيل الرواتب CSV</button>
+</div>
+
     <hr style="margin:20px 0; border:0; border-top:1px solid #2a2a2a;">
 
     <h3 style="margin-bottom:10px;">إضافة بدل / خصم</h3>
@@ -2927,6 +2932,7 @@ let lastReport = null;
 let currentFixedPayrollItems = [];
 let editMode = false;
 let editIdLocked = "";  
+let lastPayrollRows = [];  
 
 function csvEscape(v){
   const s = String(v ?? "");
@@ -3191,11 +3197,12 @@ async function loadPayrollForMonthUI() {
     }
 
     const rows = data.rows || [];
+    lastPayrollRows = rows;
 
     if (!rows.length) {
-      $('payrollTable').innerHTML = `<tr><td colspan="13" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>`;
-      return;
-    }
+  $('payrollTable').innerHTML = `<tr><td colspan="13" style="text-align:center;color:#777">لا توجد بيانات.</td></tr>`;
+  return;
+}
 
 $('payrollTable').innerHTML = rows.map(r => `
   <tr>
@@ -4637,7 +4644,94 @@ function downloadEmployeesCSV() {
   a.click();
   a.remove();
 }
- 
+
+function exportPayrollCsv() {
+  const month = Number($('payrollMonth').value);
+  const year = Number($('payrollYear').value);
+
+  if (!month || !year) {
+    showToast('اختر الشهر والسنة أولاً', 'warning');
+    return;
+  }
+
+  if (!lastPayrollRows || !lastPayrollRows.length) {
+    showToast('قم بتحميل كشف الرواتب أولاً', 'warning');
+    return;
+  }
+
+  const header = [
+    "رقم الموظف",
+    "اسم الموظف",
+    "الشهر",
+    "السنة",
+    "الراتب الأساسي",
+    "التذكرة",
+    "الإضافات الثابتة",
+    "الإضافات اليدوية",
+    "الخصومات الثابتة",
+    "الخصومات اليدوية",
+    "الصافي",
+    "الحالة"
+  ];
+
+  const lines = [header.join(",")];
+
+  lastPayrollRows.forEach(r => {
+    lines.push([
+      csvEscape(excelText(r.empId || "")),
+      csvEscape(r.empName || ""),
+      csvEscape(r.month || ""),
+      csvEscape(r.year || ""),
+      csvEscape(r.basicSalary || 0),
+      csvEscape(r.ticket || 0),
+      csvEscape(r.fixedAdd || 0),
+      csvEscape(r.manualAdd || 0),
+      csvEscape(r.fixedDeduct || 0),
+      csvEscape(r.manualDeduct || 0),
+      csvEscape(r.netSalary || 0),
+      csvEscape(r.status || "")
+    ].join(","));
+  });
+
+  downloadCSV(lines.join("\r\n"), `payroll_${year}_${String(month).padStart(2,'0')}.csv`);
+}
+
+function exportPayrollExcel() {
+  const month = Number($('payrollMonth').value);
+  const year = Number($('payrollYear').value);
+
+  if (!month || !year) {
+    showToast('اختر الشهر والسنة أولاً', 'warning');
+    return;
+  }
+
+  if (!lastPayrollRows || !lastPayrollRows.length) {
+    showToast('قم بتحميل كشف الرواتب أولاً', 'warning');
+    return;
+  }
+
+  const exportRows = lastPayrollRows.map(r => ({
+    "رقم الموظف": r.empId || "",
+    "اسم الموظف": r.empName || "",
+    "الشهر": r.month || "",
+    "السنة": r.year || "",
+    "الراتب الأساسي": Number(r.basicSalary || 0),
+    "التذكرة": Number(r.ticket || 0),
+    "الإضافات الثابتة": Number(r.fixedAdd || 0),
+    "الإضافات اليدوية": Number(r.manualAdd || 0),
+    "الخصومات الثابتة": Number(r.fixedDeduct || 0),
+    "الخصومات اليدوية": Number(r.manualDeduct || 0),
+    "الصافي": Number(r.netSalary || 0),
+    "الحالة": r.status || ""
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  XLSX.utils.book_append_sheet(wb, ws, "Payroll");
+
+  XLSX.writeFile(wb, `payroll_${year}_${String(month).padStart(2,'0')}.xlsx`);
+}
+  
 function resetSettings() {
   if (!confirm('هل تريد إعادة تعيين الإعدادات؟')) return;
 
