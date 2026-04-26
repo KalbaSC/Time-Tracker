@@ -1734,8 +1734,8 @@ body{
   </div>
 
   <div class="col">
-    <label>السنة</label>
-    <input id="fixedYear" type="number">
+<label>التاريخ</label>
+<input type="date" id="fixedDate">
   </div>
 </div>
 
@@ -2250,7 +2250,7 @@ async function addFixedPayrollItemUI() {
   const type = document.getElementById('fixedType').value;
   const reason = document.getElementById('fixedReason').value;
   const amount = document.getElementById('fixedAmount').value;
-  const year = document.getElementById('fixedYear').value;
+  const date = document.getElementById('fixedDate').value;
   const status = document.getElementById('fixedStatus').value;
   const active = document.getElementById('fixedActive').value === 'true';
 
@@ -2263,7 +2263,7 @@ async function addFixedPayrollItemUI() {
     method: "POST",
     body: JSON.stringify({
       action: "addFixedPayrollItem",
-      payload: { empId, type, reason, amount, year, status, active }
+      payload: { empId, type, reason, amount, date, status, active }
     })
   });
 
