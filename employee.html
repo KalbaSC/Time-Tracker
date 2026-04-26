@@ -1044,10 +1044,10 @@
   <h4><i class="fas fa-address-card"></i> بيانات التواصل</h4>
 
   <label>📧 البريد الإلكتروني</label>
-  <input id="profileEmail" type="email" placeholder="example@ksc.shj.ae">
+ <input id="profileEmail" type="email" required>
 
   <label>📱 رقم الهاتف داخل الإمارات</label>
-  <input id="profilePhone" placeholder="05xxxxxxxx">
+  <input id="profilePhone" required pattern="05\d{8}">
 
   <label>🌍 رقم الهاتف في البلد الأم</label>
   <input id="profileHomePhone" placeholder="+xxx xxxxxxxx">
@@ -2693,6 +2693,22 @@ async function saveMyContactInfo() {
 
   const email = $("profileEmail").value.trim();
   const phone = $("profilePhone").value.trim();
+ if (!email || !phone) {
+  showToast("📧 البريد الإلكتروني و 📱 رقم الهاتف داخل الإمارات مطلوبان", "error");
+  return;
+}
+ const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const phoneValid = /^05\d{8}$/.test(phone);
+
+if (!emailValid) {
+  showToast("❌ البريد الإلكتروني غير صحيح", "error");
+  return;
+}
+
+if (!phoneValid) {
+  showToast("❌ رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام", "error");
+  return;
+}
   const homePhone = $("profileHomePhone").value.trim();
 
   await fetch(SCRIPT_URL, {
