@@ -815,6 +815,9 @@
          <p style="color: var(--muted); margin-top: 5px;">القسم: <span id="employeeDept">—</span></p>
                <p style="color: var(--muted); margin-top: 5px;">
         سنوات الخدمة: <span id="employeeService">—</span>
+                <div>📧 البريد الإلكتروني: <span id="empEmail"></span></div>
+<div>📱 رقم الهاتف (الإمارات): <span id="empPhone"></span></div>
+<div>🌍 رقم البلد الأم: <span id="empHomePhone"></span></div>
       </p>
         </div>
              <div id="contractAlertBox"
@@ -1639,6 +1642,9 @@ async function login() {
     $('employeeName').textContent = window.employeeName;
     $('employeeId').textContent = id;
    $('employeeService').textContent = window.employeeService;
+   $('employeeEmail').textContent = data.email || "—";
+$('employeePhone').textContent = data.phone || "—";
+$('employeeHomePhone').textContent = data.homePhone || "—";
     $('leaveEmpId').value = id;
 const alertBox = $('contractAlertBox');
 const alertText = $('contractAlertText');
