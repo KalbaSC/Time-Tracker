@@ -3308,6 +3308,7 @@ $('payrollTable').innerHTML = rows.map(r => `
   <tr>
     <td>${r.empId || ''}</td>
     <td>${r.empName || ''}</td>
+    <td>${r.jobTitle || '—'}</td>
     <td>${r.month || ''}</td>
     <td>${r.year || ''}</td>
     <td>${r.basicSalary || 0}</td>
