@@ -1040,7 +1040,22 @@
       </div>
     </div>
   </div>
+<div class="leave-status">
+  <h4><i class="fas fa-address-card"></i> بيانات التواصل</h4>
 
+  <label>📧 البريد الإلكتروني</label>
+  <input id="profileEmail" type="email" placeholder="example@ksc.shj.ae">
+
+  <label>📱 رقم الهاتف داخل الإمارات</label>
+  <input id="profilePhone" placeholder="05xxxxxxxx">
+
+  <label>🌍 رقم الهاتف في البلد الأم</label>
+  <input id="profileHomePhone" placeholder="+xxx xxxxxxxx">
+
+  <button type="button" class="btn-yellow" onclick="saveMyContactInfo()">
+    <i class="fas fa-save"></i> حفظ بيانات التواصل
+  </button>
+</div>
   <form id="employeeDocsForm" onsubmit="return submitEmployeeDocuments(event);">
     <label><i class="fas fa-id-card"></i> الهوية الإماراتية</label>
     <input type="file" id="empIdFile" accept=".pdf,.jpg,.jpeg,.png" required>
@@ -1639,13 +1654,16 @@ async function login() {
     openPinChangeModal();
     return;
    }
-    $('employeeName').textContent = window.employeeName;
-    $('employeeId').textContent = id;
+   $('employeeName').textContent = window.employeeName;
+   $('employeeId').textContent = id;
    $('employeeService').textContent = window.employeeService;
    $('employeeEmail').textContent = data.email || "—";
-$('employeePhone').textContent = data.phone || "—";
-$('employeeHomePhone').textContent = data.homePhone || "—";
-    $('leaveEmpId').value = id;
+   $('employeePhone').textContent = data.phone || "—";
+   $('employeeHomePhone').textContent = data.homePhone || "—";
+   $('profileEmail').value = data.email || "";
+   $('profilePhone').value = data.phone || "";
+   $('profileHomePhone').value = data.homePhone || "";
+   $('leaveEmpId').value = id;
 const alertBox = $('contractAlertBox');
 const alertText = $('contractAlertText');
 
@@ -2665,6 +2683,37 @@ async function submitEmployeeDocuments(event) {
   }
 
   return false;
+}
+
+async function saveMyContactInfo() {
+  if (!window.currentID) {
+    showToast("يرجى تسجيل الدخول أولاً", "error");
+    return;
+  }
+
+  const email = $("profileEmail").value.trim();
+  const phone = $("profilePhone").value.trim();
+  const homePhone = $("profileHomePhone").value.trim();
+
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      action: "updateEmployeeContact",
+      payload: {
+        id: window.currentID,
+        email,
+        phone,
+        homePhone
+      }
+    })
+  });
+
+  $("employeeEmail").textContent = email || "—";
+  $("employeePhone").textContent = phone || "—";
+  $("employeeHomePhone").textContent = homePhone || "—";
+
+  showToast("تم حفظ بيانات التواصل بنجاح", "success");
 }
  
 function initialize() {
