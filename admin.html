@@ -2254,7 +2254,7 @@ async function addFixedPayrollItemUI() {
   const status = document.getElementById('fixedStatus').value;
   const active = document.getElementById('fixedActive').value === 'true';
 
-  if (!reason || !amount || !year) {
+  if (!reason || !amount || !date) {
     alert("أكمل البيانات");
     return;
   }
@@ -4806,7 +4806,7 @@ function exportPayrollCsv() {
     "رقم الموظف",
     "اسم الموظف",
     "الشهر",
-    "السنة",
+    "الشهر",
     "الراتب الأساسي",
     "التذكرة",
     "الإضافات الثابتة",
