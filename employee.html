@@ -939,8 +939,18 @@
   </div>
 </div>
 
-          <label><i class="fas fa-paperclip"></i> ملف الإجازة (صورة أو PDF - اختياري)</label>
-          <input type="file" id="leaveFile" name="leaveFile" accept=".pdf,.jpg,.jpeg,.png" />
+         <div class="leave-status">
+  <h4><i class="fas fa-file-download"></i> نموذج طلب الإجازة</h4>
+  <p style="color: var(--muted); font-size: 14px; margin-bottom: 12px;">
+    يرجى تحميل النموذج، تعبئته، ثم إعادة رفعه مع طلب الإجازة.
+  </p>
+
+  <a href="./leave-form.doc" download class="btn-yellow" style="text-decoration:none;">
+    <i class="fas fa-download"></i> تحميل نموذج الإجازة
+  </a>
+</div>
+          <label><i class="fas fa-paperclip"></i> رفع نموذج الإجازة بعد التعبئة</label>
+<input type="file" id="leaveFile" name="leaveFile" accept=".pdf,.jpg,.jpeg,.png" required />
 
           <label><i class="fas fa-comment-alt"></i> السبب</label>
           <input id="leaveReason" name="reason" placeholder="اكتب سبب الإجازة">
