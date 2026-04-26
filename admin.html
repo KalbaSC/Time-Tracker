@@ -1769,7 +1769,7 @@ body{
       <th>السنة</th>
       <th>الحالة</th>
       <th>نشط</th>
-      <th>حذف</th>
+      <th>تعطيل</th>
     </tr>
   </thead>
   <tbody id="fixedPayrollTable">
@@ -2237,10 +2237,18 @@ function renderFixedPayrollItems() {
       <td>${i.amount}</td>
       <td>${i.date || '-'}</td>
       <td>${i.status}</td>
-      <td>${i.active ? 'نعم' : 'لا'}</td>
       <td>
-        <button onclick="deleteFixedPayrollItemUI('${i.id}')">حذف</button>
-      </td>
+  ${i.active === true || i.active === "true"
+    ? `<span style="color:#22c55e;font-weight:800;">✔ نشط</span>`
+    : `<span style="color:#ef4444;font-weight:800;">✖ متوقف</span>`
+  }
+</td>
+<td>
+  ${i.active === true || i.active === "true"
+    ? `<button class="btn-yellow" onclick="toggleFixedPayrollItem('${i.id}', false)">⛔ تعطيل</button>`
+    : `<button class="btn-green" onclick="toggleFixedPayrollItem('${i.id}', true)">🔄 تفعيل</button>`
+  }
+</td>
     </tr>
   `).join('');
 }
