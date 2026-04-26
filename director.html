@@ -375,6 +375,34 @@
         </div>
       </div>
 
+    <div class="card table-card">
+  <div class="table-head">
+    <h3><i class="fas fa-calendar-check"></i> طلبات الإجازة بانتظار قرار المدير</h3>
+    <button class="btn btn-primary" style="width:auto;padding:10px 16px" onclick="loadDirectorLeaves()">
+      تحديث الطلبات
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الموظف</th>
+          <th>الرقم الوظيفي</th>
+          <th>النوع</th>
+          <th>من</th>
+          <th>إلى</th>
+          <th>السبب</th>
+          <th>الحالة</th>
+          <th>الإجراء</th>
+        </tr>
+      </thead>
+      <tbody id="directorLeavesTable">
+        <tr><td colspan="8" style="color:#777;padding:25px">لا توجد بيانات.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>  
       <div class="summary">
 <div class="card summary-card">
   <div class="icon"><i class="fas fa-users"></i></div>
@@ -552,6 +580,7 @@ function loginDirector(){
   $("pageTitle").textContent = "لوحة حضور " + director.department;
 
   loadDirectorReport();
+  loadDirectorLeaves();
 }
 
 function parseDateInput(val){
@@ -575,6 +604,7 @@ function restoreSession(){
     $("dirLabel").textContent = data.name;
     $("pageTitle").textContent = "لوحة حضور " + data.department;
     loadDirectorReport();
+    loadDirectorLeaves();
   }catch(e){}
 }
 restoreSession();
@@ -836,6 +866,89 @@ function renderStatusChart(rows){
     }
   });
 }
+
+function formatStatusDirectorLeave(status) {
+  if (status === "DirectorApproved") return `<span class="status s-ok">موافق من المدير</span>`;
+  if (status === "DirectorRejected") return `<span class="status s-bad">مرفوض من المدير</span>`;
+  if (status === "Approved") return `<span class="status s-ok">معتمد HR</span>`;
+  if (status === "Rejected") return `<span class="status s-bad">مرفوض HR</span>`;
+  return `<span class="status s-warn">بانتظار المدير</span>`;
+}
+
+async function loadDirectorLeaves() {
+  if (!currentDirector) return;
+
+  const tbody = $("directorLeavesTable");
+  tbody.innerHTML = `<tr><td colspan="8" style="color:#777;padding:25px">جاري التحميل...</td></tr>`;
+
+  try {
+    const url = SCRIPT_URL + "?action=getDirectorLeaveRequests&department=" + encodeURIComponent(currentDirector.department);
+    const data = await jsonp(url);
+
+    if (!data.ok) throw new Error(data.error || "Failed");
+
+    const rows = (data.rows || []).filter(r => String(r.status || "Pending") === "Pending");
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:#777;padding:25px">لا توجد طلبات بانتظار قرار المدير.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.name || "—"}</td>
+        <td>${r.id || "—"}</td>
+        <td>${r.type || "—"}</td>
+        <td>${onlyDateDirector(r.fromDate)}</td>
+        <td>${onlyDateDirector(r.toDate)}</td>
+        <td>${r.reason || "—"}</td>
+        <td>${formatStatusDirectorLeave(r.status)}</td>
+        <td>
+          <button class="btn btn-primary" style="width:auto;padding:8px 12px;display:inline-flex" onclick="directorDecision(${r.row}, 'DirectorApproved')">
+            موافقة
+          </button>
+          <button class="btn btn-ghost" style="width:auto;padding:8px 12px;display:inline-flex" onclick="directorDecision(${r.row}, 'DirectorRejected')">
+            رفض
+          </button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444;padding:25px">تعذر تحميل طلبات الإجازة.</td></tr>`;
+  }
+}
+
+function onlyDateDirector(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (isNaN(d)) return String(v).slice(0, 10);
+  return d.toISOString().slice(0, 10);
+}
+
+async function directorDecision(row, status) {
+  const note = prompt("اكتب ملاحظة المدير - اختياري") || "";
+
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      action: "updateDirectorLeaveStatus",
+      payload: {
+        row,
+        status,
+        directorName: currentDirector.name,
+        note
+      }
+    })
+  });
+
+  alert(status === "DirectorApproved" ? "تمت الموافقة وإرسال إشعار إلى HR" : "تم الرفض وإرسال إشعار إلى HR");
+
+  setTimeout(loadDirectorLeaves, 1000);
+}
+  
 </script>
 </body>
 </html>
