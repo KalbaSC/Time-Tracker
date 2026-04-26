@@ -1562,29 +1562,9 @@ body{
 
     <div class="loader" id="documentsLoader"></div>
 
-    <div style="overflow-x:auto;">
-      <table>
-<thead>
-  <tr>
-    <th>الرقم</th>
-    <th>الموظف</th>
-    <th>الهوية</th>
-    <th>الجواز</th>
-    <th>العقد</th>
-    <th>الصورة</th>
-    <th>الشهادات</th>
-    <th>ملفات أخرى</th>
-    <th>نسبة الاكتمال</th>
-    <th>آخر تحديث</th>
-  </tr>
-</thead>
-        <tbody id="documentsTable">
-          <tr>
-            <td colspan="10" style="text-align:center;color:#777">لا توجد بيانات.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+ <div id="documentsTable" style="margin-top:20px;">
+  <div style="text-align:center; color:#777">لا توجد بيانات.</div>
+</div>
   </div>
 </div>
 
@@ -3712,45 +3692,41 @@ function linkCell(url, label) {
     }
 
 $('documentsTable').innerHTML = `
-  <tr>
-    <td colspan="10">
-      <div class="docs-card-grid">
-        ${rows.map(r => {
-          const percent = calcCompletion(r);
-          const cls = barClass(percent);
+  <div class="docs-card-grid">
+    ${rows.map(r => {
+      const percent = calcCompletion(r);
+      const cls = barClass(percent);
 
-          return `
-            <div class="doc-card" data-docid="${String(r.employeeId || '').trim()}">
-              <div class="doc-card-head">
-                <div>
-                  <div class="doc-name">${r.employeeName || '-'}</div>
-                  <div class="doc-id">الرقم: ${r.employeeId || '-'}</div>
-                </div>
-                <div class="doc-percent">${percent}%</div>
-              </div>
-
-              <div class="leave-balance-track" style="height:8px;margin:10px 0;">
-                <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
-              </div>
-
-              <div class="doc-links">
-                ${linkCell(r.idCardUrl, 'الهوية')}
-                ${linkCell(r.passportUrl, 'الجواز')}
-                ${linkCell(r.contractUrl, 'العقد')}
-                ${linkCell(r.photoUrl, 'الصورة')}
-                ${linkCell(r.certificateUrl, 'الشهادات')}
-                ${linkCell(r.otherUrl, 'ملفات أخرى')}
-              </div>
-
-              <div class="doc-date">
-                آخر تحديث: ${formatDocDate(r.updatedAt)}
-              </div>
+      return `
+        <div class="doc-card">
+          <div class="doc-card-head">
+            <div>
+              <div class="doc-name">${r.employeeName || '-'}</div>
+              <div class="doc-id">الرقم: ${r.employeeId || '-'}</div>
             </div>
-          `;
-        }).join('')}
-      </div>
-    </td>
-  </tr>
+            <div class="doc-percent">${percent}%</div>
+          </div>
+
+          <div class="leave-balance-track" style="height:8px;margin:10px 0;">
+            <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
+          </div>
+
+          <div class="doc-links">
+            ${linkCell(r.idCardUrl, 'الهوية')}
+            ${linkCell(r.passportUrl, 'الجواز')}
+            ${linkCell(r.contractUrl, 'العقد')}
+            ${linkCell(r.photoUrl, 'الصورة')}
+            ${linkCell(r.certificateUrl, 'الشهادات')}
+            ${linkCell(r.otherUrl, 'ملفات أخرى')}
+          </div>
+
+          <div class="doc-date">
+            آخر تحديث: ${formatDocDate(r.updatedAt)}
+          </div>
+        </div>
+      `;
+    }).join('')}
+  </div>
 `;
 
     $('documentsCount').textContent = rows.length;
