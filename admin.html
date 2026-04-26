@@ -1046,6 +1046,32 @@ body{
   cursor:pointer;
 }
 .btn-blue:hover{ filter:brightness(1.05); }
+    #documentsContent table{
+  table-layout: fixed;
+  width: 100%;
+}
+
+#documentsContent th,
+#documentsContent td{
+  text-align: center;
+  white-space: nowrap;
+}
+
+.doc-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#ffd21f;
+  text-decoration:none;
+  font-weight:800;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(246,194,26,.08);
+}
+
+.doc-link:hover{
+  background:rgba(246,194,26,.18);
+}
   </style>
 </head>
 <body>
@@ -1164,7 +1190,7 @@ body{
           </tr>
         </thead>
         <tbody id="empTable">
-          <tr><td colspan="5" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
+          <tr><td colspan="10" style="text-align:center; color:#777">لا يوجد بيانات بعد.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1468,18 +1494,20 @@ body{
 
     <div style="overflow-x:auto;">
       <table>
-        <thead>
-          <tr>
-            <th>الرقم</th>
-            <th>الموظف</th>
-            <th>الهوية</th>
-            <th>الجواز</th>
-            <th>العقد</th>
-            <th>الصورة</th>
-            <th>نسبة الاكتمال</th>
-            <th>آخر تحديث</th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th>الرقم</th>
+    <th>الموظف</th>
+    <th>الهوية</th>
+    <th>الجواز</th>
+    <th>العقد</th>
+    <th>الصورة</th>
+    <th>الشهادات</th>
+    <th>ملفات أخرى</th>
+    <th>نسبة الاكتمال</th>
+    <th>آخر تحديث</th>
+  </tr>
+</thead>
         <tbody id="documentsTable">
           <tr>
             <td colspan="10" style="text-align:center;color:#777">لا توجد بيانات.</td>
@@ -3567,16 +3595,16 @@ async function loadEmployeeDocumentsAdmin() {
 
     if (!rows.length) {
       $('documentsTable').innerHTML = `
-        <tr><td colspan="8" style="text-align:center;color:#777">لا توجد وثائق مرفوعة.</td></tr>
+        <tr><td colspan="10" style="text-align:center;color:#777">لا توجد وثائق مرفوعة.</td></tr>
       `;
       $('documentsCount').textContent = 0;
       return;
     }
 
-    function linkCell(url, label) {
-      if (!url) return `<span style="color:#777">—</span>`;
-      return `<a href="${url}" target="_blank" style="color:#ffd21f;text-decoration:underline;">${label}</a>`;
-    }
+function linkCell(url, label) {
+  if (!url) return `<span style="color:#777">—</span>`;
+  return `<a href="${url}" target="_blank" class="doc-link">${label}</a>`;
+}
 
     function calcCompletion(row) {
       let percent = 0;
@@ -3628,7 +3656,7 @@ async function loadEmployeeDocumentsAdmin() {
   } catch (e) {
     console.error(e);
     $('documentsTable').innerHTML = `
-      <tr><td colspan="8" style="text-align:center;color:#777">خطأ في تحميل الوثائق</td></tr>
+      <tr><td colspan="10" style="text-align:center;color:#777">خطأ في تحميل الوثائق</td></tr>
     `;
   } finally {
     hideLoader('documentsLoader');
