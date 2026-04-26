@@ -1165,7 +1165,7 @@
       </div>
     </div>
   </div>
-
+<div id="profileEditArea">
   <div class="profile-grid">
 
     <div class="profile-card">
@@ -1193,13 +1193,13 @@
       </div>
 
       <label>اسم البنك</label>
-      <input id="bankName" placeholder="مثال: بنك الشارقة">
+      <input id="bankName" placeholder="مثال: بنك الشارقة" required>>
 
       <label>اسم صاحب الحساب</label>
-      <input id="bankOwner" placeholder="اسم صاحب الحساب">
+      <input id="bankOwner" placeholder="اسم صاحب الحساب" required>
 
       <label>رقم الحساب / IBAN</label>
-      <input id="bankIban" placeholder="AE...">
+      <input id="bankIban" placeholder="AE..." required>
 
       <label>شهادة الحساب البنكي / IBAN</label>
       <input type="file" id="bankFile" accept=".pdf,.jpg,.jpeg,.png">
@@ -1260,6 +1260,7 @@
       </button>
     </div>
   </form>
+ </div>
 
   <div class="loader" id="docsLoader"></div>
   <div id="docsMsg" class="msg"></div>
@@ -2737,16 +2738,16 @@ function getProfileCompletionClass(percent) {
 }
 
 function toggleEmployeeDocsEdit(showForm) {
-  const form = $("employeeDocsForm");
+  const editArea = $("profileEditArea");
   const editBtn = $("editDocsBtn");
 
-  if (!form || !editBtn) return;
+  if (!editArea || !editBtn) return;
 
   if (showForm) {
-    form.style.display = "block";
+    editArea.style.display = "block";
     editBtn.style.display = "none";
   } else {
-    form.style.display = "none";
+    editArea.style.display = "none";
     editBtn.style.display = "block";
   }
 }
@@ -2756,7 +2757,7 @@ function renderProfileCompletion(docs) {
   const text = $("profileCompletionText");
   const note = $("profileCompletionNote");
   const list = $("employeeDocsList");
-const form = $("employeeDocsForm");
+const editArea = $("profileEditArea");
 const editBtn = $("editDocsBtn");
   if (!fill || !text || !note || !list) return;
 
@@ -2784,10 +2785,10 @@ const editBtn = $("editDocsBtn");
       ? `<i class="fas fa-pen"></i> تعديل الملف`
       : `<i class="fas fa-upload"></i> إكمال الملف`;
   }
-    if (form) form.style.display = "none";
+    if (editArea) editArea.style.display = "none";
     if (editBtn) editBtn.style.display = "block";
   } else {
-    if (form) form.style.display = "block";
+    if (editArea) editArea.style.display = "block";
     if (editBtn) editBtn.style.display = "none";
   }
    if (window.currentID) {
@@ -2918,6 +2919,11 @@ async function submitEmployeeDocuments(event) {
 const bankName = $("bankName")?.value.trim() || "";
 const bankOwner = $("bankOwner")?.value.trim() || "";
 const bankIban = $("bankIban")?.value.trim() || "";
+ 
+ if (!bankName || !bankOwner || !bankIban) {
+  showToast("البيانات البنكية مطلوبة", "error");
+  return false;
+}
 
   if (!idFile || !passportFile || !contractFile) {
     showToast("الهوية والجواز والعقد مطلوبة", "error");
