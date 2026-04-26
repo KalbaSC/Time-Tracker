@@ -766,6 +766,18 @@
     padding: 12px 14px;
   }
 }   
+   .toggle-section-btn{
+  margin-top: 16px;
+  width: 100%;
+}
+
+.collapsible-section{
+  display: none;
+}
+
+.collapsible-section.open{
+  display: block;
+}
   </style>
 </head>
 <body>
@@ -883,8 +895,12 @@
         </div>
       </div>
 
-      <div class="section">
-        <h3><i class="fas fa-calendar-plus"></i> طلب إجازة</h3>
+<button type="button" class="btn-yellow toggle-section-btn" onclick="toggleSection('leaveSection')">
+  <i class="fas fa-calendar-plus"></i> طلب إجازة
+</button>
+
+<div id="leaveSection" class="section collapsible-section">
+  <h3><i class="fas fa-calendar-plus"></i> طلب إجازة</h3>
         <div class="leave-status" id="leaveBalanceBox">
   <h4><i class="fas fa-wallet"></i> رصيد الإجازات</h4>
   <div id="leaveBalanceContent" style="color: var(--muted); line-height: 1.9;">
@@ -961,7 +977,11 @@
  
       </div>
 
-    <div class="section">
+<button type="button" class="btn-yellow toggle-section-btn" onclick="toggleSection('tafreeghSection')">
+  <i class="fas fa-briefcase"></i> طلب تفريغ
+</button>
+
+<div id="tafreeghSection" class="section collapsible-section">
   <h3><i class="fas fa-briefcase"></i> طلب تفريغ</h3>
 
   <div class="leave-status">
@@ -1020,7 +1040,11 @@
 </div>
 
      
-<div class="section">
+<button type="button" class="btn-yellow toggle-section-btn" onclick="toggleSection('profileSection')">
+  <i class="fas fa-folder-open"></i> ملف الموظف
+</button>
+
+<div id="profileSection" class="section collapsible-section">
   <h3><i class="fas fa-folder-open"></i> ملف الموظف</h3>
 
   <div class="leave-status">
@@ -2730,6 +2754,13 @@ if (!phoneValid) {
   $("employeeHomePhone").textContent = homePhone || "—";
 
   showToast("تم حفظ بيانات التواصل بنجاح", "success");
+}
+
+function toggleSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+
+  section.classList.toggle("open");
 }
  
 function initialize() {
