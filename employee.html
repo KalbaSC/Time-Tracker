@@ -1153,6 +1153,9 @@
   <label>اسم البنك</label>
   <input id="bankName" placeholder="مثال: بنك الشارقة">
 
+ <label>اسم صاحب الحساب</label>
+<input id="bankOwner" placeholder="اسم صاحب الحساب">
+
   <label>رقم الحساب / IBAN</label>
   <input id="bankIban" placeholder="AE...">
 
@@ -2817,8 +2820,9 @@ async function submitEmployeeDocuments(event) {
  const otherFile = $("empOtherFile")?.files?.[0] || null;
  const bankFile = $("bankFile")?.files?.[0] || null;
 
- const bankName = $("bankName")?.value.trim() || "";
- const bankIban = $("bankIban")?.value.trim() || "";
+const bankName = $("bankName")?.value.trim() || "";
+const bankOwner = $("bankOwner")?.value.trim() || "";
+const bankIban = $("bankIban")?.value.trim() || "";
 
   if (!idFile || !passportFile || !contractFile) {
     showToast("الهوية والجواز والعقد مطلوبة", "error");
@@ -2841,6 +2845,7 @@ async function submitEmployeeDocuments(event) {
       id: String(window.currentID),
       name: String(window.employeeName || ""),
       bankName,
+      bankOwner,
       bankIban
     };
 
