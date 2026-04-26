@@ -3322,6 +3322,16 @@ $('payrollTable').innerHTML = rows.map(r => `
     <td>${renderPayrollActions(r)}</td>
   </tr>
 `).join('');
+
+    const hasDraft = rows.some(r => r.status === "Draft");
+
+if (hasDraft) {
+  $('payrollTable').insertAdjacentHTML("afterend", `
+    <button id="reviewSelectedPayrollBtn" class="btn-yellow" onclick="reviewSelectedPayroll()" style="margin-top:15px;">
+      ✔ تم المراجعة
+    </button>
+  `);
+}
     
   } catch (e) {
     showToast('خطأ في تحميل الرواتب', 'error');
@@ -4117,20 +4127,12 @@ function formatEnglishDateOnly(date) {
   return `${year}-${month}-${day} (${dayName})`;
 }
 
-  function renderPayrollActions(r) {
+function renderPayrollActions(r) {
   if (r.status === "Draft") {
-    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Reviewed')" class="btn-yellow">تم المراجعة</button>`;
+    return `<input type="checkbox" class="payroll-review-check" value="${r.empId}">`;
   }
 
-  if (r.status === "Reviewed") {
-    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Approved')" class="btn-green">تم الاعتماد</button>`;
-  }
-
-  if (r.status === "Approved") {
-    return `<button onclick="changePayrollStatus('${r.empId}', ${r.month}, ${r.year}, 'Paid')" class="btn-blue">تم التحويل</button>`;
-  }
-
-  return "✔️ تم";
+  return `<span style="color:#22c55e;font-weight:800;">✔ تم المراجعة</span>`;
 }
 
   function changePayrollStatus(empId, month, year, status) {
@@ -4149,6 +4151,46 @@ function formatEnglishDateOnly(date) {
       alert(res.error);
     }
   });
+}
+
+async function reviewSelectedPayroll() {
+  const checked = Array.from(document.querySelectorAll(".payroll-review-check:checked"));
+
+  if (!checked.length) {
+    showToast("اختر الموظفين أولاً", "warning");
+    return;
+  }
+
+  const rowsToReview = lastPayrollRows.filter(r =>
+    checked.some(c => String(c.value) === String(r.empId))
+  );
+
+  try {
+    showLoader("payrollLoader");
+
+    await Promise.all(rowsToReview.map(r =>
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "updatePayrollStatus",
+          payload: {
+            empId: r.empId,
+            month: r.month,
+            year: r.year,
+            status: "تم المراجعة"
+          }
+        })
+      })
+    ));
+
+    showToast("تمت مراجعة الموظفين المحددين", "success");
+    loadPayrollForMonthUI();
+
+  } catch (e) {
+    showToast("خطأ في تحديث المراجعة", "error");
+  } finally {
+    hideLoader("payrollLoader");
+  }
 }
   
 function getPeriodLabelArabic(period, start, end) {
