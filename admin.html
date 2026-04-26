@@ -2235,7 +2235,7 @@ function renderFixedPayrollItems() {
       <td>${i.type === 'ADD' ? 'إضافة' : 'خصم'}</td>
       <td>${i.reason}</td>
       <td>${i.amount}</td>
-      <td>${i.year}</td>
+      <td>${i.date || '-'}</td>
       <td>${i.status}</td>
       <td>${i.active ? 'نعم' : 'لا'}</td>
       <td>
@@ -2248,18 +2248,18 @@ function renderFixedPayrollItems() {
 async function addFixedPayrollItemUI() {
   const empId = document.getElementById('editEmpId').value;
   const type = document.getElementById('fixedType').value;
-  const reason = document.getElementById('fixedReason').value;
+  const reason = document.getElementById('fixedReason').value.trim();
   const amount = document.getElementById('fixedAmount').value;
   const date = document.getElementById('fixedDate').value;
   const status = document.getElementById('fixedStatus').value;
   const active = document.getElementById('fixedActive').value === 'true';
 
-  if (!reason || !amount || !date) {
-    alert("أكمل البيانات");
+  if (!empId || !reason || !amount || !date) {
+    showToast("أكمل البيانات", "warning");
     return;
   }
 
-  await fetch(SCRIPT_URL, {
+  const res = await fetch(SCRIPT_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "addFixedPayrollItem",
@@ -2267,6 +2267,14 @@ async function addFixedPayrollItemUI() {
     })
   });
 
+  const data = await res.json();
+
+  if (!data.ok) {
+    showToast(data.error || "لم يتم الحفظ", "error");
+    return;
+  }
+
+  showToast("تمت الإضافة", "success");
   loadFixedPayrollItems(empId);
 }
 
