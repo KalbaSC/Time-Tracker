@@ -2142,13 +2142,18 @@ async function submitLeaveForm(event) {
       action: "requestLeave",
       payload
     });
-await fetch(SCRIPT_URL, {
+const res = await fetch(SCRIPT_URL, {
   method: "POST",
-  mode: "no-cors",
   body: body
 });
 
-    showToast('تم إرسال طلب الإجازة بنجاح ✅', 'success');
+const data = await res.json();
+
+if (!data.ok) {
+  throw new Error(data.error || "فشل إرسال طلب الإجازة");
+}
+
+showToast('تم إرسال طلب الإجازة بنجاح ✅', 'success');
 
     if (leaveMsg) {
       leaveMsg.className = 'msg ok';
