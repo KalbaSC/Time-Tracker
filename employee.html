@@ -1076,6 +1076,9 @@
     <label><i class="fas fa-note-sticky"></i> ملاحظات إضافية</label>
     <input id="remoteNotes" placeholder="اختياري">
 
+   <label><i class="fas fa-paperclip"></i> مرفق إلزامي (صورة أو PDF)</label>
+<input type="file" id="remoteFile" accept=".pdf,.jpg,.jpeg,.png" required>
+   
     <button type="submit" class="btn-yellow">
       <i class="fas fa-paper-plane"></i> إرسال طلب العمل عن بُعد
     </button>
@@ -2431,14 +2434,24 @@ async function submitRemoteForm(event) {
   const tasks = $("remoteTasks").value.trim();
   const notes = $("remoteNotes").value.trim();
 
+  const fileInput = document.getElementById("remoteFile");
+  const file = fileInput.files[0];
+
   if (!date || !location || !tasks) {
     showToast("يرجى تعبئة جميع الحقول المطلوبة", "error");
+    return false;
+  }
+
+  if (!file) {
+    showToast("يجب إرفاق ملف", "error");
     return false;
   }
 
   showLoader("remoteLoader");
 
   try {
+    const base64 = await readFileAsBase64_(file);
+
     await fetch(SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
@@ -2450,7 +2463,10 @@ async function submitRemoteForm(event) {
           date,
           location,
           tasks,
-          notes
+          notes,
+          fileData: base64,
+          fileName: file.name,
+          fileType: file.type
         }
       })
     });
