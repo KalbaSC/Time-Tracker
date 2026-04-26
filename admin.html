@@ -2499,18 +2499,20 @@ async function loadLeaves(filter = 'all') {
 
     leaves.forEach((lv) => {
       let statusClass = '';
-      switch (lv.status) {
-        case 'Pending': statusClass = 'status-pending'; break;
-        case 'Approved': statusClass = 'status-approved'; break;
-        case 'Rejected': statusClass = 'status-rejected'; break;
-      }
+switch (lv.status) {
+  case 'Pending': statusClass = 'status-pending'; break;
+  case 'DirectorApproved': statusClass = 'status-pending'; break;
+  case 'DirectorRejected': statusClass = 'status-rejected'; break;
+  case 'Approved': statusClass = 'status-approved'; break;
+  case 'Rejected': statusClass = 'status-rejected'; break;
+}
 
       const balance = balanceMap[String(lv.id || "").trim()];
       const balanceInfo = renderLeaveBalanceCell_(balance, lv.type, lv.fromDate, lv.toDate);
 
       let actionsHtml = "";
-      if (lv.status === "Pending") {
-        if (balanceInfo.canApprove) {
+if (lv.status === "DirectorApproved") {
+  if (balanceInfo.canApprove) {
           actionsHtml = `
             <div class="actions-cell">
               <button class="btn-success" onclick="setLeaveStatus(${lv.row}, 'Approved')">✔ قبول</button>
@@ -2533,8 +2535,8 @@ async function loadLeaves(filter = 'all') {
         ? `<a href="${lv.fileUrl}" target="_blank" style="color:#ffd21f;text-decoration:underline;">📎 عرض</a>`
         : `<span style="color:#777">—</span>`;
 
-      const noteBox = (lv.status === "Pending")
-        ? `<textarea id="note_${lv.row}" placeholder="ملاحظة / سبب الرفض ..." style="width:100%;min-height:38px;border-radius:10px;padding:8px;"></textarea>`
+const noteBox = (lv.status === "DirectorApproved")
+  ? `<textarea id="note_${lv.row}" placeholder="ملاحظة / سبب الرفض ..." style="width:100%;min-height:38px;border-radius:10px;padding:8px;"></textarea>`
         : `<span style="color:#777">${lv.note || "—"}</span>`;
 
       html += `
