@@ -1141,6 +1141,25 @@
     <label><i class="fas fa-camera"></i> الصورة الشخصية (اختياري)</label>
     <input type="file" id="empPhotoFile" accept=".jpg,.jpeg,.png">
 
+   <label><i class="fas fa-certificate"></i> الشهادات (اختياري)</label>
+<input type="file" id="empCertificateFile" accept=".pdf,.jpg,.jpeg,.png">
+
+<label><i class="fas fa-folder-plus"></i> ملفات أخرى (اختياري)</label>
+<input type="file" id="empOtherFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+
+<div class="leave-status">
+  <h4><i class="fas fa-building-columns"></i> البيانات البنكية</h4>
+
+  <label>اسم البنك</label>
+  <input id="bankName" placeholder="مثال: بنك الشارقة">
+
+  <label>رقم الحساب / IBAN</label>
+  <input id="bankIban" placeholder="AE...">
+
+  <label>شهادة الحساب البنكي / IBAN (اختياري)</label>
+  <input type="file" id="bankFile" accept=".pdf,.jpg,.jpeg,.png">
+</div>
+
     <button type="submit" class="btn-yellow" id="submitDocsBtn">
       <i class="fas fa-upload"></i> رفع ملفات الموظف
     </button>
@@ -2648,6 +2667,9 @@ const editBtn = $("editDocsBtn");
   const hasPassport = !!docs.passportUrl;
   const hasContract = !!docs.contractUrl;
   const hasPhoto = !!docs.photoUrl;
+  const hasCertificate = !!docs.certificateUrl;
+  const hasOther = !!docs.otherUrl;
+  const hasBankFile = !!docs.bankFileUrl;
 
   let percent = 0;
   if (hasId) percent += 34;
@@ -2727,6 +2749,33 @@ const editBtn = $("editDocsBtn");
         </div>
         ${hasPhoto ? `<div class="leave-balance-foot"><a href="${docs.photoUrl}" target="_blank" style="color:var(--accent);">عرض الصورة</a></div>` : ``}
       </div>
+      <div class="leave-balance-item">
+  <div class="leave-balance-head">
+    <span class="leave-balance-name">الشهادات</span>
+    <span class="leave-balance-numbers">${hasCertificate ? "مرفوعة ✅" : "اختيارية"}</span>
+  </div>
+  ${hasCertificate ? `<div class="leave-balance-foot"><a href="${docs.certificateUrl}" target="_blank" style="color:var(--accent);">عرض الشهادة</a></div>` : ``}
+</div>
+
+<div class="leave-balance-item">
+  <div class="leave-balance-head">
+    <span class="leave-balance-name">ملفات أخرى</span>
+    <span class="leave-balance-numbers">${hasOther ? "مرفوعة ✅" : "اختيارية"}</span>
+  </div>
+  ${hasOther ? `<div class="leave-balance-foot"><a href="${docs.otherUrl}" target="_blank" style="color:var(--accent);">عرض الملف</a></div>` : ``}
+</div>
+
+<div class="leave-balance-item">
+  <div class="leave-balance-head">
+    <span class="leave-balance-name">البيانات البنكية</span>
+    <span class="leave-balance-numbers">${docs.bankName || docs.bankIban ? "مدخلة ✅" : "غير مدخلة"}</span>
+  </div>
+  <div class="leave-balance-foot">
+    البنك: ${docs.bankName || "—"}<br>
+    IBAN: ${docs.bankIban || "—"}
+    ${hasBankFile ? `<br><a href="${docs.bankFileUrl}" target="_blank" style="color:var(--accent);">عرض شهادة البنك</a>` : ``}
+  </div>
+</div>
     </div>
   `;
 }
@@ -2764,6 +2813,12 @@ async function submitEmployeeDocuments(event) {
   const passportFile = $("empPassportFile")?.files?.[0] || null;
   const contractFile = $("empContractFile")?.files?.[0] || null;
   const photoFile = $("empPhotoFile")?.files?.[0] || null;
+ const certificateFile = $("empCertificateFile")?.files?.[0] || null;
+ const otherFile = $("empOtherFile")?.files?.[0] || null;
+ const bankFile = $("bankFile")?.files?.[0] || null;
+
+ const bankName = $("bankName")?.value.trim() || "";
+ const bankIban = $("bankIban")?.value.trim() || "";
 
   if (!idFile || !passportFile || !contractFile) {
     showToast("الهوية والجواز والعقد مطلوبة", "error");
@@ -2784,7 +2839,9 @@ async function submitEmployeeDocuments(event) {
   try {
     const payload = {
       id: String(window.currentID),
-      name: String(window.employeeName || "")
+      name: String(window.employeeName || ""),
+      bankName,
+      bankIban
     };
 
     if (idFile) {
@@ -2810,6 +2867,24 @@ async function submitEmployeeDocuments(event) {
       payload.photoFileName = photoFile.name;
       payload.photoFileType = photoFile.type || "application/octet-stream";
     }
+
+   if (certificateFile) {
+  payload.certificateFileData = await readFileAsBase64_(certificateFile);
+  payload.certificateFileName = certificateFile.name;
+  payload.certificateFileType = certificateFile.type || "application/octet-stream";
+}
+
+if (otherFile) {
+  payload.otherFileData = await readFileAsBase64_(otherFile);
+  payload.otherFileName = otherFile.name;
+  payload.otherFileType = otherFile.type || "application/octet-stream";
+}
+
+if (bankFile) {
+  payload.bankFileData = await readFileAsBase64_(bankFile);
+  payload.bankFileName = bankFile.name;
+  payload.bankFileType = bankFile.type || "application/octet-stream";
+}
 
     await fetch(SCRIPT_URL, {
       method: "POST",
