@@ -2190,10 +2190,38 @@ setTimeout(() => {
 }
 
 function statusBadgeHtml_(statusRaw, note){
-  const s = String(statusRaw || "Pending").toLowerCase();
-  let bg = "rgba(245,158,11,.12)", color = "#f59e0b", label = "قيد الانتظار";
-  if (s === "approved") { bg = "rgba(34,197,94,.12)"; color = "#22c55e"; label = "مقبولة"; }
-  if (s === "rejected") { bg = "rgba(239,68,68,.12)"; color = "#ef4444"; label = "مرفوضة"; }
+  const s = String(statusRaw || "Pending");
+
+  let bg = "rgba(245,158,11,.12)";
+  let color = "#f59e0b";
+  let label = "قيد الانتظار";
+
+  if (s === "Pending") {
+    label = "بانتظار قرار المدير";
+  }
+
+  if (s === "DirectorApproved") {
+    label = "بانتظار اعتماد HR";
+  }
+
+  if (s === "DirectorRejected") {
+    bg = "rgba(239,68,68,.12)";
+    color = "#ef4444";
+    label = "مرفوضة من المدير";
+  }
+
+  if (s === "Approved") {
+    bg = "rgba(34,197,94,.12)";
+    color = "#22c55e";
+    label = "مقبولة";
+  }
+
+  if (s === "Rejected") {
+    bg = "rgba(239,68,68,.12)";
+    color = "#ef4444";
+    label = "مرفوضة من HR";
+  }
+
   return `<span style="padding:4px 10px;border-radius:999px;background:${bg};color:${color};font-weight:800;font-size:12px;">${label}</span>`;
 }
 
