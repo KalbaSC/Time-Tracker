@@ -392,13 +392,15 @@
           <th>النوع</th>
           <th>من</th>
           <th>إلى</th>
+          <th>المرفق</th>
           <th>السبب</th>
           <th>الحالة</th>
           <th>الإجراء</th>
         </tr>
       </thead>
       <tbody id="directorLeavesTable">
-        <tr><td colspan="8" style="color:#777;padding:25px">لا توجد بيانات.</td></tr>
+<tr><td colspan="9" style="color:#777;padding:25px">لا توجد بيانات.</td></tr>
+    </tr>
       </tbody>
     </table>
   </div>
@@ -894,25 +896,36 @@ async function loadDirectorLeaves() {
       return;
     }
 
-    tbody.innerHTML = rows.map(r => `
-      <tr>
-        <td>${r.name || "—"}</td>
-        <td>${r.id || "—"}</td>
-        <td>${r.type || "—"}</td>
-        <td>${onlyDateDirector(r.fromDate)}</td>
-        <td>${onlyDateDirector(r.toDate)}</td>
-        <td>${r.reason || "—"}</td>
-        <td>${formatStatusDirectorLeave(r.status)}</td>
-        <td>
-          <button class="btn btn-primary" style="width:auto;padding:8px 12px;display:inline-flex" onclick="directorDecision(${r.row}, 'DirectorApproved')">
-            موافقة
-          </button>
-          <button class="btn btn-ghost" style="width:auto;padding:8px 12px;display:inline-flex" onclick="directorDecision(${r.row}, 'DirectorRejected')">
-            رفض
-          </button>
-        </td>
-      </tr>
-    `).join("");
+tbody.innerHTML = rows.map(r => `
+  <tr>
+    <td>${r.name || "—"}</td>
+    <td>${r.id || "—"}</td>
+    <td>${r.type || "—"}</td>
+    <td>${onlyDateDirector(r.fromDate)}</td>
+    <td>${onlyDateDirector(r.toDate)}</td>
+
+    <td>
+      ${r.fileUrl 
+        ? `<a href="${r.fileUrl}" target="_blank" style="color:#f6c21a;font-weight:800;">عرض</a>` 
+        : "—"}
+    </td>
+
+    <td>${r.reason || "—"}</td>
+    <td>${formatStatusDirectorLeave(r.status)}</td>
+
+    <td>
+      <button class="btn btn-primary" style="width:auto;padding:8px 12px;display:inline-flex"
+        onclick="directorDecision(${r.row}, 'DirectorApproved')">
+        موافقة
+      </button>
+
+      <button class="btn btn-ghost" style="width:auto;padding:8px 12px;display:inline-flex"
+        onclick="directorDecision(${r.row}, 'DirectorRejected')">
+        رفض
+      </button>
+    </td>
+  </tr>
+`).join("");
 
   } catch (e) {
     console.error(e);
