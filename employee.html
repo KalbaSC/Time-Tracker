@@ -2773,11 +2773,12 @@ const editBtn = $("editDocsBtn");
     <span class="leave-balance-name">البيانات البنكية</span>
     <span class="leave-balance-numbers">${docs.bankName || docs.bankIban ? "مدخلة ✅" : "غير مدخلة"}</span>
   </div>
-  <div class="leave-balance-foot">
-    البنك: ${docs.bankName || "—"}<br>
-    IBAN: ${docs.bankIban || "—"}
-    ${hasBankFile ? `<br><a href="${docs.bankFileUrl}" target="_blank" style="color:var(--accent);">عرض شهادة البنك</a>` : ``}
-  </div>
+<div class="leave-balance-foot">
+  البنك: ${docs.bankName || "—"}<br>
+  صاحب الحساب: ${docs.bankOwner || "—"}<br>
+  IBAN: ${docs.bankIban || "—"}
+  ${hasBankFile ? `<br><a href="${docs.bankFileUrl}" target="_blank" style="color:var(--accent);">عرض شهادة البنك</a>` : ``}
+</div>
 </div>
     </div>
   `;
