@@ -1482,7 +1482,7 @@ body{
         </thead>
         <tbody id="documentsTable">
           <tr>
-            <td colspan="8" style="text-align:center;color:#777">لا توجد بيانات.</td>
+            <td colspan="10" style="text-align:center;color:#777">لا توجد بيانات.</td>
           </tr>
         </tbody>
       </table>
@@ -3558,7 +3558,7 @@ async function loadEmployeeDocumentsAdmin() {
 
     if (!data.ok) {
       $('documentsTable').innerHTML = `
-        <tr><td colspan="8" style="text-align:center;color:#777">تعذر تحميل الوثائق</td></tr>
+        <tr><td colspan="10" style="text-align:center;color:#777">تعذر تحميل الوثائق</td></tr>
       `;
       return;
     }
@@ -3603,8 +3603,10 @@ async function loadEmployeeDocumentsAdmin() {
           <td>${linkCell(r.idCardUrl, 'عرض')}</td>
           <td>${linkCell(r.passportUrl, 'عرض')}</td>
           <td>${linkCell(r.contractUrl, 'عرض')}</td>
-          <td>${linkCell(r.photoUrl, 'عرض')}</td>
-          <td>
+<td>${linkCell(r.photoUrl, 'عرض')}</td>
+<td>${linkCell(r.certificateUrl, 'عرض')}</td>
+<td>${linkCell(r.otherUrl, 'عرض')}</td>
+<td>
             <div style="min-width:160px;">
               <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:6px;">
                 <span style="font-weight:800;">${percent}%</span>
