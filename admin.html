@@ -1072,6 +1072,75 @@ body{
 .doc-link:hover{
   background:rgba(246,194,26,.18);
 }
+    .docs-card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:16px;
+}
+
+.doc-card{
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:18px;
+  padding:16px;
+  text-align:right;
+}
+
+.doc-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+
+.doc-name{
+  color:#fff;
+  font-weight:900;
+  font-size:18px;
+}
+
+.doc-id,
+.doc-date{
+  color:#aaa;
+  font-size:13px;
+  margin-top:5px;
+}
+
+.doc-percent{
+  background:rgba(34,197,94,.15);
+  color:#22c55e;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:900;
+}
+
+.doc-links{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+
+.doc-link{
+  color:#ffd21f;
+  background:rgba(246,194,26,.10);
+  border-radius:12px;
+  padding:10px;
+  text-align:center;
+  text-decoration:none;
+  font-weight:900;
+}
+
+.doc-link.missing{
+  color:#777;
+  background:rgba(255,255,255,.04);
+}
+
+.doc-date{
+  margin-top:14px;
+  border-top:1px solid #222;
+  padding-top:10px;
+}
   </style>
 </head>
 <body>
@@ -3602,10 +3671,20 @@ async function loadEmployeeDocumentsAdmin() {
     }
 
 function linkCell(url, label) {
-  if (!url) return `<span style="color:#777">—</span>`;
+  if (!url) return `<span class="doc-link missing">${label}: —</span>`;
   return `<a href="${url}" target="_blank" class="doc-link">${label}</a>`;
 }
 
+    function formatDocDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (isNaN(d)) return String(v).split("T")[0] || "—";
+  return d.toLocaleDateString("ar-AE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+}
     function calcCompletion(row) {
       let percent = 0;
       if (row.idCardUrl) percent += 34;
@@ -3620,35 +3699,47 @@ function linkCell(url, label) {
       return 'good';
     }
 
-    $('documentsTable').innerHTML = rows.map(r => {
-      const percent = calcCompletion(r);
-      const cls = barClass(percent);
+$('documentsTable').innerHTML = `
+  <tr>
+    <td colspan="10">
+      <div class="docs-card-grid">
+        ${rows.map(r => {
+          const percent = calcCompletion(r);
+          const cls = barClass(percent);
 
-      return `
-        <tr data-docid="${String(r.employeeId || '').trim()}">
-          <td>${r.employeeId || '-'}</td>
-          <td>${r.employeeName || '-'}</td>
-          <td>${linkCell(r.idCardUrl, 'عرض')}</td>
-          <td>${linkCell(r.passportUrl, 'عرض')}</td>
-          <td>${linkCell(r.contractUrl, 'عرض')}</td>
-<td>${linkCell(r.photoUrl, 'عرض')}</td>
-<td>${linkCell(r.certificateUrl, 'عرض')}</td>
-<td>${linkCell(r.otherUrl, 'عرض')}</td>
-<td>
-            <div style="min-width:160px;">
-              <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:6px;">
-                <span style="font-weight:800;">${percent}%</span>
-                <span style="color:#aaa;">${percent === 100 ? 'مكتمل' : 'غير مكتمل'}</span>
+          return `
+            <div class="doc-card" data-docid="${String(r.employeeId || '').trim()}">
+              <div class="doc-card-head">
+                <div>
+                  <div class="doc-name">${r.employeeName || '-'}</div>
+                  <div class="doc-id">الرقم: ${r.employeeId || '-'}</div>
+                </div>
+                <div class="doc-percent">${percent}%</div>
               </div>
-              <div class="leave-balance-track" style="height:8px;">
+
+              <div class="leave-balance-track" style="height:8px;margin:10px 0;">
                 <div class="leave-balance-fill ${cls}" style="width:${percent}%;"></div>
               </div>
+
+              <div class="doc-links">
+                ${linkCell(r.idCardUrl, 'الهوية')}
+                ${linkCell(r.passportUrl, 'الجواز')}
+                ${linkCell(r.contractUrl, 'العقد')}
+                ${linkCell(r.photoUrl, 'الصورة')}
+                ${linkCell(r.certificateUrl, 'الشهادات')}
+                ${linkCell(r.otherUrl, 'ملفات أخرى')}
+              </div>
+
+              <div class="doc-date">
+                آخر تحديث: ${formatDocDate(r.updatedAt)}
+              </div>
             </div>
-          </td>
-          <td>${r.updatedAt || '-'}</td>
-        </tr>
-      `;
-    }).join('');
+          `;
+        }).join('')}
+      </div>
+    </td>
+  </tr>
+`;
 
     $('documentsCount').textContent = rows.length;
     attachDocumentsSearch_();
