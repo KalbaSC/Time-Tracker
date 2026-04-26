@@ -4669,9 +4669,9 @@ function exportPayrollCsv() {
     "الراتب الأساسي",
     "التذكرة",
     "الإضافات الثابتة",
-    "الإضافات اليدوية",
+    "الإضافات الشهرية",
     "الخصومات الثابتة",
-    "الخصومات اليدوية",
+    "الخصومات الشهرية",
     "الصافي",
     "الحالة"
   ];
@@ -4720,9 +4720,9 @@ function exportPayrollExcel() {
     "الراتب الأساسي": Number(r.basicSalary || 0),
     "التذكرة": Number(r.ticket || 0),
     "الإضافات الثابتة": Number(r.fixedAdd || 0),
-    "الإضافات اليدوية": Number(r.manualAdd || 0),
+    "الإضافات الشهرية": Number(r.manualAdd || 0),
     "الخصومات الثابتة": Number(r.fixedDeduct || 0),
-    "الخصومات اليدوية": Number(r.manualDeduct || 0),
+    "الخصومات الشهرية": Number(r.manualDeduct || 0),
     "الصافي": Number(r.netSalary || 0),
     "الحالة": r.status || ""
   }));
