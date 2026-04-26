@@ -778,6 +778,59 @@
 .collapsible-section.open{
   display: block;
 }
+
+.profile-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.profile-card{
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+}
+
+.profile-card-title{
+  color:var(--accent);
+  font-weight:900;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.upload-box{
+  border:1px dashed rgba(246,194,26,.45);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+  background:rgba(246,194,26,.04);
+}
+
+.upload-box label{
+  margin-bottom:8px;
+  color:#fff;
+}
+
+.profile-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+
+.profile-actions .btn-yellow{
+  flex:1;
+  min-width:180px;
+}
+
+@media(max-width:768px){
+  .profile-grid{
+    grid-template-columns:1fr;
+  }
+}   
   </style>
 </head>
 <body>
@@ -1107,78 +1160,119 @@
           <div class="leave-balance-fill bad" id="profileCompletionFill" style="width:0%;"></div>
         </div>
         <div class="leave-balance-foot" id="profileCompletionNote">
-          الهوية والجواز والعقد مطلوبة، والصورة اختيارية
+          الهوية والجواز والعقد مطلوبة، والصورة والشهادات اختيارية
         </div>
       </div>
     </div>
   </div>
-<div class="leave-status">
-  <h4><i class="fas fa-address-card"></i> بيانات التواصل</h4>
 
-  <label>📧 البريد الإلكتروني</label>
- <input id="profileEmail" type="email" required>
+  <div class="profile-grid">
 
-  <label>📱 رقم الهاتف داخل الإمارات</label>
-  <input id="profilePhone" required pattern="05\d{8}">
+    <div class="profile-card">
+      <div class="profile-card-title">
+        <i class="fas fa-address-card"></i> بيانات التواصل
+      </div>
 
-  <label>🌍 رقم الهاتف في البلد الأم</label>
-  <input id="profileHomePhone" placeholder="+xxx xxxxxxxx">
+      <label>📧 البريد الإلكتروني</label>
+      <input id="profileEmail" type="email" placeholder="example@email.com" required>
 
-  <button type="button" class="btn-yellow" onclick="saveMyContactInfo()">
-    <i class="fas fa-save"></i> حفظ بيانات التواصل
-  </button>
-</div>
-  <form id="employeeDocsForm" onsubmit="return submitEmployeeDocuments(event);">
-    <label><i class="fas fa-id-card"></i> الهوية الإماراتية</label>
-    <input type="file" id="empIdFile" accept=".pdf,.jpg,.jpeg,.png" required>
+      <label>📱 رقم الهاتف داخل الإمارات</label>
+      <input id="profilePhone" placeholder="05xxxxxxxx" required pattern="05\d{8}">
 
-    <label><i class="fas fa-passport"></i> جواز السفر</label>
-    <input type="file" id="empPassportFile" accept=".pdf,.jpg,.jpeg,.png" required>
+      <label>🌍 رقم الهاتف في البلد الأم</label>
+      <input id="profileHomePhone" placeholder="+xxx xxxxxxxx">
 
-    <label><i class="fas fa-file-signature"></i> العقد</label>
-    <input type="file" id="empContractFile" accept=".pdf,.jpg,.jpeg,.png" required>
+      <button type="button" class="btn-yellow" onclick="saveMyContactInfo()">
+        <i class="fas fa-save"></i> حفظ بيانات التواصل
+      </button>
+    </div>
 
-    <label><i class="fas fa-camera"></i> الصورة الشخصية (اختياري)</label>
-    <input type="file" id="empPhotoFile" accept=".jpg,.jpeg,.png">
+    <div class="profile-card">
+      <div class="profile-card-title">
+        <i class="fas fa-building-columns"></i> البيانات البنكية
+      </div>
 
-   <label><i class="fas fa-certificate"></i> الشهادات (اختياري)</label>
-<input type="file" id="empCertificateFile" accept=".pdf,.jpg,.jpeg,.png">
+      <label>اسم البنك</label>
+      <input id="bankName" placeholder="مثال: بنك الشارقة">
 
-<label><i class="fas fa-folder-plus"></i> ملفات أخرى (اختياري)</label>
-<input type="file" id="empOtherFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+      <label>اسم صاحب الحساب</label>
+      <input id="bankOwner" placeholder="اسم صاحب الحساب">
 
-<div class="leave-status">
-  <h4><i class="fas fa-building-columns"></i> البيانات البنكية</h4>
+      <label>رقم الحساب / IBAN</label>
+      <input id="bankIban" placeholder="AE...">
 
-  <label>اسم البنك</label>
-  <input id="bankName" placeholder="مثال: بنك الشارقة">
+      <label>شهادة الحساب البنكي / IBAN</label>
+      <input type="file" id="bankFile" accept=".pdf,.jpg,.jpeg,.png">
+    </div>
 
- <label>اسم صاحب الحساب</label>
-<input id="bankOwner" placeholder="اسم صاحب الحساب">
+  </div>
 
-  <label>رقم الحساب / IBAN</label>
-  <input id="bankIban" placeholder="AE...">
+  <form id="employeeDocsForm" onsubmit="return submitEmployeeDocuments(event);" style="margin-top:16px;">
+    <div class="profile-grid">
 
-  <label>شهادة الحساب البنكي / IBAN (اختياري)</label>
-  <input type="file" id="bankFile" accept=".pdf,.jpg,.jpeg,.png">
-</div>
+      <div class="profile-card">
+        <div class="profile-card-title">
+          <i class="fas fa-file-contract"></i> الملفات الأساسية
+        </div>
 
-    <button type="submit" class="btn-yellow" id="submitDocsBtn">
-      <i class="fas fa-upload"></i> رفع ملفات الموظف
-    </button>
+        <div class="upload-box">
+          <label><i class="fas fa-id-card"></i> الهوية الإماراتية <span style="color:var(--bad);">*</span></label>
+          <input type="file" id="empIdFile" accept=".pdf,.jpg,.jpeg,.png" required>
+        </div>
+
+        <div class="upload-box">
+          <label><i class="fas fa-passport"></i> جواز السفر <span style="color:var(--bad);">*</span></label>
+          <input type="file" id="empPassportFile" accept=".pdf,.jpg,.jpeg,.png" required>
+        </div>
+
+        <div class="upload-box">
+          <label><i class="fas fa-file-signature"></i> العقد <span style="color:var(--bad);">*</span></label>
+          <input type="file" id="empContractFile" accept=".pdf,.jpg,.jpeg,.png" required>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-card-title">
+          <i class="fas fa-folder-plus"></i> ملفات إضافية
+        </div>
+
+        <div class="upload-box">
+          <label><i class="fas fa-camera"></i> الصورة الشخصية</label>
+          <input type="file" id="empPhotoFile" accept=".jpg,.jpeg,.png">
+        </div>
+
+        <div class="upload-box">
+          <label><i class="fas fa-certificate"></i> الشهادات</label>
+          <input type="file" id="empCertificateFile" accept=".pdf,.jpg,.jpeg,.png">
+        </div>
+
+        <div class="upload-box">
+          <label><i class="fas fa-folder-open"></i> ملفات أخرى</label>
+          <input type="file" id="empOtherFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="profile-actions">
+      <button type="submit" class="btn-yellow" id="submitDocsBtn">
+        <i class="fas fa-upload"></i> حفظ ورفع ملف الموظف
+      </button>
+    </div>
   </form>
 
   <div class="loader" id="docsLoader"></div>
   <div id="docsMsg" class="msg"></div>
 
   <div class="leave-status" style="margin-top:18px;">
-    <h4><i class="fas fa-paperclip"></i> الملفات المرفوعة</h4>
+    <h4><i class="fas fa-paperclip"></i> الملفات والبيانات المحفوظة</h4>
     <div id="employeeDocsList" style="color:var(--muted);">جاري التحميل...</div>
-   <div style="margin-top:12px;">
-  <button type="button" class="btn-yellow" id="editDocsBtn" style="display:none;" onclick="toggleEmployeeDocsEdit(true)">
-    <i class="fas fa-pen"></i> تعديل الملف
-  </button>
-</div>
+
+    <div style="margin-top:12px;">
+      <button type="button" class="btn-yellow" id="editDocsBtn" style="display:none;" onclick="toggleEmployeeDocsEdit(true)">
+        <i class="fas fa-pen"></i> تعديل الملف
+      </button>
+    </div>
   </div>
 </div>
      
