@@ -5245,7 +5245,7 @@ async function loadFinanceFinalPayrolls() {
       window.financeStatusMap[key] = p.status;
     });
 
-    renderPayrollTable(lastPayrollRows);
+    loadPayrollForMonthUI();
 
     showToast("تم تحديث حالة المالية داخل الجدول ✅", "success");
 
