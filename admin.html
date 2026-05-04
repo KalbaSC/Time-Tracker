@@ -3458,7 +3458,10 @@ $('payrollTable').innerHTML = rows.map(r => `
   </tr>
 `).join('');
 
-    const hasDraft = rows.some(r => r.status === "Draft");
+const oldBtn = document.getElementById("reviewSelectedPayrollBtn");
+if (oldBtn) oldBtn.remove();
+
+const hasDraft = rows.some(r => r.status === "Draft");
 
 if (hasDraft) {
   $('payrollTable').insertAdjacentHTML("afterend", `
