@@ -1517,6 +1517,7 @@ body{
   <th>الخصومات الثابتة</th>
   <th>الخصومات الشهرية</th>
   <th>الصافي</th>
+  <th>حالة المالية</th>
   <th>الحالة</th>
   <th>إجراء</th>
 </tr>
@@ -3463,6 +3464,7 @@ $('payrollTable').innerHTML = rows.map(r => `
     <td>${r.fixedDeduct || 0}</td>
     <td>${r.manualDeduct || 0}</td>
     <td>${r.netSalary || 0}</td>
+    <td>${getFinanceStatus(r)}</td>
     <td>${r.status || ''}</td>
     <td>${renderPayrollActions(r)}</td>
   </tr>
@@ -5236,12 +5238,43 @@ async function loadFinanceFinalPayrolls() {
       return;
     }
 
-    console.log(data.payrolls);
-    showToast("تم تحميل حالة المالية (افتح Console)", "success");
+    window.financeStatusMap = {};
+
+    (data.payrolls || []).forEach(p => {
+      const key = `${p.month}-${p.year}`;
+      window.financeStatusMap[key] = p.status;
+    });
+
+    renderPayrollTable(lastPayrollRows);
+
+    showToast("تم تحديث حالة المالية داخل الجدول ✅", "success");
 
   } catch (e) {
     showToast("خطأ في تحميل حالة المالية", "error");
   }
+}
+
+function getFinanceStatus(row) {
+  if (!window.financeStatusMap) return "—";
+
+  const key = `${row.month}-${row.year}`;
+
+  return window.financeStatusMap[key] || "—";
+}  
+
+function getFinanceStatus(row) {
+  if (!window.financeStatusMap) return "—";
+
+  const key = `${row.month}-${row.year}`;
+  const s = window.financeStatusMap[key];
+
+  if (!s) return "—";
+
+  if (s.includes("معتمد")) return `<span style="color:#10b981;font-weight:900">${s}</span>`;
+  if (s.includes("مرفوض")) return `<span style="color:#ef4444;font-weight:900">${s}</span>`;
+  if (s.includes("مرسل")) return `<span style="color:#f59e0b;font-weight:900">${s}</span>`;
+
+  return s;
 }  
 </script>
 
