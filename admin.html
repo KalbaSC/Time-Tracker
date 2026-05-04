@@ -1187,13 +1187,14 @@ body{
   <button class="tab-btn" onclick="showTab('tafreegh')">🚗 طلبات التفريغ</button>
   <button class="tab-btn" onclick="showTab('documents')">📁 إدارة العقود والوثائق</button>
   <button class="tab-btn" onclick="showTab('payroll')">💰 الرواتب</button>
+  <button class="tab-btn" onclick="showTab('hrReports')">📊 تقارير المدراء</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ الإعدادات</button>
 </div>
 <div class="card">
   <h2>📝 سجل ملاحظات الموظفين</h2>
   <button class="btn-yellow" onclick="loadAllEmployeeNotes()">تحميل الملاحظات</button>
 
-  <div style="overflow-x:auto; margin-top:15px;">
+<div style="overflow-x:auto; margin-top:15px;">
     <table>
       <thead>
         <tr>
@@ -1538,6 +1539,36 @@ body{
       </table>
     </div>
 
+  </div>
+</div>
+
+<div id="hrReportsContent" class="tab-content">
+  <div class="card">
+    <h2>📊 تقارير المدراء المعتمدة</h2>
+
+    <button class="btn-yellow" onclick="loadHRReports()">
+      🔄 تحميل التقارير
+    </button>
+
+    <div style="overflow-x:auto; margin-top:15px;">
+      <table>
+        <thead>
+          <tr>
+            <th>وقت الإرسال</th>
+            <th>المدير</th>
+            <th>القسم</th>
+            <th>الفترة</th>
+            <th>الحالة</th>
+            <th>عرض</th>
+          </tr>
+        </thead>
+        <tbody id="hrReportsTable">
+          <tr><td colspan="6">لا توجد تقارير.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="hrReportDetails" style="margin-top:20px;"></div>
   </div>
 </div>
     
@@ -2006,6 +2037,9 @@ function showTab(tabName) {
   if (tabName === 'payroll') {
     loadPendingAdjustments();
   }
+  if (tabName === 'hrReports') {
+  loadHRReports();
+}
 }
 
 function logout() {
@@ -2449,6 +2483,105 @@ function leaveDaysBetween_(fromDate, toDate) {
   return diff + 1;
 }
 
+let hrReportsCache = [];
+
+async function loadHRReports() {
+  const tbody = document.getElementById("hrReportsTable");
+  tbody.innerHTML = `<tr><td colspan="6">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getHRReports",
+        payload: {}
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      tbody.innerHTML = `<tr><td colspan="6">خطأ في تحميل التقارير</td></tr>`;
+      return;
+    }
+
+    hrReportsCache = data.reports || [];
+
+    if (!hrReportsCache.length) {
+      tbody.innerHTML = `<tr><td colspan="6">لا توجد تقارير.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = hrReportsCache.map((r, index) => `
+      <tr>
+        <td>${r.timestamp || "—"}</td>
+        <td>${r.director || "—"}</td>
+        <td>${r.department || "—"}</td>
+        <td>${r.range || "—"}</td>
+        <td>${r.status || "Pending"}</td>
+        <td>
+          <button class="btn-yellow" onclick="viewHRReport(${index})">
+            عرض
+          </button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6">حدث خطأ</td></tr>`;
+  }
+}
+
+function viewHRReport(index) {
+  const report = hrReportsCache[index];
+  const box = document.getElementById("hrReportDetails");
+
+  let rows = [];
+
+  try {
+    rows = JSON.parse(report.dataJSON || "[]");
+  } catch (e) {
+    rows = [];
+  }
+
+  box.innerHTML = `
+    <div class="card">
+      <h2>تفاصيل التقرير</h2>
+      <p><b>المدير:</b> ${report.director}</p>
+      <p><b>القسم:</b> ${report.department}</p>
+      <p><b>الفترة:</b> ${report.range}</p>
+      <p><b>الحالة:</b> ${report.status}</p>
+
+      <div style="overflow-x:auto;margin-top:15px;">
+        <table>
+          <thead>
+            <tr>
+              <th>الرقم الوظيفي</th>
+              <th>الاسم</th>
+              <th>القسم</th>
+              <th>إجمالي الساعات</th>
+              <th>أيام الحضور</th>
+              <th>متوسط اليوم</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td>${r.id || "—"}</td>
+                <td>${r.name || "—"}</td>
+                <td>${r.department || "—"}</td>
+                <td>${r.totalHHMM || "00:00"}</td>
+                <td>${r.presentDays || 0}</td>
+                <td>${r.avgPerDayHHMM || "00:00"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+  
 function getLeaveTypeBalance_(balance, leaveType) {
   if (!balance) {
     return { entitled: 0, used: 0, remaining: 0, label: "غير معروف" };
