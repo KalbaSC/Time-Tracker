@@ -358,15 +358,15 @@
         </div>
         <div>
           <label>التاريخ الأساسي</label>
-          <input id="reportDate" type="text" placeholder="DD/MM/YYYY">
+          <input id="reportDate" date="text" placeholder="DD/MM/YYYY">
         </div>
         <div id="startWrap" style="display:none">
           <label>من تاريخ</label>
-          <input id="startDate" type="text" placeholder="DD/MM/YYYY">
+          <input id="startDate" type="date" placeholder="DD/MM/YYYY">
         </div>
         <div id="endWrap" style="display:none">
           <label>إلى تاريخ</label>
-          <input id="endDate" type="text" placeholder="DD/MM/YYYY">
+          <input id="endDate" type="date" placeholder="DD/MM/YYYY">
         </div>
         <div style="display:flex;align-items:end">
           <button class="btn btn-primary" onclick="loadDirectorReport()">
@@ -587,9 +587,17 @@ function loginDirector(){
 
 function parseDateInput(val){
   if (!val) return "";
+
+  val = String(val).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+
   const parts = val.split("/");
-  if (parts.length !== 3) return "";
-  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+  }
+
+  return "";
 }
   
 function restoreSession(){
