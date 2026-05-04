@@ -1449,6 +1449,10 @@ body{
   <button class="btn-success" onclick="sendPayrollToDirector()">
     📤 إرسال كشف الرواتب إلى المدير
   </button>
+
+<button class="btn-blue" onclick="sendPayrollToFinance()">
+  📤 إرسال كشف الرواتب إلى المالية
+</button>
 </div>
     
     <hr style="margin:20px 0; border:0; border-top:1px solid #2a2a2a;">
@@ -4384,7 +4388,63 @@ async function sendPayrollToDirector() {
     hideLoader("payrollLoader");
   }
 }
-  
+
+async function sendPayrollToFinance() {
+  const month = Number($('payrollMonth').value);
+  const year = Number($('payrollYear').value);
+
+  if (!month || !year) {
+    showToast("اختر الشهر والسنة أولاً", "warning");
+    return;
+  }
+
+  if (!lastPayrollRows || !lastPayrollRows.length) {
+    showToast("قم بتحميل كشف الرواتب أولاً", "warning");
+    return;
+  }
+
+  const notReviewed = lastPayrollRows.filter(r =>
+    String(r.status || "").trim() !== "تم المراجعة"
+  );
+
+  if (notReviewed.length) {
+    showToast("يجب مراجعة جميع الرواتب قبل إرسالها إلى المالية", "warning");
+    return;
+  }
+
+  if (!confirm("هل تريد إرسال كشف الرواتب إلى المالية؟")) return;
+
+  showLoader("payrollLoader");
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "sendPayrollToFinance",
+        payload: {
+          hrName: "الموارد البشرية",
+          month,
+          year,
+          rows: lastPayrollRows
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast(data.error || "فشل إرسال كشف الرواتب إلى المالية", "error");
+      return;
+    }
+
+    showToast("تم إرسال كشف الرواتب إلى المالية ✅", "success");
+
+  } catch (e) {
+    showToast("خطأ أثناء إرسال كشف الرواتب إلى المالية", "error");
+  } finally {
+    hideLoader("payrollLoader");
+  }
+}  
 function getPeriodLabelArabic(period, start, end) {
   const labels = {
     daily: 'يومي',
