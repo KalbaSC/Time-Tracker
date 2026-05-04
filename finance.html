@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة المالية - نادي كلباء</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --card:#111213;
+      --accent:#f6c21a;
+      --accent2:#ffda41;
+      --text:#f2f2f2;
+      --muted:#aaa;
+      --line:#252525;
+      --success:#10b981;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+      --radius:18px;
+      --shadow:0 8px 25px rgba(0,0,0,.35);
+      font-family:"Tajawal",sans-serif;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .container{
+      max-width:1300px;
+      margin:auto;
+    }
+
+    .card{
+      background:linear-gradient(180deg,#151515,#101010);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:var(--shadow);
+      margin-bottom:18px;
+    }
+
+    h1,h2,h3{
+      color:var(--accent);
+      margin-bottom:14px;
+      font-weight:900;
+    }
+
+    label{
+      color:var(--muted);
+      display:block;
+      margin:10px 0 6px;
+      font-weight:700;
+    }
+
+    input,select,button{
+      width:100%;
+      padding:13px;
+      border-radius:12px;
+      border:1px solid #2a2a2a;
+      background:#0f0f0f;
+      color:var(--text);
+      font-size:15px;
+      font-family:"Tajawal",sans-serif;
+    }
+
+    button{
+      background:var(--accent);
+      color:#111;
+      font-weight:900;
+      cursor:pointer;
+      border:none;
+      transition:.2s;
+    }
+
+    button:hover{
+      background:var(--accent2);
+      transform:translateY(-1px);
+    }
+
+    .btn-green{background:var(--success);color:white}
+    .btn-red{background:var(--danger);color:white}
+    .btn-blue{background:#2563eb;color:white}
+    .btn-dark{background:#1f1f1f;color:white;border:1px solid #333}
+
+    .login-card{
+      max-width:460px;
+      margin:60px auto;
+      text-align:center;
+    }
+
+    .logo{
+      width:70px;
+      height:70px;
+      margin:0 auto 12px;
+      border-radius:18px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#111;
+      font-size:30px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+
+    .topbar-info{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .role-badge{
+      display:inline-block;
+      background:rgba(246,194,26,.12);
+      color:var(--accent);
+      border:1px solid rgba(246,194,26,.35);
+      border-radius:999px;
+      padding:6px 12px;
+      font-weight:800;
+      margin-top:6px;
+    }
+
+    .filters{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+      align-items:end;
+    }
+
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .summary-card{
+      text-align:center;
+      padding:18px;
+    }
+
+    .summary-card .label{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .summary-card .value{
+      font-size:28px;
+      font-weight:900;
+      margin-top:8px;
+    }
+
+    .table-wrap{
+      overflow-x:auto;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#0f0f0f;
+      margin-top:12px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1000px;
+    }
+
+    th,td{
+      padding:12px;
+      border-bottom:1px solid #222;
+      text-align:center;
+      white-space:nowrap;
+      font-size:14px;
+    }
+
+    th{
+      background:#171717;
+      color:var(--accent);
+      font-weight:900;
+    }
+
+    .status{
+      display:inline-block;
+      padding:5px 12px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+    }
+
+    .s-pending{background:rgba(245,158,11,.16);color:#f8c567}
+    .s-approved{background:rgba(16,185,129,.16);color:#78e2be}
+    .s-rejected{background:rgba(239,68,68,.16);color:#ff9999}
+    .s-review{background:rgba(59,130,246,.16);color:#93c5fd}
+
+    .actions{
+      display:flex;
+      gap:8px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .actions button{
+      width:auto;
+      padding:8px 12px;
+      margin:0;
+    }
+
+    .details-box{
+      margin-top:18px;
+      display:none;
+    }
+
+    .toast{
+      position:fixed;
+      top:20px;
+      right:20px;
+      background:var(--card);
+      border-right:4px solid var(--accent);
+      color:white;
+      padding:14px 18px;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      transform:translateX(150%);
+      transition:.3s;
+      z-index:9999;
+      max-width:360px;
+      font-weight:800;
+    }
+
+    .toast.show{transform:translateX(0)}
+    .toast.success{border-right-color:var(--success)}
+    .toast.error{border-right-color:var(--danger)}
+    .toast.warning{border-right-color:var(--warning)}
+
+    .hidden{display:none!important}
+
+    @media(max-width:900px){
+      .filters,.summary{grid-template-columns:1fr 1fr}
+    }
+
+    @media(max-width:600px){
+      body{padding:12px}
+      .filters,.summary{grid-template-columns:1fr}
+      .topbar{align-items:stretch}
+    }
+  </style>
+</head>
+
+<body>
+<div id="toast" class="toast"></div>
+
+<div class="container">
+
+  <div id="loginBox" class="card login-card">
+    <div class="logo"><i class="fas fa-coins"></i></div>
+    <h1>لوحة المالية</h1>
+    <p style="color:var(--muted);margin-bottom:18px;">تسجيل دخول المحاسب / المدير المالي</p>
+
+    <label>اسم المستخدم</label>
+    <input id="loginUser" placeholder="accountant أو finance">
+
+    <label>كلمة المرور</label>
+    <input id="loginPass" type="password" placeholder="أدخل كلمة المرور">
+
+    <button onclick="loginFinance()">
+      <i class="fas fa-sign-in-alt"></i> دخول
+    </button>
+
+    <p id="loginMsg" style="color:#ef4444;margin-top:10px;font-weight:800;"></p>
+  </div>
+
+  <div id="financeBox" class="hidden">
+
+    <div class="card topbar">
+      <div>
+        <h1>لوحة المالية</h1>
+        <div class="topbar-info">
+          المستخدم: <span id="userLabel">—</span><br>
+          الصلاحية: <span id="roleLabel" class="role-badge">—</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-dark" style="width:auto;padding:10px 16px;" onclick="loadFinancePayrolls()">
+          <i class="fas fa-rotate"></i> تحديث
+        </button>
+        <button class="btn-red" style="width:auto;padding:10px 16px;" onclick="logoutFinance()">
+          <i class="fas fa-sign-out-alt"></i> خروج
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-filter"></i> تصفية كشوف الرواتب</h2>
+
+      <div class="filters">
+        <div>
+          <label>الشهر</label>
+          <select id="filterMonth">
+            <option value="">الكل</option>
+            <option value="1">يناير</option>
+            <option value="2">فبراير</option>
+            <option value="3">مارس</option>
+            <option value="4">أبريل</option>
+            <option value="5">مايو</option>
+            <option value="6">يونيو</option>
+            <option value="7">يوليو</option>
+            <option value="8">أغسطس</option>
+            <option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option>
+            <option value="11">نوفمبر</option>
+            <option value="12">ديسمبر</option>
+          </select>
+        </div>
+
+        <div>
+          <label>السنة</label>
+          <input id="filterYear" type="number" placeholder="مثال: 2026">
+        </div>
+
+        <div>
+          <label>الحالة</label>
+          <select id="filterStatus">
+            <option value="">الكل</option>
+            <option value="مرسل إلى المالية">مرسل إلى المالية</option>
+            <option value="تمت مراجعة المحاسب">تمت مراجعة المحاسب</option>
+            <option value="معتمد من المدير المالي">معتمد من المدير المالي</option>
+            <option value="مرفوض من المدير المالي">مرفوض من المدير المالي</option>
+          </select>
+        </div>
+
+        <div>
+          <button onclick="applyFinanceFilters()">
+            <i class="fas fa-search"></i> بحث
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="card summary-card">
+        <div class="label">عدد الكشوف</div>
+        <div id="sumCount" class="value">0</div>
+      </div>
+
+      <div class="card summary-card">
+        <div class="label">إجمالي الموظفين</div>
+        <div id="sumEmployees" class="value">0</div>
+      </div>
+
+      <div class="card summary-card">
+        <div class="label">إجمالي الصافي</div>
+        <div id="sumNet" class="value">0</div>
+      </div>
+
+      <div class="card summary-card">
+        <div class="label">بانتظار المالية</div>
+        <div id="sumPending" class="value">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-file-invoice-dollar"></i> كشوف الرواتب المرسلة من HR</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>وقت الإرسال</th>
+              <th>مرسل بواسطة</th>
+              <th>الشهر</th>
+              <th>السنة</th>
+              <th>عدد الموظفين</th>
+              <th>إجمالي الصافي</th>
+              <th>الحالة</th>
+              <th>الإجراء</th>
+            </tr>
+          </thead>
+          <tbody id="financePayrollTable">
+            <tr><td colspan="8" style="color:#777;padding:30px;">لا توجد بيانات.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="payrollDetailsBox" class="card details-box">
+      <h2><i class="fas fa-list"></i> تفاصيل كشف الرواتب</h2>
+
+      <div id="selectedPayrollMeta" style="color:var(--muted);line-height:1.8;margin-bottom:12px;"></div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn-blue" style="width:auto;padding:10px 16px;" onclick="exportSelectedPayrollExcel()">
+          <i class="fas fa-file-excel"></i> تنزيل Excel
+        </button>
+
+        <button id="accountantReviewBtn" class="btn-green hidden" style="width:auto;padding:10px 16px;" onclick="accountantReviewPayroll()">
+          <i class="fas fa-check"></i> تمت مراجعة المحاسب
+        </button>
+
+        <button id="managerApproveBtn" class="btn-green hidden" style="width:auto;padding:10px 16px;" onclick="financeDecision('معتمد من المدير المالي')">
+          <i class="fas fa-check-circle"></i> اعتماد المدير المالي
+        </button>
+
+        <button id="managerRejectBtn" class="btn-red hidden" style="width:auto;padding:10px 16px;" onclick="financeDecision('مرفوض من المدير المالي')">
+          <i class="fas fa-times-circle"></i> رفض المدير المالي
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الموظف</th>
+              <th>اسم الموظف</th>
+              <th>المسمى الوظيفي</th>
+              <th>الشهر</th>
+              <th>السنة</th>
+              <th>الراتب الأساسي</th>
+              <th>التذكرة</th>
+              <th>الإضافات الثابتة</th>
+              <th>الإضافات الشهرية</th>
+              <th>الخصومات الثابتة</th>
+              <th>الخصومات الشهرية</th>
+              <th>الصافي</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="payrollDetailsTable">
+            <tr><td colspan="13" style="color:#777;">اختر كشف رواتب للعرض.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ8MafycAGqEwMuKBVEddTYBLd3Z4kyYTSgfBzI_HOl5wyaixuJWxGSM6_tAT_hKIh/exec";
+
+const FINANCE_USERS = [
+  {
+    username: "accountant",
+    password: "1234",
+    role: "accountant",
+    name: "المحاسب"
+  },
+  {
+    username: "finance",
+    password: "1234",
+    role: "manager",
+    name: "المدير المالي"
+  }
+];
+
+let currentFinanceUser = null;
+let financePayrolls = [];
+let filteredPayrolls = [];
+let selectedPayroll = null;
+
+const $ = id => document.getElementById(id);
+
+function showToast(message, type = "success") {
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+
+function loginFinance() {
+  const username = $("loginUser").value.trim();
+  const password = $("loginPass").value.trim();
+
+  const user = FINANCE_USERS.find(u =>
+    u.username === username && u.password === password
+  );
+
+  if (!user) {
+    $("loginMsg").textContent = "بيانات الدخول غير صحيحة";
+    return;
+  }
+
+  currentFinanceUser = user;
+  sessionStorage.setItem("financeUser", JSON.stringify(user));
+
+  $("loginBox").classList.add("hidden");
+  $("financeBox").classList.remove("hidden");
+
+  $("userLabel").textContent = user.name;
+  $("roleLabel").textContent = user.role === "accountant" ? "محاسب - عرض ومراجعة" : "مدير مالي - اعتماد ورفض";
+
+  loadFinancePayrolls();
+}
+
+function restoreFinanceSession() {
+  try {
+    const raw = sessionStorage.getItem("financeUser");
+    if (!raw) return;
+
+    currentFinanceUser = JSON.parse(raw);
+
+    $("loginBox").classList.add("hidden");
+    $("financeBox").classList.remove("hidden");
+
+    $("userLabel").textContent = currentFinanceUser.name;
+    $("roleLabel").textContent = currentFinanceUser.role === "accountant" ? "محاسب - عرض ومراجعة" : "مدير مالي - اعتماد ورفض";
+
+    loadFinancePayrolls();
+  } catch (e) {}
+}
+
+function logoutFinance() {
+  sessionStorage.removeItem("financeUser");
+  currentFinanceUser = null;
+  location.reload();
+}
+
+async function loadFinancePayrolls() {
+  const tbody = $("financePayrollTable");
+  tbody.innerHTML = `<tr><td colspan="8" style="color:#777;padding:30px;">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getFinancePayrolls",
+        payload: {}
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444;padding:30px;">فشل تحميل كشوف الرواتب</td></tr>`;
+      return;
+    }
+
+    financePayrolls = data.payrolls || [];
+    filteredPayrolls = financePayrolls;
+
+    renderFinancePayrolls(filteredPayrolls);
+    updateSummary(filteredPayrolls);
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444;padding:30px;">خطأ في الاتصال</td></tr>`;
+  }
+}
+
+function applyFinanceFilters() {
+  const month = $("filterMonth").value;
+  const year = $("filterYear").value.trim();
+  const status = $("filterStatus").value.trim();
+
+  filteredPayrolls = financePayrolls.filter(p => {
+    const matchMonth = !month || String(p.month) === String(month);
+    const matchYear = !year || String(p.year) === String(year);
+    const matchStatus = !status || String(p.status || "").trim() === status;
+    return matchMonth && matchYear && matchStatus;
+  });
+
+  renderFinancePayrolls(filteredPayrolls);
+  updateSummary(filteredPayrolls);
+}
+
+function renderFinancePayrolls(rows) {
+  const tbody = $("financePayrollTable");
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#777;padding:30px;">لا توجد كشوف رواتب.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((p, index) => {
+    const payrollRows = parseRows(p.dataJSON);
+    const totalNet = payrollRows.reduce((sum, r) => sum + Number(r.netSalary || 0), 0);
+
+    return `
+      <tr>
+        <td>${formatDate(p.timestamp)}</td>
+        <td>${p.sentByHR || "HR"}</td>
+        <td>${p.month || "—"}</td>
+        <td>${p.year || "—"}</td>
+        <td>${payrollRows.length}</td>
+        <td>${formatMoney(totalNet)}</td>
+        <td>${renderStatus(p.status)}</td>
+        <td>
+          <div class="actions">
+            <button onclick="viewPayroll(${index})">
+              <i class="fas fa-eye"></i> عرض
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function viewPayroll(index) {
+  selectedPayroll = filteredPayrolls[index];
+
+  const rows = parseRows(selectedPayroll.dataJSON);
+  const totalNet = rows.reduce((sum, r) => sum + Number(r.netSalary || 0), 0);
+
+  $("payrollDetailsBox").style.display = "block";
+
+  $("selectedPayrollMeta").innerHTML = `
+    <b>الشهر:</b> ${selectedPayroll.month || "—"} |
+    <b>السنة:</b> ${selectedPayroll.year || "—"} |
+    <b>الحالة:</b> ${selectedPayroll.status || "—"} |
+    <b>عدد الموظفين:</b> ${rows.length} |
+    <b>إجمالي الصافي:</b> ${formatMoney(totalNet)}
+  `;
+
+  $("payrollDetailsTable").innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.empId || ""}</td>
+      <td>${r.empName || ""}</td>
+      <td>${r.jobTitle || "—"}</td>
+      <td>${r.month || ""}</td>
+      <td>${r.year || ""}</td>
+      <td>${formatMoney(r.basicSalary || 0)}</td>
+      <td>${formatMoney(r.ticket || 0)}</td>
+      <td>${formatMoney(r.fixedAdd || 0)}</td>
+      <td>${formatMoney(r.manualAdd || 0)}</td>
+      <td>${formatMoney(r.fixedDeduct || 0)}</td>
+      <td>${formatMoney(r.manualDeduct || 0)}</td>
+      <td style="font-weight:900;color:#10b981;">${formatMoney(r.netSalary || 0)}</td>
+      <td>${r.status || "—"}</td>
+    </tr>
+  `).join("");
+
+  updateActionButtons();
+  $("payrollDetailsBox").scrollIntoView({ behavior: "smooth" });
+}
+
+function updateActionButtons() {
+  $("accountantReviewBtn").classList.add("hidden");
+  $("managerApproveBtn").classList.add("hidden");
+  $("managerRejectBtn").classList.add("hidden");
+
+  if (!selectedPayroll || !currentFinanceUser) return;
+
+  const status = String(selectedPayroll.status || "").trim();
+
+  if (currentFinanceUser.role === "accountant") {
+    if (status === "مرسل إلى المالية") {
+      $("accountantReviewBtn").classList.remove("hidden");
+    }
+  }
+
+  if (currentFinanceUser.role === "manager") {
+    if (status === "تمت مراجعة المحاسب" || status === "مرسل إلى المالية") {
+      $("managerApproveBtn").classList.remove("hidden");
+      $("managerRejectBtn").classList.remove("hidden");
+    }
+  }
+}
+
+async function accountantReviewPayroll() {
+  if (!selectedPayroll) return;
+
+  if (!confirm("هل تؤكد مراجعة كشف الرواتب؟")) return;
+
+  await updateFinanceStatus(
+    selectedPayroll.row,
+    "تمت مراجعة المحاسب",
+    currentFinanceUser.name,
+    ""
+  );
+}
+
+async function financeDecision(status) {
+  if (!selectedPayroll) return;
+
+  const note = prompt("ملاحظة المدير المالي - اختياري") || "";
+
+  if (!confirm(`هل تريد ${status === "معتمد من المدير المالي" ? "اعتماد" : "رفض"} كشف الرواتب؟`)) return;
+
+  await updateFinanceStatus(
+    selectedPayroll.row,
+    status,
+    currentFinanceUser.name,
+    note
+  );
+}
+
+async function updateFinanceStatus(row, status, userName, note) {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updateFinancePayrollStatus",
+        payload: {
+          row,
+          status,
+          userName,
+          note
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast(data.error || "فشل تحديث الحالة", "error");
+      return;
+    }
+
+    showToast("تم تحديث الحالة بنجاح ✅", "success");
+
+    selectedPayroll = null;
+    $("payrollDetailsBox").style.display = "none";
+
+    await loadFinancePayrolls();
+
+  } catch (e) {
+    showToast("خطأ أثناء تحديث الحالة", "error");
+  }
+}
+
+function exportSelectedPayrollExcel() {
+  if (!selectedPayroll) {
+    showToast("اختر كشف رواتب أولاً", "warning");
+    return;
+  }
+
+  const rows = parseRows(selectedPayroll.dataJSON);
+
+  if (!rows.length) {
+    showToast("لا توجد بيانات للتنزيل", "warning");
+    return;
+  }
+
+  const exportRows = rows.map(r => ({
+    "رقم الموظف": r.empId || "",
+    "اسم الموظف": r.empName || "",
+    "المسمى الوظيفي": r.jobTitle || "",
+    "الشهر": r.month || "",
+    "السنة": r.year || "",
+    "الراتب الأساسي": Number(r.basicSalary || 0),
+    "التذكرة": Number(r.ticket || 0),
+    "الإضافات الثابتة": Number(r.fixedAdd || 0),
+    "الإضافات الشهرية": Number(r.manualAdd || 0),
+    "الخصومات الثابتة": Number(r.fixedDeduct || 0),
+    "الخصومات الشهرية": Number(r.manualDeduct || 0),
+    "الصافي": Number(r.netSalary || 0),
+    "الحالة": r.status || ""
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  ws["!rtl"] = true;
+
+  XLSX.utils.book_append_sheet(wb, ws, "Finance Payroll");
+
+  XLSX.writeFile(
+    wb,
+    `finance_payroll_${selectedPayroll.year}_${String(selectedPayroll.month).padStart(2,"0")}.xlsx`
+  );
+}
+
+function parseRows(json) {
+  try {
+    return JSON.parse(json || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function renderStatus(status) {
+  const s = String(status || "").trim();
+
+  if (s === "معتمد من المدير المالي") {
+    return `<span class="status s-approved">${s}</span>`;
+  }
+
+  if (s === "مرفوض من المدير المالي") {
+    return `<span class="status s-rejected">${s}</span>`;
+  }
+
+  if (s === "تمت مراجعة المحاسب") {
+    return `<span class="status s-review">${s}</span>`;
+  }
+
+  return `<span class="status s-pending">${s || "مرسل إلى المالية"}</span>`;
+}
+
+function updateSummary(rows) {
+  let payrollCount = rows.length;
+  let employeeCount = 0;
+  let totalNet = 0;
+  let pendingCount = 0;
+
+  rows.forEach(p => {
+    const payrollRows = parseRows(p.dataJSON);
+    employeeCount += payrollRows.length;
+    totalNet += payrollRows.reduce((sum, r) => sum + Number(r.netSalary || 0), 0);
+
+    const s = String(p.status || "").trim();
+    if (s === "مرسل إلى المالية" || s === "تمت مراجعة المحاسب") {
+      pendingCount++;
+    }
+  });
+
+  $("sumCount").textContent = payrollCount;
+  $("sumEmployees").textContent = employeeCount;
+  $("sumNet").textContent = formatMoney(totalNet);
+  $("sumPending").textContent = pendingCount;
+}
+
+function formatMoney(n) {
+  return Number(n || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (isNaN(d)) return String(v);
+  return d.toLocaleString("ar-AE", {
+    timeZone: "Asia/Dubai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+restoreFinanceSession();
+</script>
+</body>
+</html>
