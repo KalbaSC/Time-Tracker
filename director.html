@@ -492,6 +492,35 @@
           </table>
         </div>
       </div>
+      <div id="supportPayrollBox" class="card table-card" style="display:none;">
+  <div class="table-head">
+    <h3><i class="fas fa-money-bill"></i> كشوف الرواتب بانتظار الاعتماد النهائي</h3>
+
+    <button class="btn btn-primary"
+      style="width:auto;padding:10px 16px;margin-top:0;"
+      onclick="loadSupportServicesPayrolls()">
+      تحديث
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الشهر</th>
+          <th>السنة</th>
+          <th>الحالة</th>
+          <th>الإجراء</th>
+        </tr>
+      </thead>
+      <tbody id="supportPayrollTable">
+        <tr><td colspan="4">لا توجد كشوف.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="supportPayrollDetails" style="margin-top:20px;"></div>
+</div>
     </div>
   </div>
 
@@ -590,6 +619,10 @@ function loginDirector(){
 
   loadDirectorReport();
   loadDirectorLeaves();
+
+ if (currentDirector.department === "الخدمات المساندة") {
+  loadSupportServicesPayrolls();
+} 
 }
 
 function parseDateInput(val){
@@ -1020,7 +1053,98 @@ async function directorDecision(row, status) {
 
   setTimeout(loadDirectorLeaves, 1000);
 }
-  
+let supportPayrolls = [];
+
+async function loadSupportServicesPayrolls() {
+  if (!currentDirector || currentDirector.department !== "الخدمات المساندة") return;
+
+  $("supportPayrollBox").style.display = "block";
+
+  const tbody = $("supportPayrollTable");
+  tbody.innerHTML = `<tr><td colspan="4">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getSupportServicesPayrolls",
+        payload: {}
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      tbody.innerHTML = `<tr><td colspan="4">فشل تحميل الرواتب</td></tr>`;
+      return;
+    }
+
+    supportPayrolls = data.payrolls || [];
+
+    if (!supportPayrolls.length) {
+      tbody.innerHTML = `<tr><td colspan="4">لا توجد كشوف بانتظار الاعتماد النهائي.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = supportPayrolls.map((p, index) => `
+      <tr>
+        <td>${p.month}</td>
+        <td>${p.year}</td>
+        <td>${p.status}</td>
+        <td>
+          <button onclick="viewSupportPayroll(${index})">عرض</button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4">خطأ في الاتصال</td></tr>`;
+  }
+}
+
+function viewSupportPayroll(index) {
+  const p = supportPayrolls[index];
+  const box = $("supportPayrollDetails");
+
+  let rows = [];
+  try {
+    rows = JSON.parse(p.dataJSON || "[]");
+  } catch (e) {}
+
+  box.innerHTML = `
+    <div class="card">
+      <h3>تفاصيل ${p.month}/${p.year}</h3>
+
+      <button onclick="supportPayrollDecision(${p.row}, 'معتمد نهائياً من مدير الخدمات المساندة')">
+        اعتماد نهائي
+      </button>
+
+      <button onclick="supportPayrollDecision(${p.row}, 'مرفوض من مدير الخدمات المساندة')">
+        رفض
+      </button>
+    </div>
+  `;
+}
+
+async function supportPayrollDecision(row, status) {
+  const note = prompt("ملاحظة") || "";
+
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "supportServicesPayrollDecision",
+      payload: {
+        row,
+        status,
+        directorName: currentDirector.name,
+        note
+      }
+    })
+  });
+
+  alert("تم الإرسال إلى HR");
+  loadSupportServicesPayrolls();
+}  
 </script>
 </body>
 </html>
