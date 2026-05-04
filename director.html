@@ -372,6 +372,9 @@
           <button class="btn btn-primary" onclick="loadDirectorReport()">
             <i class="fas fa-chart-bar"></i> عرض البيانات
           </button>
+          <button class="btn btn-primary" onclick="signAndSendReportToHR()">
+  <i class="fas fa-signature"></i> اعتماد وإرسال إلى الموارد البشرية
+</button>
         </div>
       </div>
 
@@ -742,6 +745,50 @@ async function loadDirectorReport(){
   }
 }
 
+async function signAndSendReportToHR() {
+  if (!currentDirector) {
+    alert("يرجى تسجيل الدخول أولاً");
+    return;
+  }
+
+  if (!lastRows || !lastRows.length) {
+    alert("لا يوجد تقرير لإرساله");
+    return;
+  }
+
+  if (!confirm("هل تريد اعتماد التقرير وإرساله إلى HR داخل النظام؟")) return;
+
+  const payload = {
+    directorName: currentDirector.name,
+    department: currentDirector.department,
+    period: $("period").value,
+    rangeText: $("rangeChip").textContent.replace("النطاق: ", ""),
+    rows: lastRows
+  };
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "submitDirectorReport",
+        payload: payload
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.error || "فشل إرسال التقرير");
+      return;
+    }
+
+    alert("تم اعتماد التقرير وإرساله إلى الموارد البشرية ✅");
+
+  } catch (e) {
+    alert("حدث خطأ أثناء إرسال التقرير");
+  }
+}
+  
 function getCompletionPercent(row){
   const total = Number(row.totalSec || 0);
   const required = Number(row.presentDays || 0) * 7 * 3600;
