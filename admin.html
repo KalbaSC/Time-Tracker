@@ -1444,6 +1444,12 @@ body{
   <button class="btn-green" onclick="exportPayrollExcel()">تنزيل الرواتب Excel</button>
   <button class="btn-blue" onclick="exportPayrollCsv()">تنزيل الرواتب CSV</button>
 </div>
+
+ <div class="flex" style="margin-top:10px;">
+  <button class="btn-blue" onclick="loadFinanceFinalPayrolls()">
+    🔄 تحديث حالة المالية
+  </button>
+</div>
     
 <div class="flex" style="margin-top:10px;">
   <button class="btn-success" onclick="sendPayrollToDirector()">
@@ -5212,6 +5218,31 @@ if ("serviceWorker" in navigator) {
     tbody.innerHTML = `<tr><td colspan="7">خطأ</td></tr>`;
   }
 }
+
+async function loadFinanceFinalPayrolls() {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getFinancePayrolls",
+        payload: {}
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      showToast("فشل تحميل حالة المالية", "error");
+      return;
+    }
+
+    console.log(data.payrolls);
+    showToast("تم تحميل حالة المالية (افتح Console)", "success");
+
+  } catch (e) {
+    showToast("خطأ في تحميل حالة المالية", "error");
+  }
+}  
 </script>
 
 </body>
