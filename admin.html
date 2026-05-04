@@ -5252,15 +5252,7 @@ async function loadFinanceFinalPayrolls() {
   } catch (e) {
     showToast("خطأ في تحميل حالة المالية", "error");
   }
-}
-
-function getFinanceStatus(row) {
-  if (!window.financeStatusMap) return "—";
-
-  const key = `${row.month}-${row.year}`;
-
-  return window.financeStatusMap[key] || "—";
-}  
+} 
 
 function getFinanceStatus(row) {
   if (!window.financeStatusMap) return "—";
