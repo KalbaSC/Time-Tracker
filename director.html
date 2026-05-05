@@ -653,8 +653,12 @@ function restoreSession(){
     $("deptLabel").textContent = data.department;
     $("dirLabel").textContent = data.name;
     $("pageTitle").textContent = "لوحة حضور " + data.department;
-    loadDirectorReport();
-    loadDirectorLeaves();
+loadDirectorReport();
+loadDirectorLeaves();
+
+if (currentDirector.department === "الخدمات المساندة") {
+  loadSupportServicesPayrolls();
+}
   }catch(e){}
 }
 restoreSession();
