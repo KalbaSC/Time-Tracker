@@ -620,9 +620,7 @@ function loginDirector(){
   loadDirectorReport();
   loadDirectorLeaves();
 
- if (currentDirector.department === "الخدمات المساندة") {
-  loadSupportServicesPayrolls();
-} 
+startSupportPayrollAutoRefresh();
 }
 
 function parseDateInput(val){
@@ -655,7 +653,8 @@ function restoreSession(){
     $("pageTitle").textContent = "لوحة حضور " + data.department;
 loadDirectorReport();
 loadDirectorLeaves();
-
+startSupportPayrollAutoRefresh();
+    
 if (currentDirector.department === "الخدمات المساندة") {
   loadSupportServicesPayrolls();
 }
@@ -670,6 +669,7 @@ function logoutDirector(){
   $("topbar").style.display = "none";
   $("loginBox").style.display = "block";
   clearMsg();
+  if (supportPayrollAutoRefresh) clearInterval(supportPayrollAutoRefresh);
 }
 
 function togglePeriodFields(){
@@ -1198,6 +1198,20 @@ async function supportPayrollDecision(row, status) {
 
   alert("تم الإرسال إلى HR");
   loadSupportServicesPayrolls();
+} 
+
+let supportPayrollAutoRefresh = null;
+
+function startSupportPayrollAutoRefresh() {
+  if (supportPayrollAutoRefresh) clearInterval(supportPayrollAutoRefresh);
+
+  if (currentDirector && currentDirector.department === "الخدمات المساندة") {
+    loadSupportServicesPayrolls();
+
+    supportPayrollAutoRefresh = setInterval(() => {
+      loadSupportServicesPayrolls();
+    }, 15000); 
+  }
 }  
 </script>
 </body>
