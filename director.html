@@ -1109,21 +1109,71 @@ function viewSupportPayroll(index) {
   let rows = [];
   try {
     rows = JSON.parse(p.dataJSON || "[]");
-  } catch (e) {}
+  } catch (e) {
+    rows = [];
+  }
 
   box.innerHTML = `
-    <div class="card">
-      <h3>تفاصيل ${p.month}/${p.year}</h3>
+    <div class="card table-card">
+      <div class="table-head">
+        <h3>تفاصيل كشف الرواتب ${p.month}/${p.year}</h3>
 
-      <button onclick="supportPayrollDecision(${p.row}, 'معتمد نهائياً من مدير الخدمات المساندة')">
-        اعتماد نهائي
-      </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary"
+            style="width:auto;padding:10px 16px;margin-top:0;"
+            onclick="supportPayrollDecision(${p.row}, 'معتمد نهائياً من مدير الخدمات المساندة')">
+            اعتماد نهائي
+          </button>
 
-      <button onclick="supportPayrollDecision(${p.row}, 'مرفوض من مدير الخدمات المساندة')">
-        رفض
-      </button>
+          <button class="btn btn-ghost"
+            style="width:auto;padding:10px 16px;margin-top:0;"
+            onclick="supportPayrollDecision(${p.row}, 'مرفوض من مدير الخدمات المساندة')">
+            رفض
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الموظف</th>
+              <th>الاسم</th>
+              <th>المسمى الوظيفي</th>
+              <th>الراتب الأساسي</th>
+              <th>التذكرة</th>
+              <th>الإضافات</th>
+              <th>الخصومات</th>
+              <th>الصافي</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.length
+                ? rows.map(r => `
+                  <tr>
+                    <td>${r.empId || "—"}</td>
+                    <td>${r.empName || "—"}</td>
+                    <td>${r.jobTitle || "—"}</td>
+                    <td>${r.basicSalary || 0}</td>
+                    <td>${r.ticket || 0}</td>
+                    <td>${Number(r.fixedAdd || 0) + Number(r.manualAdd || 0)}</td>
+                    <td>${Number(r.fixedDeduct || 0) + Number(r.manualDeduct || 0)}</td>
+                    <td>${r.netSalary || 0}</td>
+                    <td>${r.status || "—"}</td>
+                  </tr>
+                `).join("")
+                : `<tr><td colspan="9">لا توجد تفاصيل محفوظة داخل الكشف.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
+
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function supportPayrollDecision(row, status) {
