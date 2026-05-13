@@ -650,7 +650,8 @@ function renderFinancePayrolls(rows) {
 }
 
 function viewPayroll(index) {
-  selectedPayroll = filteredPayrolls[index];
+  const source = filteredPayrolls.length ? filteredPayrolls : financePayrolls;
+selectedPayroll = source[index];
 
   const rows = parseRows(selectedPayroll.dataJSON);
   const totalNet = rows.reduce((sum, r) => sum + Number(r.netSalary || 0), 0);
