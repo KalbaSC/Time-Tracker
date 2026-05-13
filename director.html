@@ -518,17 +518,7 @@
     </table>
   </div>
 
-  <div id="supportPayrollDetails" style="margin-top:20px;display:none;">
-
-  <div style="display:flex;justify-content:flex-start;margin-bottom:14px;">
-    <button class="btn btn-ghost"
-      style="width:auto;padding:8px 14px;margin-top:0;"
-      onclick="closeSupportPayrollDetails()">
-      إغلاق
-    </button>
-  </div>
-
-</div>
+<div id="supportPayrollDetails" style="margin-top:20px;display:none;"></div>
         
 </div>
     </div>
@@ -847,6 +837,7 @@ async function signAndSendReportToHR() {
 
 function closeSupportPayrollDetails() {
   $("supportPayrollDetails").style.display = "none";
+  $("supportPayrollDetails").innerHTML = "";
 }
   
 function getCompletionPercent(row){
@@ -1130,6 +1121,14 @@ $("supportPayrollDetails").style.display = "block";
   box.innerHTML = `
     <div class="card table-card">
       <div class="table-head">
+      <div style="display:flex;justify-content:flex-start;margin-bottom:14px;">
+  <button class="btn btn-ghost"
+    style="width:auto;padding:8px 14px;margin-top:0;"
+    onclick="closeSupportPayrollDetails()">
+    إغلاق
+  </button>
+</div>
+
         <h3>تفاصيل كشف الرواتب ${p.month}/${p.year}</h3>
 
 ${
