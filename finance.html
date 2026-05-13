@@ -535,32 +535,68 @@ function logoutFinance() {
 
 async function loadFinancePayrolls() {
   const tbody = $("financePayrollTable");
-  tbody.innerHTML = `<tr><td colspan="8" style="color:#777;padding:30px;">جاري التحميل...</td></tr>`;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" style="padding:30px;color:#777">
+        جاري تحميل كشوف الرواتب...
+      </td>
+    </tr>
+  `;
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "getFinancePayrolls",
-        payload: {}
-      })
+
+    const cb = "cb_" + Date.now();
+
+    const data = await new Promise((resolve, reject) => {
+
+      window[cb] = (result) => {
+        resolve(result);
+        delete window[cb];
+        script.remove();
+      };
+
+      const script = document.createElement("script");
+
+      script.src =
+        SCRIPT_URL +
+        "?action=getFinancePayrolls&callback=" +
+        cb +
+        "&_=" +
+        Date.now();
+
+      script.onerror = reject;
+
+      document.body.appendChild(script);
+
     });
 
-    const data = await res.json();
-
     if (!data.ok) {
-      tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444;padding:30px;">فشل تحميل كشوف الرواتب</td></tr>`;
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="padding:30px;color:#ef4444">
+            فشل تحميل البيانات
+          </td>
+        </tr>
+      `;
       return;
     }
 
     financePayrolls = data.payrolls || [];
-    filteredPayrolls = financePayrolls;
 
-    renderFinancePayrolls(filteredPayrolls);
-    updateSummary(filteredPayrolls);
+    renderFinancePayrolls(financePayrolls);
 
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444;padding:30px;">خطأ في الاتصال</td></tr>`;
+  } catch (err) {
+
+    console.error(err);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="padding:30px;color:#ef4444">
+          خطأ في الاتصال
+        </td>
+      </tr>
+    `;
   }
 }
 
