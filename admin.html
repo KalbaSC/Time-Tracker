@@ -4314,25 +4314,22 @@ async function reviewSelectedPayroll() {
   try {
     showLoader("payrollLoader");
 
-    await Promise.all(rowsToReview.map(r =>
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "updatePayrollStatus",
-          payload: {
-            empId: r.empId,
-            month: r.month,
-            year: r.year,
-            status: "تم المراجعة"
-          }
-        })
-      })
-    ));
+    for (const r of rowsToReview) {
+      await jsonp(
+        `${SCRIPT_URL}?action=updatePayrollStatus` +
+        `&empId=${encodeURIComponent(r.empId)}` +
+        `&month=${encodeURIComponent(r.month)}` +
+        `&year=${encodeURIComponent(r.year)}` +
+        `&status=${encodeURIComponent("تم المراجعة")}` +
+        `&_=${Date.now()}`
+      );
+    }
 
     showToast("تمت مراجعة الموظفين المحددين", "success");
     loadPayrollForMonthUI();
 
   } catch (e) {
+    console.error(e);
     showToast("خطأ في تحديث المراجعة", "error");
   } finally {
     hideLoader("payrollLoader");
