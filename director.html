@@ -1116,19 +1116,29 @@ function viewSupportPayroll(index) {
       <div class="table-head">
         <h3>تفاصيل كشف الرواتب ${p.month}/${p.year}</h3>
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-primary"
-            style="width:auto;padding:10px 16px;margin-top:0;"
-            onclick="supportPayrollDecision(${p.row}, 'معتمد نهائياً من مدير الخدمات المساندة')">
-            اعتماد نهائي
-          </button>
+${
+  p.status === "مرسل إلى مدير الخدمات المساندة"
+    ? `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary"
+          style="width:auto;padding:10px 16px;margin-top:0;"
+          onclick="supportPayrollDecision(${p.row}, 'معتمد نهائياً من مدير الخدمات المساندة')">
+          اعتماد نهائي
+        </button>
 
-          <button class="btn btn-ghost"
-            style="width:auto;padding:10px 16px;margin-top:0;"
-            onclick="supportPayrollDecision(${p.row}, 'مرفوض من مدير الخدمات المساندة')">
-            رفض
-          </button>
-        </div>
+        <button class="btn btn-ghost"
+          style="width:auto;padding:10px 16px;margin-top:0;"
+          onclick="supportPayrollDecision(${p.row}, 'مرفوض من مدير الخدمات المساندة')">
+          رفض
+        </button>
+      </div>
+    `
+    : `
+      <div class="chip">
+        الحالة الحالية: ${p.status}
+      </div>
+    `
+}
       </div>
 
       <div class="table-wrap">
