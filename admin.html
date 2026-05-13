@@ -5180,11 +5180,6 @@ function importData() {
   showToast('⚠️ الاستيراد غير مفعل حالياً', 'warning');
 }
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  });
-}
   async function loadAllEmployeeNotes() {
   const tbody = document.getElementById('allEmployeeNotesTable');
   if (!tbody) return;
