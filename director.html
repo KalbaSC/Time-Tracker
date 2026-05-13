@@ -518,7 +518,18 @@
     </table>
   </div>
 
-  <div id="supportPayrollDetails" style="margin-top:20px;"></div>
+  <div id="supportPayrollDetails" style="margin-top:20px;display:none;">
+
+  <div style="display:flex;justify-content:flex-start;margin-bottom:14px;">
+    <button class="btn btn-ghost"
+      style="width:auto;padding:8px 14px;margin-top:0;"
+      onclick="closeSupportPayrollDetails()">
+      إغلاق
+    </button>
+  </div>
+
+</div>
+        
 </div>
     </div>
   </div>
@@ -833,6 +844,10 @@ async function signAndSendReportToHR() {
     alert("حدث خطأ أثناء إرسال التقرير");
   }
 }
+
+function closeSupportPayrollDetails() {
+  $("supportPayrollDetails").style.display = "none";
+}
   
 function getCompletionPercent(row){
   const total = Number(row.totalSec || 0);
@@ -1110,7 +1125,8 @@ function viewSupportPayroll(index) {
   } catch (e) {
     rows = [];
   }
-
+$("supportPayrollDetails").style.display = "block";
+  
   box.innerHTML = `
     <div class="card table-card">
       <div class="table-head">
