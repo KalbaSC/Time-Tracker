@@ -1067,15 +1067,7 @@ async function loadSupportServicesPayrolls() {
   tbody.innerHTML = `<tr><td colspan="4">جاري التحميل...</td></tr>`;
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "getSupportServicesPayrolls",
-        payload: {}
-      })
-    });
-
-    const data = await res.json();
+    const data = await jsonp(`${SCRIPT_URL}?action=getSupportServicesPayrolls`);
 
     if (!data.ok) {
       tbody.innerHTML = `<tr><td colspan="4">فشل تحميل الرواتب</td></tr>`;
@@ -1094,9 +1086,7 @@ async function loadSupportServicesPayrolls() {
         <td>${p.month}</td>
         <td>${p.year}</td>
         <td>${p.status}</td>
-        <td>
-          <button onclick="viewSupportPayroll(${index})">عرض</button>
-        </td>
+        <td><button onclick="viewSupportPayroll(${index})">عرض</button></td>
       </tr>
     `).join("");
 
