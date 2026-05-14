@@ -1896,19 +1896,9 @@ loadEmployeeDocuments();
 }
 
 function logout() {
-  if (confirm("هل تريد تسجيل الخروج؟")) {
-    resetPunchUI();
-    window.currentID = null;
-    window.employeeName = null;
-    $("dash").style.display = "none";
-    clearSession_();
-    $("loginBox").style.display = "block";
-    $("uaeHeader").style.display = "none";
-    $("empId").value = "";
-    $("empPin").value = "";
-    $("locationStatus").style.display = "none";
-    showToast('تم تسجيل الخروج', 'success');
-  }
+  clearSession_();
+  localStorage.removeItem("kscc_emp_session_v1");
+  location.href = "login.html";
 }
 
 async function getTodayRows() {
