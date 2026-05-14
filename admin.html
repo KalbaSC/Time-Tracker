@@ -3172,6 +3172,15 @@ setInterval(() => {
   }
 }, 90000);
 
+setInterval(() => {
+  if (
+    sessionStorage.getItem('adminLogged') === '1' &&
+    currentTab === 'payroll'
+  ) {
+    loadPendingAdjustments();
+  }
+}, 10000);
+
 let lastReport = null;
 let currentFixedPayrollItems = [];
 let editMode = false;
