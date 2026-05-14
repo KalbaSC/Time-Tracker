@@ -527,10 +527,9 @@ function restoreFinanceSession() {
   } catch (e) {}
 }
 
-function logoutFinance() {
+function logoutFinance(){
   sessionStorage.removeItem("financeUser");
-  currentFinanceUser = null;
-  location.reload();
+  location.href = "login.html";
 }
 
 async function loadFinancePayrolls() {
