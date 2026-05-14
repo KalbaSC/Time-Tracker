@@ -1,45 +1,418 @@
-<input id="username" placeholder="Username / Employee ID">
-<input id="password" type="password" placeholder="Password / PIN">
-<button onclick="loginUnified()">Login</button>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - نادي كلباء</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    :root{
+      --bg:#080808;
+      --card:#111213;
+      --accent:#f6c21a;
+      --accent2:#ffdd45;
+      --text:#f5f5f5;
+      --muted:#aaa;
+      --line:#262626;
+      --danger:#ef4444;
+      --success:#10b981;
+      --radius:22px;
+      font-family:"Tajawal",sans-serif;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top right, rgba(246,194,26,.18), transparent 35%),
+        radial-gradient(circle at bottom left, rgba(246,194,26,.08), transparent 35%),
+        var(--bg);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .login-wrapper{
+      width:100%;
+      max-width:980px;
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      background:linear-gradient(180deg,#151515,#0f0f0f);
+      border:1px solid var(--line);
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+
+    .welcome{
+      padding:45px;
+      background:
+        linear-gradient(135deg,rgba(246,194,26,.18),rgba(0,0,0,.2)),
+        #101010;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      position:relative;
+    }
+
+    .club-icon{
+      width:76px;
+      height:76px;
+      border-radius:22px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#111;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:34px;
+      margin-bottom:22px;
+      box-shadow:0 12px 35px rgba(246,194,26,.25);
+    }
+
+    .welcome h1{
+      color:var(--accent);
+      font-size:34px;
+      font-weight:900;
+      margin-bottom:12px;
+      line-height:1.4;
+    }
+
+    .welcome p{
+      color:#d4d4d4;
+      line-height:1.9;
+      font-size:16px;
+      max-width:420px;
+    }
+
+    .features{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:28px;
+    }
+
+    .feature{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:13px;
+      border-radius:16px;
+      color:#ddd;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .feature i{
+      color:var(--accent);
+      margin-left:6px;
+    }
+
+    .login-card{
+      padding:45px 38px;
+      background:rgba(10,10,10,.72);
+      backdrop-filter:blur(12px);
+    }
+
+    .login-card h2{
+      color:var(--accent);
+      font-size:27px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .subtitle{
+      color:var(--muted);
+      margin-bottom:26px;
+      font-size:14px;
+    }
+
+    label{
+      color:var(--muted);
+      font-weight:800;
+      display:block;
+      margin:13px 0 7px;
+      font-size:14px;
+    }
+
+    .input-box{
+      position:relative;
+    }
+
+    .input-box i{
+      position:absolute;
+      right:14px;
+      top:50%;
+      transform:translateY(-50%);
+      color:var(--accent);
+    }
+
+    input{
+      width:100%;
+      padding:15px 44px 15px 14px;
+      border-radius:15px;
+      border:1px solid #2a2a2a;
+      background:#0d0d0d;
+      color:var(--text);
+      font-size:16px;
+      font-family:"Tajawal",sans-serif;
+      outline:none;
+      transition:.2s;
+    }
+
+    input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 4px rgba(246,194,26,.10);
+    }
+
+    .login-btn{
+      width:100%;
+      margin-top:22px;
+      padding:16px;
+      border:none;
+      border-radius:16px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#111;
+      font-size:17px;
+      font-weight:900;
+      cursor:pointer;
+      font-family:"Tajawal",sans-serif;
+      transition:.2s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .login-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 25px rgba(246,194,26,.22);
+    }
+
+    .login-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .msg{
+      margin-top:14px;
+      padding:12px;
+      border-radius:14px;
+      display:none;
+      font-weight:800;
+      font-size:14px;
+      text-align:center;
+    }
+
+    .msg.error{
+      display:block;
+      background:rgba(239,68,68,.12);
+      border:1px solid rgba(239,68,68,.35);
+      color:#ff9b9b;
+    }
+
+    .msg.success{
+      display:block;
+      background:rgba(16,185,129,.12);
+      border:1px solid rgba(16,185,129,.35);
+      color:#81e6bd;
+    }
+
+    .hint{
+      margin-top:20px;
+      padding:13px;
+      border-radius:16px;
+      background:rgba(246,194,26,.08);
+      border:1px solid rgba(246,194,26,.18);
+      color:#d7d7d7;
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .footer{
+      margin-top:22px;
+      text-align:center;
+      color:#777;
+      font-size:12px;
+    }
+
+    @media(max-width:850px){
+      .login-wrapper{
+        grid-template-columns:1fr;
+      }
+
+      .welcome{
+        padding:32px 24px;
+        text-align:center;
+        align-items:center;
+      }
+
+      .welcome h1{
+        font-size:26px;
+      }
+
+      .features{
+        grid-template-columns:1fr;
+        width:100%;
+      }
+
+      .login-card{
+        padding:32px 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-wrapper">
+
+    <div class="welcome">
+      <div class="club-icon">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+
+      <h1>نظام نادي كلباء الرياضي الثقافي</h1>
+      <p>
+        بوابة دخول موحدة للموظفين، الموارد البشرية، المدراء، والمالية.
+        يرجى إدخال بيانات الدخول وسيتم توجيهك تلقائياً حسب الصلاحية.
+      </p>
+
+      <div class="features">
+        <div class="feature"><i class="fas fa-user-check"></i> حضور الموظفين</div>
+        <div class="feature"><i class="fas fa-calendar-check"></i> الإجازات</div>
+        <div class="feature"><i class="fas fa-file-invoice-dollar"></i> الرواتب</div>
+        <div class="feature"><i class="fas fa-chart-line"></i> التقارير</div>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <h2>تسجيل الدخول</h2>
+      <div class="subtitle">استخدم اسم المستخدم أو الرقم الوظيفي</div>
+
+      <label>اسم المستخدم / الرقم الوظيفي</label>
+      <div class="input-box">
+        <i class="fas fa-user"></i>
+        <input id="username" placeholder="مثال: 2124 أو eman أو finance">
+      </div>
+
+      <label>كلمة المرور / PIN</label>
+      <div class="input-box">
+        <i class="fas fa-lock"></i>
+        <input id="password" type="password" placeholder="أدخل كلمة المرور">
+      </div>
+
+      <button class="login-btn" id="loginBtn" onclick="loginUnified()">
+        <i class="fas fa-right-to-bracket"></i>
+        دخول
+      </button>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="hint">
+        <b>ملاحظة:</b> سيتم تحويلك تلقائياً إلى الصفحة المناسبة حسب صلاحيتك.
+      </div>
+
+      <div class="footer">
+        © نادي كلباء الرياضي الثقافي
+      </div>
+    </div>
+
+  </div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ8MafycAGqEwMuKBVEddTYBLd3Z4kyYTSgfBzI_HOl5wyaixuJWxGSM6_tAT_hKIh/exec";
 
-async function loginUnified() {
+function showMsg(text, type="error"){
+  const msg = document.getElementById("msg");
+  msg.textContent = text;
+  msg.className = "msg " + type;
+}
+
+function setLoading(isLoading){
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = isLoading;
+  btn.innerHTML = isLoading
+    ? `<i class="fas fa-spinner fa-spin"></i> جاري التحقق...`
+    : `<i class="fas fa-right-to-bracket"></i> دخول`;
+}
+
+function loginUnified() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
 
-  const url = `${SCRIPT_URL}?action=unifiedLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&callback=handleLogin`;
-
-  const script = document.createElement("script");
-  script.src = url;
-  document.body.appendChild(script);
-}
-
-function handleLogin(res) {
-  if (!res.ok) {
-    alert("بيانات الدخول غير صحيحة");
+  if (!username || !password) {
+    showMsg("يرجى إدخال اسم المستخدم وكلمة المرور");
     return;
   }
 
-  if (res.role === "employee") {
-    localStorage.setItem("kscc_emp_session_v1", JSON.stringify(res.user));
-    location.href = "employee.html";
-  }
+  setLoading(true);
 
-if (res.role === "admin") {
-  sessionStorage.setItem("adminLogged", "1");
-  location.href = "admin.html";
+  const cb = "loginCb_" + Date.now();
+
+  window[cb] = function(res) {
+    setLoading(false);
+
+    if (!res || !res.ok) {
+      showMsg("بيانات الدخول غير صحيحة");
+      delete window[cb];
+      return;
+    }
+
+    showMsg("تم تسجيل الدخول بنجاح، جاري التحويل...", "success");
+
+    if (res.role === "employee") {
+      localStorage.setItem("kscc_emp_session_v1", JSON.stringify(res.user));
+      setTimeout(() => location.href = "employee.html", 600);
+    }
+
+    if (res.role === "admin") {
+      sessionStorage.setItem("adminLogged", "1");
+      setTimeout(() => location.href = "admin.html", 600);
+    }
+
+    if (res.role === "director") {
+      sessionStorage.setItem("directorSession", JSON.stringify(res.user));
+      setTimeout(() => location.href = "director.html", 600);
+    }
+
+    if (res.role === "accountant" || res.role === "finance") {
+      sessionStorage.setItem("financeUser", JSON.stringify(res.user));
+      setTimeout(() => location.href = "finance.html", 600);
+    }
+
+    delete window[cb];
+  };
+
+  const script = document.createElement("script");
+  script.src =
+    SCRIPT_URL +
+    "?action=unifiedLogin" +
+    "&username=" + encodeURIComponent(username) +
+    "&password=" + encodeURIComponent(password) +
+    "&callback=" + cb +
+    "&_=" + Date.now();
+
+  script.onerror = function(){
+    setLoading(false);
+    showMsg("حدث خطأ في الاتصال، يرجى المحاولة مرة أخرى");
+    delete window[cb];
+  };
+
+  document.body.appendChild(script);
 }
 
-  if (res.role === "director") {
-    sessionStorage.setItem("directorSession", JSON.stringify(res.user));
-    location.href = "director.html";
+document.addEventListener("keydown", function(e){
+  if (e.key === "Enter") {
+    loginUnified();
   }
-
-  if (res.role === "accountant" || res.role === "finance") {
-    sessionStorage.setItem("financeUser", JSON.stringify(res.user));
-    location.href = "finance.html";
-  }
-}
+});
 </script>
+
+</body>
+</html>
