@@ -404,6 +404,37 @@
     </table>
   </div>
 </div>  
+
+     <div class="card table-card">
+  <div class="table-head">
+    <h3><i class="fas fa-location-arrow"></i> طلبات البصمة الخارجية</h3>
+    <button class="btn btn-primary" style="width:auto;padding:10px 16px" onclick="loadRemotePunchRequests()">
+      تحديث الطلبات
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الموظف</th>
+          <th>الرقم الوظيفي</th>
+          <th>التاريخ</th>
+          <th>الوقت</th>
+          <th>النوع</th>
+          <th>الموقع</th>
+          <th>السبب</th>
+          <th>الحالة</th>
+          <th>الإجراء</th>
+        </tr>
+      </thead>
+      <tbody id="remotePunchRequestsTable">
+        <tr><td colspan="9" style="color:#777;padding:25px">لا توجد طلبات.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+      
       <div class="summary">
 <div class="card summary-card">
   <div class="icon"><i class="fas fa-users"></i></div>
@@ -650,6 +681,7 @@ function loginDirector(){
   loadDirectorReport();
   loadDirectorLeaves();
   loadDirectorAdjustments();
+  loadRemotePunchRequests();
 
 startSupportPayrollAutoRefresh();
   
@@ -698,6 +730,7 @@ function restoreSession(){
 loadDirectorReport();
 loadDirectorLeaves();
     loadDirectorAdjustments();
+    loadRemotePunchRequests();
 startSupportPayrollAutoRefresh();
 
 
@@ -1112,6 +1145,100 @@ async function directorDecision(row, status) {
 
   setTimeout(loadDirectorLeaves, 1000);
 }
+
+async function loadRemotePunchRequests() {
+  if (!currentDirector) return;
+
+  const tbody = $("remotePunchRequestsTable");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="9" style="color:#777;padding:25px">جاري التحميل...</td></tr>`;
+
+  try {
+    const data = await jsonp(
+      `${SCRIPT_URL}?action=getDirectorRemotePunchRequests&department=${encodeURIComponent(currentDirector.department)}`
+    );
+
+    const rows = data.rows || [];
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="9" style="color:#777;padding:25px">لا توجد طلبات.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.empName || "—"}</td>
+        <td>${r.empId || "—"}</td>
+        <td>${onlyDateDirector(r.date)}</td>
+        <td>${r.time || "—"}</td>
+        <td>${r.type === "IN" ? "دخول" : "خروج"}</td>
+        <td>
+          ${r.mapsLink
+            ? `<a href="${r.mapsLink}" target="_blank" style="color:#f6c21a;font-weight:800;">عرض الموقع</a>`
+            : "—"}
+        </td>
+        <td>${r.reason || "—"}</td>
+        <td>${formatRemotePunchStatus(r.status)}</td>
+        <td>
+          ${
+            r.status === "PendingDirector"
+              ? `
+                <button class="btn btn-primary" style="width:auto;padding:8px 12px;display:inline-flex"
+                  onclick="remotePunchDecisionUI(${r.row}, 'DirectorApproved')">
+                  اعتماد
+                </button>
+
+                <button class="btn btn-ghost" style="width:auto;padding:8px 12px;display:inline-flex"
+                  onclick="remotePunchDecisionUI(${r.row}, 'DirectorRejected')">
+                  رفض
+                </button>
+              `
+              : `<span style="color:#888;">—</span>`
+          }
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="9" style="color:#ef4444;padding:25px">تعذر تحميل طلبات البصمة الخارجية.</td></tr>`;
+  }
+}
+
+function formatRemotePunchStatus(status) {
+  if (status === "DirectorApproved") {
+    return `<span class="status s-ok">معتمد من المدير</span>`;
+  }
+
+  if (status === "DirectorRejected") {
+    return `<span class="status s-bad">مرفوض من المدير</span>`;
+  }
+
+  return `<span class="status s-warn">بانتظار اعتماد المدير</span>`;
+}
+
+async function remotePunchDecisionUI(row, status) {
+  const note = prompt("ملاحظة المدير - اختياري") || "";
+
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "remotePunchDecision",
+      payload: {
+        row,
+        status,
+        managerName: currentDirector.name,
+        note
+      }
+    })
+  });
+
+  alert(status === "DirectorApproved" ? "تم اعتماد البصمة وإضافتها للحضور" : "تم رفض البصمة");
+  loadRemotePunchRequests();
+  loadDirectorReport();
+}
+  
 let supportPayrolls = [];
 
 async function loadSupportServicesPayrolls() {
