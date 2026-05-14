@@ -3392,8 +3392,8 @@ async function addPayrollAdjustmentUI() {
           reason,
           month,
           year,
-          approvedBy: "HR",
-          status: "Pending"
+          approvedBy: "",
+          status: "PendingDirector"
         }
       })
     });
@@ -3405,7 +3405,7 @@ async function addPayrollAdjustmentUI() {
       return;
     }
 
-    showToast('تم حفظ البدل / الخصم', 'success');
+    showToast('تم إرسال البدل / الخصم إلى المدير للاعتماد', 'success');
   } catch (e) {
     showToast('خطأ في الحفظ', 'error');
   } finally {
