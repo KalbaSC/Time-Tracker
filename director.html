@@ -664,12 +664,7 @@ restoreSession();
 
 function logoutDirector(){
   sessionStorage.removeItem("directorSession");
-  currentDirector = null;
-  $("dashboard").style.display = "none";
-  $("topbar").style.display = "none";
-  $("loginBox").style.display = "block";
-  clearMsg();
-  if (supportPayrollAutoRefresh) clearInterval(supportPayrollAutoRefresh);
+  location.href = "login.html";
 }
 
 function togglePeriodFields(){
