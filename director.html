@@ -652,6 +652,11 @@ function loginDirector(){
   loadDirectorAdjustments();
 
 startSupportPayrollAutoRefresh();
+  
+setInterval(() => {
+  loadDirectorAdjustments();
+}, 10000);
+  
 if (currentDirector.department === "الخدمات المساندة") {
   $("supportPayrollBox").style.display = "block";
   loadSupportServicesPayrolls();
@@ -694,6 +699,11 @@ loadDirectorReport();
 loadDirectorLeaves();
     loadDirectorAdjustments();
 startSupportPayrollAutoRefresh();
+
+
+setInterval(() => {
+  loadDirectorAdjustments();
+}, 10000);  
     
 if (currentDirector.department === "الخدمات المساندة") {
   loadSupportServicesPayrolls();
