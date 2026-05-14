@@ -1,0 +1,45 @@
+<input id="username" placeholder="Username / Employee ID">
+<input id="password" type="password" placeholder="Password / PIN">
+<button onclick="loginUnified()">Login</button>
+
+<script>
+const SCRIPT_URL = "YOUR_APPS_SCRIPT_URL";
+
+async function loginUnified() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  const url = `${SCRIPT_URL}?action=unifiedLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&callback=handleLogin`;
+
+  const script = document.createElement("script");
+  script.src = url;
+  document.body.appendChild(script);
+}
+
+function handleLogin(res) {
+  if (!res.ok) {
+    alert("بيانات الدخول غير صحيحة");
+    return;
+  }
+
+  if (res.role === "employee") {
+    localStorage.setItem("kscc_emp_session_v1", JSON.stringify(res.user));
+    location.href = "employee.html";
+  }
+
+  if (res.role === "admin") {
+    sessionStorage.setItem("adminLogged", "true");
+    location.href = "admin.html";
+  }
+
+  if (res.role === "director") {
+    sessionStorage.setItem("directorSession", JSON.stringify(res.user));
+    location.href = "director.html";
+  }
+
+  if (res.role === "accountant" || res.role === "finance") {
+    sessionStorage.setItem("financeUser", JSON.stringify(res.user));
+    location.href = "finance.html";
+  }
+}
+</script>
