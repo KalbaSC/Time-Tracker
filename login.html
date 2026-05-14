@@ -27,10 +27,10 @@ function handleLogin(res) {
     location.href = "employee.html";
   }
 
-  if (res.role === "admin") {
-    sessionStorage.setItem("adminLogged", "true");
-    location.href = "admin.html";
-  }
+if (res.role === "admin") {
+  sessionStorage.setItem("adminLogged", "1");
+  location.href = "admin.html";
+}
 
   if (res.role === "director") {
     sessionStorage.setItem("directorSession", JSON.stringify(res.user));
