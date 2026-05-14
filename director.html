@@ -1304,16 +1304,25 @@ async function loadDirectorAdjustments() {
         <td>${r.type === "ADD" ? "إضافة" : "خصم"}</td>
         <td>${r.amount}</td>
         <td>${r.reason}</td>
-        <td>
-          <button class="btn btn-primary" style="width:auto;padding:8px 12px"
-            onclick="directorAdjustmentDecisionUI('${r.id}', 'DirectorApproved')">
-            اعتماد
-          </button>
-          <button class="btn btn-ghost" style="width:auto;padding:8px 12px"
-            onclick="directorAdjustmentDecisionUI('${r.id}', 'DirectorRejected')">
-            رفض
-          </button>
-        </td>
+ <td>
+  ${
+    r.status === "PendingDirector"
+      ? `
+        <button class="btn btn-primary" style="width:auto;padding:8px 12px"
+          onclick="directorAdjustmentDecisionUI('${r.id}', 'DirectorApproved')">
+          اعتماد
+        </button>
+
+        <button class="btn btn-ghost" style="width:auto;padding:8px 12px"
+          onclick="directorAdjustmentDecisionUI('${r.id}', 'DirectorRejected')">
+          رفض
+        </button>
+      `
+      : r.status === "DirectorApproved"
+        ? `<span class="status s-ok">معتمد من المدير</span>`
+        : `<span class="status s-bad">مرفوض من المدير</span>`
+  }
+</td>
       </tr>
     `).join("");
 
