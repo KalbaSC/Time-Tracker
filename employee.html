@@ -911,9 +911,9 @@
         <button class="btn-yellow btn-punch" onclick="punch('OUT')" id="punchOutBtn" disabled>
           <i class="fas fa-sign-out-alt"></i> بصمة خروج
         </button>
-         <button class="btn-yellow btn-punch" style="background:#2563eb;color:white;" onclick="requestRemotePunch('OUT')">
-    <i class="fas fa-location-arrow"></i> بصمة خارج النادي
-  </button>
+         <button class="btn-yellow btn-punch" style="background:#2563eb;color:white;" onclick="requestRemotePunchAuto()">
+         <i class="fas fa-location-arrow"></i> بصمة خارج النادي
+         </button>
       </div>
 
             <div id="locationStatus" class="location-status" style="display: none;">
@@ -1324,12 +1324,18 @@ const SESSION_KEY = "kscc_emp_session_v1";
 
 function saveSession_() {
   if (!window.currentID) return;
-const data = {
-  id: String(window.currentID),
-  name: String(window.employeeName || ""),
-  dept: String(window.employeeDept || ""),
-  savedAt: Date.now()
-};
+
+  const data = {
+    id: String(window.currentID),
+    name: String(window.employeeName || ""),
+    dept: String(window.employeeDept || ""),
+    service: String(window.employeeService || "—"),
+    email: String(window.employeeEmail || "—"),
+    phone: String(window.employeePhone || "—"),
+    homePhone: String(window.employeeHomePhone || "—"),
+    savedAt: Date.now()
+  };
+
   localStorage.setItem(SESSION_KEY, JSON.stringify(data));
 }
 
@@ -1344,6 +1350,15 @@ function restoreSession_() {
     window.currentID = data.id;
     window.employeeName = data.name || "موظف";
     window.employeeDept = data.dept || "";
+    window.employeeService = data.service || "—";
+    window.employeeEmail = data.email || "—";
+    window.employeePhone = data.phone || "—";
+    window.employeeHomePhone = data.homePhone || "—";
+
+$("employeeService").textContent = window.employeeService;
+$("employeeEmail").textContent = window.employeeEmail;
+$("employeePhone").textContent = window.employeePhone;
+$("employeeHomePhone").textContent = window.employeeHomePhone; 
     const deptEl = $('employeeDept');
     if (deptEl) deptEl.textContent = window.employeeDept || '—';
 
@@ -1835,6 +1850,9 @@ async function login() {
     window.employeePin = pin;
     window.employeeDept = (data.department || '').trim();
    window.employeeService = data.serviceText || "—";
+   window.employeeEmail = data.email || "—";
+   window.employeePhone = data.phone || "—";
+   window.employeeHomePhone = data.homePhone || "—";
    window.contractAlertText = data.contractAlertText || "";
    window.hasContractAlert = !!data.hasContractAlert;
    window.contractDaysLeft = data.contractDaysLeft;
@@ -1958,6 +1976,20 @@ function canPunch(type, todayRows) {
   
   return { ok: true };
 }
+
+async function requestRemotePunchAuto() {
+  const todayRows = await getTodayRows();
+
+  let nextType = "IN";
+
+  if (todayRows.length > 0) {
+    const lastType = String(todayRows[todayRows.length - 1][3] || "").trim();
+    nextType = lastType === "IN" ? "OUT" : "IN";
+  }
+
+  requestRemotePunch(nextType);
+}
+ 
 async function requestRemotePunch(type) {
   if (!window.currentID) {
     showToast("يرجى تسجيل الدخول أولاً", "error");
