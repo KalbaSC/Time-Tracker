@@ -911,6 +911,9 @@
         <button class="btn-yellow btn-punch" onclick="punch('OUT')" id="punchOutBtn" disabled>
           <i class="fas fa-sign-out-alt"></i> بصمة خروج
         </button>
+         <button class="btn-yellow btn-punch" style="background:#2563eb;color:white;" onclick="requestRemotePunch('OUT')">
+    <i class="fas fa-location-arrow"></i> بصمة خارج النادي
+  </button>
       </div>
 
             <div id="locationStatus" class="location-status" style="display: none;">
@@ -1955,7 +1958,78 @@ function canPunch(type, todayRows) {
   
   return { ok: true };
 }
+async function requestRemotePunch(type) {
+  if (!window.currentID) {
+    showToast("يرجى تسجيل الدخول أولاً", "error");
+    return;
+  }
 
+  const reason = prompt("اكتب سبب البصمة خارج النادي:");
+  if (!reason || !reason.trim()) {
+    showToast("يجب كتابة سبب الطلب", "warning");
+    return;
+  }
+
+  const msg = $("punchMsg");
+  msg.style.display = "none";
+  showLoader("punchLoader");
+
+  try {
+    const todayRows = await getTodayRows();
+    const seq = canPunch(type, todayRows);
+
+    if (!seq.ok) {
+      hideLoader("punchLoader");
+      msg.className = "msg err";
+      msg.style.display = "block";
+      msg.textContent = seq.error;
+      showToast(seq.error, "error");
+      return;
+    }
+
+    const pos = await getPositionSmart();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "requestRemotePunch",
+        payload: {
+          id: window.currentID,
+          name: window.employeeName,
+          department: window.employeeDept,
+          type,
+          lat,
+          lng,
+          zone: "خارج النادي",
+          mapsLink,
+          reason: reason.trim()
+        }
+      })
+    });
+
+    hideLoader("punchLoader");
+
+    updateLastMovementInstant(type);
+    updateTodayTableInstant(type, "⏳ بانتظار اعتماد المدير");
+
+    msg.className = "msg warning";
+    msg.style.display = "block";
+    msg.textContent = "تم إرسال طلب البصمة الخارجية إلى المدير للاعتماد.";
+    showToast("تم إرسال طلب البصمة الخارجية", "success");
+
+  } catch (e) {
+    console.error(e);
+    hideLoader("punchLoader");
+    msg.className = "msg err";
+    msg.style.display = "block";
+    msg.textContent = "تعذر إرسال طلب البصمة الخارجية";
+    showToast("تعذر إرسال الطلب", "error");
+  }
+}
+ 
 async function punch(type) {
   if (!window.currentID) {
     showToast('يرجى تسجيل الدخول أولاً', 'error');
