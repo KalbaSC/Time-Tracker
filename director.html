@@ -621,6 +621,10 @@ function loginDirector(){
   loadDirectorLeaves();
 
 startSupportPayrollAutoRefresh();
+if (currentDirector.department === "الخدمات المساندة") {
+  $("supportPayrollBox").style.display = "block";
+  loadSupportServicesPayrolls();
+}  
 }
 
 function parseDateInput(val){
@@ -645,6 +649,10 @@ function restoreSession(){
     const data = JSON.parse(raw);
     if (!data || !data.department) return;
     currentDirector = data;
+    if (currentDirector.department === "الخدمات المساندة") {
+    $("supportPayrollBox").style.display = "block";
+    loadSupportServicesPayrolls();
+    }
     $("loginBox").style.display = "none";
     $("topbar").style.display = "flex";
     $("dashboard").style.display = "block";
