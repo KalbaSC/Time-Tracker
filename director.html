@@ -491,6 +491,36 @@
           </table>
         </div>
       </div>
+
+<div class="card table-card">
+  <div class="table-head">
+    <h3>طلبات اعتماد البدلات والخصومات</h3>
+    <button class="btn btn-primary" style="width:auto;padding:10px 16px" onclick="loadDirectorAdjustments()">
+      تحديث
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الموظف</th>
+          <th>الرقم الوظيفي</th>
+          <th>الشهر</th>
+          <th>السنة</th>
+          <th>النوع</th>
+          <th>المبلغ</th>
+          <th>السبب</th>
+          <th>الإجراء</th>
+        </tr>
+      </thead>
+      <tbody id="directorAdjustmentsTable">
+        <tr><td colspan="8">لا توجد طلبات.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
       <div id="supportPayrollBox" class="card table-card" style="display:none;">
   <div class="table-head">
     <h3><i class="fas fa-money-bill"></i> كشوف الرواتب - الاعتماد النهائي</h3>
@@ -619,6 +649,7 @@ function loginDirector(){
 
   loadDirectorReport();
   loadDirectorLeaves();
+  loadDirectorAdjustments();
 
 startSupportPayrollAutoRefresh();
 if (currentDirector.department === "الخدمات المساندة") {
@@ -661,6 +692,7 @@ function restoreSession(){
     $("pageTitle").textContent = "لوحة حضور " + data.department;
 loadDirectorReport();
 loadDirectorLeaves();
+    loadDirectorAdjustments();
 startSupportPayrollAutoRefresh();
     
 if (currentDirector.department === "الخدمات المساندة") {
@@ -1234,6 +1266,77 @@ function startSupportPayrollAutoRefresh() {
       loadSupportServicesPayrolls();
     }, 15000); 
   }
+}
+
+async function loadDirectorAdjustments() {
+  if (!currentDirector) return;
+
+  const tbody = $("directorAdjustmentsTable");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="8">جاري التحميل...</td></tr>`;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getDirectorAdjustments",
+        payload: {
+          department: currentDirector.department
+        }
+      })
+    });
+
+    const data = await res.json();
+    const rows = data.rows || [];
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8">لا توجد طلبات.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.empName || "—"}</td>
+        <td>${r.empId}</td>
+        <td>${r.month}</td>
+        <td>${r.year}</td>
+        <td>${r.type === "ADD" ? "إضافة" : "خصم"}</td>
+        <td>${r.amount}</td>
+        <td>${r.reason}</td>
+        <td>
+          <button class="btn btn-primary" style="width:auto;padding:8px 12px"
+            onclick="directorAdjustmentDecisionUI('${r.id}', 'DirectorApproved')">
+            اعتماد
+          </button>
+          <button class="btn btn-ghost" style="width:auto;padding:8px 12px"
+            onclick="directorAdjustmentDecisionUI('${r.id}', 'DirectorRejected')">
+            رفض
+          </button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8">خطأ في التحميل</td></tr>`;
+  }
+}
+
+async function directorAdjustmentDecisionUI(id, status) {
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "directorAdjustmentDecision",
+      payload: {
+        id,
+        status,
+        directorName: currentDirector.name
+      }
+    })
+  });
+
+  alert(status === "DirectorApproved" ? "تم الاعتماد وإرساله إلى HR" : "تم الرفض");
+  loadDirectorAdjustments();
 }  
 </script>
 </body>
