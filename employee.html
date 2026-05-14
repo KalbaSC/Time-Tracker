@@ -1375,6 +1375,40 @@ $("employeeHomePhone").textContent = window.employeeHomePhone;
   }
 }
 
+
+async function loadEmployeeProfileFromServer_() {
+  if (!window.currentID) return;
+
+  try {
+    const data = await jsonp(`${SCRIPT_URL}?action=getEmployees`);
+
+    const emp = (data.employees || []).find(e =>
+      String(e.id).trim() === String(window.currentID).trim()
+    );
+
+    if (!emp) return;
+
+    window.employeeService = emp.serviceText || "—";
+    window.employeeEmail = emp.email || "—";
+    window.employeePhone = emp.phone || "—";
+    window.employeeHomePhone = emp.homePhone || "—";
+
+    $("employeeService").textContent = window.employeeService;
+    $("employeeEmail").textContent = window.employeeEmail;
+    $("employeePhone").textContent = window.employeePhone;
+    $("employeeHomePhone").textContent = window.employeeHomePhone;
+
+    $("profileEmail").value = emp.email || "";
+    $("profilePhone").value = emp.phone || "";
+    $("profileHomePhone").value = emp.homePhone || "";
+
+    saveSession_();
+
+  } catch (e) {
+    console.error("Failed to load employee profile", e);
+  }
+}
+ 
 function clearSession_() {
   localStorage.removeItem(SESSION_KEY);
 }
@@ -3201,12 +3235,14 @@ function initialize() {
   lastYMD_ = ymd(new Date());
   setInterval(handleDayRollover_, 10000);
 
-  if (window.currentID) {
-    $("loginBox").style.display = "none";
-    $("dash").style.display = "block";
-    $("uaeHeader").style.display = "flex";
+if (window.currentID) {
+  $("loginBox").style.display = "none";
+  $("dash").style.display = "block";
+  $("uaeHeader").style.display = "flex";
 
-    resetPunchUI();
+  loadEmployeeProfileFromServer_();
+
+  resetPunchUI();
 refreshAll();
 checkLocationStatus();
 loadMyLeaves();
