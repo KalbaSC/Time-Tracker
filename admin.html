@@ -2059,11 +2059,9 @@ function showTab(tabName) {
 }
 }
 
-function logout() {
-  if (confirm('هل تريد تسجيل الخروج؟')) {
-    sessionStorage.removeItem('adminLogged');
-    location.reload();
-  }
+function logoutAdmin() {
+  sessionStorage.removeItem("adminLogged");
+  location.href = "login.html";
 }
 
 function validateEmployeeData(name, id, pin, dept) {
