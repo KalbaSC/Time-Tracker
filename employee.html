@@ -2308,11 +2308,11 @@ return `<tr><td>${t}</td><td>${type}</td><td>${status}</td></tr>`;
     }
 
 if (lastOptimisticPunch) {
-  const existsInCsv = todayRows.some(r => {
-    const t = (r[4] || "").slice(0, 5);
-    const ty = (r[3] || "").trim();
-    return t === lastOptimisticPunch.t && ty === lastOptimisticPunch.type;
-  });
+const existsInCsv = todayRows.some(r => {
+  const t = (r.time || "").slice(0, 5);
+  const ty = (r.type || "").trim();
+  return t === lastOptimisticPunch.t && ty === lastOptimisticPunch.type;
+});
 
   if (!existsInCsv) {
   const oldOpt = table.querySelector('tr[data-opt="1"]');
@@ -2335,9 +2335,9 @@ if (lastOptimisticPunch) {
     let workedToday = 0;
     let lastIn = null;
     
-    todayRows.forEach(r => {
-      const type = (r[3] || "").trim();
-      const t = (r[4] || "").slice(0, 5);
+todayRows.forEach(r => {
+  const type = (r.type || "").trim();
+  const t = (r.time || "").slice(0, 5);
       
       if (type === "IN") {
         lastIn = t;
