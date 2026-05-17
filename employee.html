@@ -2069,13 +2069,19 @@ function canPunch(type, todayRows) {
 
 async function requestRemotePunchAuto() {
   const todayRows = await getTodayRows();
+  const localRemote = getRemotePunchState_();
 
-  let nextType = "IN";
+  let lastType = "";
 
   if (todayRows.length > 0) {
-    const lastType = String(todayRows[todayRows.length - 1][3] || "").trim();
-    nextType = lastType === "IN" ? "OUT" : "IN";
+    lastType = String(todayRows[todayRows.length - 1][3] || "").trim();
   }
+
+  if (localRemote && localRemote.type) {
+    lastType = String(localRemote.type || "").trim();
+  }
+
+  const nextType = lastType === "IN" ? "OUT" : "IN";
 
   requestRemotePunch(nextType);
 }
@@ -2086,7 +2092,12 @@ async function requestRemotePunch(type) {
     return;
   }
 
-  const reason = prompt("اكتب سبب البصمة خارج النادي:");
+  const reason = prompt(
+  type === "IN"
+    ? "اكتب سبب بصمة الدخول خارج النادي:"
+    : "اكتب سبب بصمة الخروج خارج النادي:"
+);
+ 
   if (!reason || !reason.trim()) {
     showToast("يجب كتابة سبب الطلب", "warning");
     return;
@@ -2290,7 +2301,16 @@ async function refreshAll() {
       table.innerHTML = todayRows.map(r => {
         const t = (r[4] || "").slice(0, 5);
         const type = (r[3] || "").trim() === "IN" ? "دخول" : "خروج";
-        const status = (r[7] || "").includes("داخل") ? "✅ داخل" : "❌ خارج";
+        const zone = String(r[14] || r[7] || "");
+const statusRaw = String(r[17] || "");
+
+let status = "✅ داخل";
+
+if (zone.includes("خارج")) {
+  status = statusRaw === "PendingDirector"
+    ? "⏳ بانتظار اعتماد المدير"
+    : "❌ خارج";
+}
         return `<tr><td>${t}</td><td>${type}</td><td>${status}</td></tr>`;
       }).join("");
     }
