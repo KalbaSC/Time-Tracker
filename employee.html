@@ -1965,25 +1965,36 @@ async function getTodayRows() {
 
   return rows
     .map(r => {
+      // RemotePunchRequests format
       if (String(r[2]).trim() === String(window.currentID) && String(r[1]).trim() === today) {
-        return [
-          r[1], 
-          r[2], 
-          r[3],   
-          r[5], 
-          r[6],     
-          ...r
-        ];
+        return {
+          date: r[1],
+          id: r[2],
+          name: r[3],
+          type: String(r[5] || "").trim(),
+          time: r[6],
+          zone: r[9],
+          status: r[12] || "PendingDirector"
+        };
       }
 
+      // Normal Punches format
       if (String(r[1]).trim() === String(window.currentID) && String(r[0]).trim() === today) {
-        return r;
+        return {
+          date: r[0],
+          id: r[1],
+          name: r[2],
+          type: String(r[3] || "").trim(),
+          time: r[4],
+          zone: r[7],
+          status: "Approved"
+        };
       }
 
       return null;
     })
-    .filter(Boolean)
-    .sort((a, b) => timeToSec((a[4] || "").slice(0, 5)) - timeToSec((b[4] || "").slice(0, 5)));
+    .filter(r => r && (r.type === "IN" || r.type === "OUT"))
+    .sort((a, b) => timeToSec((a.time || "").slice(0, 5)) - timeToSec((b.time || "").slice(0, 5)));
 }
 
 function getRemoteStateKey_() {
@@ -2035,33 +2046,21 @@ function updateTodayTableInstant(type, statusText = "✅ داخل") {
  
 function canPunch(type, todayRows) {
   const rows = todayRows || [];
-  const localRemote = getRemotePunchState_();
 
-  let lastType = rows.length
-    ? String(rows[rows.length - 1][3] || "").trim()
-    : "";
-
-  if (!lastType && localRemote?.type) {
-    lastType = localRemote.type;
-  }
-
-  if (type === "IN") {
-    if (lastType === "IN") {
-      return { ok: false, error: "❌ لا يمكن تسجيل دخول مرتين متتاليتين." };
-    }
-    return { ok: true };
-  }
-
-  if (type === "OUT") {
-    if (!lastType) {
+  if (!rows.length) {
+    if (type === "OUT") {
       return { ok: false, error: "❌ لا يمكن تسجيل خروج قبل تسجيل دخول." };
     }
-
-    if (lastType === "OUT") {
-      return { ok: false, error: "❌ لا يمكن تسجيل خروج مرتين متتاليتين." };
-    }
-
     return { ok: true };
+  }
+
+  const lastType = rows[rows.length - 1].type;
+
+  if (lastType === type) {
+    return {
+      ok: false,
+      error: `❌ لا يمكن تسجيل ${type === "IN" ? "دخول" : "خروج"} مرتين متتاليتين.`
+    };
   }
 
   return { ok: true };
@@ -2069,19 +2068,13 @@ function canPunch(type, todayRows) {
 
 async function requestRemotePunchAuto() {
   const todayRows = await getTodayRows();
-  const localRemote = getRemotePunchState_();
 
-  let lastType = "";
+  let nextType = "IN";
 
   if (todayRows.length > 0) {
-    lastType = String(todayRows[todayRows.length - 1][3] || "").trim();
+    const lastType = todayRows[todayRows.length - 1].type;
+    nextType = lastType === "IN" ? "OUT" : "IN";
   }
-
-  if (localRemote && localRemote.type) {
-    lastType = String(localRemote.type || "").trim();
-  }
-
-  const nextType = lastType === "IN" ? "OUT" : "IN";
 
   requestRemotePunch(nextType);
 }
@@ -2299,19 +2292,18 @@ async function refreshAll() {
       table.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#777">لا يوجد سجلات.</td></tr>`;
     } else {
       table.innerHTML = todayRows.map(r => {
-        const t = (r[4] || "").slice(0, 5);
-        const type = (r[3] || "").trim() === "IN" ? "دخول" : "خروج";
-        const zone = String(r[14] || r[7] || "");
-const statusRaw = String(r[17] || "");
+const t = (r.time || "").slice(0, 5);
+const type = r.type === "IN" ? "دخول" : "خروج";
 
 let status = "✅ داخل";
 
-if (zone.includes("خارج")) {
-  status = statusRaw === "PendingDirector"
+if (String(r.zone || "").includes("خارج")) {
+  status = r.status === "PendingDirector"
     ? "⏳ بانتظار اعتماد المدير"
     : "❌ خارج";
 }
-        return `<tr><td>${t}</td><td>${type}</td><td>${status}</td></tr>`;
+
+return `<tr><td>${t}</td><td>${type}</td><td>${status}</td></tr>`;
       }).join("");
     }
 
