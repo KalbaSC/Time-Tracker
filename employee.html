@@ -2044,8 +2044,14 @@ async function requestRemotePunch(type) {
   showLoader("punchLoader");
 
   try {
-    const todayRows = await getTodayRows();
-    const seq = canPunch(type, todayRows);
+    const allTodayRows = await getTodayRows();
+
+const approvedTodayRows = allTodayRows.filter(r => {
+  const status = String(r[10] || "").trim();
+  return status !== "PendingDirector";
+});
+
+const seq = canPunch(type, approvedTodayRows);
 
     if (!seq.ok) {
       hideLoader("punchLoader");
