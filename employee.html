@@ -2016,16 +2016,37 @@ function updateTodayTableInstant(type, statusText = "✅ داخل") {
 }
  
 function canPunch(type, todayRows) {
-  if (todayRows.length === 0) {
-    if (type === "OUT") return { ok: false, error: "❌ لا يمكن تسجيل خروج قبل تسجيل دخول." };
+  const rows = (todayRows || []).filter(r => {
+    const rowText = r.join(" ");
+    return !rowText.includes("Rejected") && !rowText.includes("مرفوض");
+  });
+
+  if (type === "IN") {
+    if (!rows.length) return { ok: true };
+
+    const lastType = String(rows[rows.length - 1][3] || "").trim();
+    if (lastType === "IN") {
+      return { ok: false, error: "❌ لا يمكن تسجيل دخول مرتين متتاليتين." };
+    }
+
     return { ok: true };
   }
-  
-  const lastType = String(todayRows[todayRows.length - 1][3]).trim();
-  if (lastType === type) {
-    return { ok: false, error: `❌ لا يمكن تسجيل ${type === "IN" ? "دخول" : "خروج"} مرتين متتاليتين.` };
+
+  if (type === "OUT") {
+    const hasIn = rows.some(r => String(r[3] || "").trim() === "IN");
+
+    if (!hasIn) {
+      return { ok: false, error: "❌ لا يمكن تسجيل خروج قبل تسجيل دخول." };
+    }
+
+    const lastType = String(rows[rows.length - 1][3] || "").trim();
+    if (lastType === "OUT") {
+      return { ok: false, error: "❌ لا يمكن تسجيل خروج مرتين متتاليتين." };
+    }
+
+    return { ok: true };
   }
-  
+
   return { ok: true };
 }
 
